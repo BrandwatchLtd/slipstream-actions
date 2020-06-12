@@ -1,0 +1,26 @@
+name: Test Install CLI
+on:
+  push:
+    branches:
+      master
+    paths:
+    - 'install-cli/**'
+    - '.github/workflows/install-cli-*'
+  pull_request:
+    paths:
+    - 'install-cli/**'
+    - '.github/workflows/install-cli-*'
+
+jobs:
+  integration:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ./install-cli
+    # Needs this because the version command can't run without. We should fix that.
+    - uses: GoogleCloudPlatform/github-actions/setup-gcloud@0.1.2
+      with:
+        service_account_key: ${{ secrets.BW_PROD_ARTIFACTS_KEY }}
+        export_default_credentials: true
+    - run: slipstream version

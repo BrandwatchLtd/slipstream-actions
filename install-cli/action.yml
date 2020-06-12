@@ -1,0 +1,10 @@
+name: Install CLI
+description: Install Slipstream CLI on runner'
+inputs:
+  url:
+    description: URL of the slipstream binary to download
+    required: false
+    default: https://bin.equinox.io/c/cXopLpzLbWK/slipstream-beta-linux-amd64.tgz
+runs:
+  using: node12
+  main: dist/index.js

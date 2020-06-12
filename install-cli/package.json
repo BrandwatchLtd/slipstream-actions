@@ -1,0 +1,15 @@
+{
+  "name": "slipstream-action-install-cli",
+  "version": "1.0.0",
+  "scripts": {
+    "package": "ncc build index.js -o dist",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@actions/core": "^1.2.4",
+    "@actions/tool-cache": "^1.5.5"
+  },
+  "devDependencies": {
+    "@zeit/ncc": "^0.20.5"
+  }
+}
