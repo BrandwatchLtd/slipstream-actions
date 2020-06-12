@@ -960,22 +960,14 @@ module.exports = require("os");
 const core = __webpack_require__(470);
 const exec = __webpack_require__(986);
 
+const { deploy } = __webpack_require__(104)
+
 async function run() {
   try {
     const environment = core.getInput('environment');
     const service = core.getInput('service');
     const id = core.getInput('id');
-
-    const args = [
-      'deploy',
-      environment,
-      service,
-      '--id', `${id}`,
-      '--quiet',
-      '--wait',
-    ]
-
-    await exec.exec('slipstream', args, {})
+    await deploy(environment, service, id)
   } catch ( error ) {
       core.setFailed(error.message);
   }
