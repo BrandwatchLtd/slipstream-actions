@@ -1,0 +1,17 @@
+name: Slipstream Deploy
+description: Request artifact deployment via Slipstream
+inputs:
+  environment:
+    description: Environment to deploy to
+    required: true
+  service:
+    description: Service to deploy
+    required: true
+  id:
+    description: ID of artifact to deploy, e.g. image digest, files sha, module digest.
+    required: true
+outputs:
+
+runs:
+  using: 'node12'
+  main: 'deploy.js'
