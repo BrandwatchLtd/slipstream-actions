@@ -1,6 +1,8 @@
-name: Test Deploy Action
+name: Test Push Image Action
 on:
   push:
+    branches:
+      master
     paths:
     - 'push-image/**'
     - '.github/workflows/push-image-*'
