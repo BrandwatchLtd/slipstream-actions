@@ -1,4 +1,4 @@
-name: deploy test
+name: Test Deploy Action
 on:
   push:
     paths:
@@ -10,8 +10,8 @@ on:
     - '.github/workflows/deploy-*'
 
 jobs:
-  run:
-    name: deploy
+  unit:
+    name: Unit Test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -26,3 +26,35 @@ jobs:
     - name: npm test
       run: npm test
       working-directory: ./deploy
+  integration:
+    name: Integration Test
+    #needs: unit
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@master
+      with:
+        node-version: 12.x
+    - uses: GoogleCloudPlatform/github-actions/setup-gcloud@0.1.2
+      with:
+        service_account_key: ${{ secrets.BW_PROD_ARTIFACTS_KEY }}
+        export_default_credentials: true
+    - uses: BrandwatchLtd/slipstream-installer-action@0.0.2
+
+    - name: Start fake slipstream API
+      run: node scripts/fake-slipstream-server.js &
+      working-directory: ./deploy
+
+    - name: Create config file
+      run : |
+        mkdir -p ${HOME}/.slipstream/
+        cat <<EOF > ${HOME}/.slipstream/config.yaml
+        apiurl: http://localhost:3000
+        EOF
+
+    - name: Run deploy action
+      uses: ./deploy
+      with:
+        environment: stage
+        service: myservice
+        id: 1234

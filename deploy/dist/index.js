@@ -960,7 +960,7 @@ module.exports = require("os");
 const core = __webpack_require__(470);
 const exec = __webpack_require__(986);
 
-const { deploy } = __webpack_require__(104)
+const { deploy } = __webpack_require__(376)
 
 async function run() {
   try {
@@ -989,6 +989,30 @@ module.exports = require("child_process");
 /***/ (function(module) {
 
 module.exports = require("assert");
+
+/***/ }),
+
+/***/ 376:
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+const exec = __webpack_require__(986);
+
+async function deploy(environment, service, id) {
+  const args = [
+    'deploy',
+    environment,
+    service,
+    '--id', `${id}`,
+    '--quiet',
+    '--wait',
+  ];
+  await exec.exec('slipstream', args, {})
+}
+
+module.exports = {
+  deploy,
+}
+
 
 /***/ }),
 
