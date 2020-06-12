@@ -1,7 +1,7 @@
 const core = require('@actions/core');
 const exec = require('@actions/exec');
 
-const { deploy } = require('./index')
+const { deploy } = require('./deploy')
 
 async function run() {
   try {
