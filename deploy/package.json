@@ -2,10 +2,15 @@
   "name": "slipstream-action-deploy",
   "version": "1.0.0",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "package": "ncc build index.js -o dist",
+    "test": "jest"
   },
   "dependencies": {
     "@actions/core": "^1.2.4",
     "@actions/exec": "^1.0.4"
+  },
+  "devDependencies": {
+    "@zeit/ncc": "^0.20.5",
+    "jest": "^26.0.1"
   }
 }
