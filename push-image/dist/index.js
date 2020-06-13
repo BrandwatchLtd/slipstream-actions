@@ -949,25 +949,369 @@ class ExecState extends events.EventEmitter {
 
 /***/ }),
 
-/***/ 37:
-/***/ (function(__unusedmodule, exports) {
+/***/ 19:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-/**
- * Parser for the `check-ignore` command - returns each file as a string array
- */
-exports.parseCheckIgnore = (text) => {
-    return text.split(/\n/g)
-        .map(line => line.trim())
-        .filter(file => !!file);
-};
-//# sourceMappingURL=CheckIgnore.js.map
+const util_1 = __webpack_require__(776);
+class ConfigList {
+    constructor() {
+        this.files = [];
+        this.values = Object.create(null);
+    }
+    get all() {
+        if (!this._all) {
+            this._all = Object.assign({}, ...this.files.map(file => this.values[file]));
+        }
+        return this._all;
+    }
+    addFile(file) {
+        if (!(file in this.values)) {
+            const latest = util_1.last(this.files);
+            this.values[file] = latest ? Object.create(this.values[latest]) : {};
+            this.files.push(file);
+        }
+        return this.values[file];
+    }
+    addValue(file, key, value) {
+        const values = this.addFile(file);
+        if (!values.hasOwnProperty(key)) {
+            values[key] = value;
+        }
+        else if (Array.isArray(values[key])) {
+            values[key].push(value);
+        }
+        else {
+            values[key] = [values[key], value];
+        }
+        this._all = undefined;
+    }
+}
+exports.ConfigList = ConfigList;
+function configListParser(text) {
+    const config = new ConfigList();
+    const lines = text.split('\0');
+    for (let i = 0, max = lines.length - 1; i < max;) {
+        const file = configFilePath(lines[i++]);
+        const [key, value] = util_1.splitOn(lines[i++], '\n');
+        config.addValue(file, key, value);
+    }
+    return config;
+}
+exports.configListParser = configListParser;
+function configFilePath(filePath) {
+    return filePath.replace(/^(file):/, '');
+}
+//# sourceMappingURL=ConfigList.js.map
 
 /***/ }),
 
-/***/ 39:
+/***/ 51:
+/***/ (function(module) {
+
+
+module.exports = DiffSummary;
+
+/**
+ * The DiffSummary is returned as a response to getting `git().status()`
+ *
+ * @constructor
+ */
+function DiffSummary () {
+   this.files = [];
+   this.insertions = 0;
+   this.deletions = 0;
+   this.changed = 0;
+}
+
+/**
+ * Number of lines added
+ * @type {number}
+ */
+DiffSummary.prototype.insertions = 0;
+
+/**
+ * Number of lines deleted
+ * @type {number}
+ */
+DiffSummary.prototype.deletions = 0;
+
+/**
+ * Number of files changed
+ * @type {number}
+ */
+DiffSummary.prototype.changed = 0;
+
+DiffSummary.parse = function (text) {
+   var line, handler;
+
+   var lines = text.trim().split('\n');
+   var status = new DiffSummary();
+
+   var summary = lines.pop();
+   if (summary) {
+      summary.trim().split(', ').forEach(function (text) {
+         var summary = /(\d+)\s([a-z]+)/.exec(text);
+         if (!summary) {
+            return;
+         }
+
+         if (/files?/.test(summary[2])) {
+            status.changed = parseInt(summary[1], 10);
+         }
+         else {
+            status[summary[2].replace(/s$/, '') + 's'] = parseInt(summary[1], 10);
+         }
+      });
+   }
+
+   while (line = lines.shift()) {
+      textFileChange(line, status.files) || binaryFileChange(line, status.files);
+   }
+
+   return status;
+};
+
+function textFileChange (line, files) {
+   line = line.trim().match(/^(.+)\s+\|\s+(\d+)(\s+[+\-]+)?$/);
+
+   if (line) {
+      var alterations = (line[3] || '').trim();
+      files.push({
+         file: line[1].trim(),
+         changes: parseInt(line[2], 10),
+         insertions: alterations.replace(/-/g, '').length,
+         deletions: alterations.replace(/\+/g, '').length,
+         binary: false
+      });
+
+      return true;
+   }
+}
+
+function binaryFileChange (line, files) {
+   line = line.match(/^(.+) \|\s+Bin ([0-9.]+) -> ([0-9.]+) ([a-z]+)$/);
+   if (line) {
+      files.push({
+         file: line[1].trim(),
+         before: +line[2],
+         after: +line[3],
+         binary: true
+      });
+      return true;
+   }
+}
+
+
+/***/ }),
+
+/***/ 64:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const utils_1 = __webpack_require__(152);
+class CleanResponse {
+    constructor(dryRun) {
+        this.dryRun = dryRun;
+        this.paths = [];
+        this.files = [];
+        this.folders = [];
+    }
+}
+exports.CleanResponse = CleanResponse;
+const removalRegexp = /^[a-z]+\s*/i;
+const dryRunRemovalRegexp = /^[a-z]+\s+[a-z]+\s*/i;
+const isFolderRegexp = /\/$/;
+function cleanSummaryParser(dryRun, text) {
+    const summary = new CleanResponse(dryRun);
+    const regexp = dryRun ? dryRunRemovalRegexp : removalRegexp;
+    utils_1.toLinesWithContent(text, true).forEach(line => {
+        const removed = line.replace(regexp, '');
+        summary.paths.push(removed);
+        (isFolderRegexp.test(removed) ? summary.folders : summary.files).push(removed);
+    });
+    return summary;
+}
+exports.cleanSummaryParser = cleanSummaryParser;
+//# sourceMappingURL=CleanSummary.js.map
+
+/***/ }),
+
+/***/ 87:
+/***/ (function(module) {
+
+module.exports = require("os");
+
+/***/ }),
+
+/***/ 96:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const child_process_1 = __webpack_require__(129);
+const git_error_1 = __webpack_require__(213);
+const task_1 = __webpack_require__(901);
+class GitExecutor {
+    constructor(binary = 'git', cwd, env, outputHandler) {
+        this.binary = binary;
+        this.cwd = cwd;
+        this.env = env;
+        this.outputHandler = outputHandler;
+        this._chain = Promise.resolve();
+    }
+    push(task) {
+        return this._chain = this._chain.then(() => __awaiter(this, void 0, void 0, function* () {
+            try {
+                if (task_1.isEmptyTask(task)) {
+                    return task.parser('');
+                }
+                const raw = yield this.gitResponse(this.binary, task.commands, this.outputHandler);
+                const data = yield this.handleTaskData(task, raw);
+                return task_1.isBufferTask(task) ? task.parser(data) : task.parser(data.toString(task.format));
+            }
+            catch (e) {
+                this._chain = Promise.resolve();
+                if (e instanceof git_error_1.GitError) {
+                    e.task = task;
+                    throw e;
+                }
+                throw new git_error_1.GitError(task, e && String(e));
+            }
+        }));
+    }
+    handleTaskData({ onError, concatStdErr }, { exitCode, stdOut, stdErr }) {
+        return new Promise((done, fail) => {
+            if (exitCode && stdErr.length && onError) {
+                return onError(exitCode, Buffer.concat([...(concatStdErr ? stdOut : []), ...stdErr]).toString('utf-8'), (result) => {
+                    done(Buffer.from(Buffer.isBuffer(result) ? result : String(result)));
+                }, fail);
+            }
+            if (exitCode && stdErr.length) {
+                return fail(Buffer.concat(stdErr).toString('utf-8'));
+            }
+            if (concatStdErr) {
+                stdOut.push(...stdErr);
+            }
+            done(Buffer.concat(stdOut));
+        });
+    }
+    gitResponse(command, args, outputHandler) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const spawnOptions = {
+                cwd: this.cwd,
+                env: this.env,
+                windowsHide: true,
+            };
+            return new Promise((done) => {
+                const stdOut = [];
+                const stdErr = [];
+                let attempted = false;
+                function attemptClose(exitCode) {
+                    // closing when there is content, terminate immediately
+                    if (attempted || stdErr.length || stdOut.length) {
+                        done({
+                            stdOut,
+                            stdErr,
+                            exitCode,
+                        });
+                        attempted = true;
+                    }
+                    // first attempt at closing but no content yet, wait briefly for the close/exit that may follow
+                    if (!attempted) {
+                        attempted = true;
+                        setTimeout(() => attemptClose(exitCode), 50);
+                    }
+                }
+                const spawned = child_process_1.spawn(command, args, spawnOptions);
+                spawned.stdout.on('data', (buffer) => stdOut.push(buffer));
+                spawned.stderr.on('data', (buffer) => stdErr.push(buffer));
+                spawned.on('error', (err) => stdErr.push(Buffer.from(String(err.stack), 'ascii')));
+                spawned.on('close', (code) => attemptClose(code));
+                spawned.on('exit', attemptClose);
+                if (outputHandler) {
+                    outputHandler(command[0], spawned.stdout, spawned.stderr);
+                }
+            });
+        });
+    }
+}
+exports.GitExecutor = GitExecutor;
+//# sourceMappingURL=git-executor.js.map
+
+/***/ }),
+
+/***/ 104:
+/***/ (function(__unusedmodule, __unusedexports, __webpack_require__) {
+
+const core = __webpack_require__(470);
+const exec = __webpack_require__(986);
+const push = __webpack_require__(447);
+const util = __webpack_require__(702);
+
+async function run() {
+  const service = core.getInput('service');
+  const tag = process.env.GITHUB_RUN_ID;
+  const repoTag = `eu.gcr.io/bw-prod-artifacts/${service}:${tag}`;
+
+  try {
+    core.startGroup("Configuring Docker authentication");
+    await exec.exec('gcloud', ['auth', 'configure-docker', 'eu.gcr.io', '--quiet'], {});
+    core.endGroup();
+
+    core.startGroup(`Building Docker image: ${repoTag}`);
+    await push.buildImage({
+        dockerFile: core.getInput('dockerFile'),
+        contextPath: core.getInput('contextPath'),
+        repoTag,
+    })
+    core.endGroup();
+
+    core.startGroup(`Pushing Docker image: ${repoTag}`);
+    await push.pushImage({
+        repoTag,
+    })
+    core.endGroup();
+
+    core.startGroup("Pushing Slipstream metadata");
+    const data = await push.buildMetadata({
+      event: require(process.env.GITHUB_EVENT_PATH),
+      service: core.getInput('service'),
+      repoTag,
+      labels: core.getInput('labels'),
+    })
+    await push.pushMetadata(data);
+    core.endGroup();
+
+    core.setOutput('imageDigest', util.getImageDigest(data.dockerInspect));
+    core.info('success');
+    core.info(`Run 'slipstream list images -s ${service}' to view service images`);
+
+  } catch ( error ) {
+      core.setFailed(error.message);
+  }
+}
+
+run();
+
+
+/***/ }),
+
+/***/ 115:
 /***/ (function(module) {
 
 
@@ -1111,179 +1455,1482 @@ function action (pullSummary, line) {
 
 /***/ }),
 
-/***/ 42:
+/***/ 129:
+/***/ (function(module) {
+
+module.exports = require("child_process");
+
+/***/ }),
+
+/***/ 142:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const utils_1 = __webpack_require__(532);
-class CleanResponse {
-    constructor(dryRun) {
-        this.dryRun = dryRun;
-        this.paths = [];
-        this.files = [];
-        this.folders = [];
+const git_error_1 = __webpack_require__(213);
+/**
+ * The `GitResponseError` is the wrapper for a parsed response that is treated as
+ * a fatal error, for example attempting a `merge` can leave the repo in a corrupted
+ * state when there are conflicts so the task will reject rather than resolve.
+ *
+ * For example, catching the merge conflict exception:
+ *
+ * ```typescript
+ import { gitP, SimpleGit, GitResponseError, MergeSummary } from 'simple-git';
+
+ const git = gitP(repoRoot);
+ const mergeOptions: string[] = ['--no-ff', 'other-branch'];
+ const mergeSummary: MergeSummary = await git.merge(mergeOptions)
+      .catch((e: GitResponseError<MergeSummary>) => e.git);
+
+ if (mergeSummary.failed) {
+   // deal with the error
+ }
+ ```
+ */
+class GitResponseError extends git_error_1.GitError {
+    constructor(
+    /**
+     * `.git` access the parsed response that is treated as being an error
+     */
+    git, message) {
+        super(undefined, message || String(git));
+        this.git = git;
     }
 }
-exports.CleanResponse = CleanResponse;
-const removalRegexp = /^[a-z]+\s*/i;
-const dryRunRemovalRegexp = /^[a-z]+\s+[a-z]+\s*/i;
-const isFolderRegexp = /\/$/;
-function cleanSummaryParser(dryRun, text) {
-    const summary = new CleanResponse(dryRun);
-    const regexp = dryRun ? dryRunRemovalRegexp : removalRegexp;
-    utils_1.toLinesWithContent(text, true).forEach(line => {
-        const removed = line.replace(regexp, '');
-        summary.paths.push(removed);
-        (isFolderRegexp.test(removed) ? summary.folders : summary.files).push(removed);
-    });
-    return summary;
-}
-exports.cleanSummaryParser = cleanSummaryParser;
-//# sourceMappingURL=CleanSummary.js.map
+exports.GitResponseError = GitResponseError;
+//# sourceMappingURL=git-response-error.js.map
 
 /***/ }),
 
-/***/ 57:
+/***/ 143:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const task_1 = __webpack_require__(901);
+function addSubModuleTask(repo, path) {
+    return subModuleTask(['add', repo, path]);
+}
+exports.addSubModuleTask = addSubModuleTask;
+function initSubModuleTask(customArgs) {
+    return subModuleTask(['init', ...customArgs]);
+}
+exports.initSubModuleTask = initSubModuleTask;
+function subModuleTask(customArgs) {
+    const commands = [...customArgs];
+    if (commands[0] !== 'submodule') {
+        commands.unshift('submodule');
+    }
+    return task_1.straightThroughStringTask(commands);
+}
+exports.subModuleTask = subModuleTask;
+function updateSubModuleTask(customArgs) {
+    return subModuleTask(['update', ...customArgs]);
+}
+exports.updateSubModuleTask = updateSubModuleTask;
+//# sourceMappingURL=sub-module.js.map
+
+/***/ }),
+
+/***/ 144:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * Known process exit codes used by the task parsers to determine whether an error
+ * was one they can automatically handle
+ */
+var ExitCodes;
+(function (ExitCodes) {
+    ExitCodes[ExitCodes["SUCCESS"] = 0] = "SUCCESS";
+    ExitCodes[ExitCodes["ERROR"] = 1] = "ERROR";
+})(ExitCodes = exports.ExitCodes || (exports.ExitCodes = {}));
+//# sourceMappingURL=exit-codes.js.map
+
+/***/ }),
+
+/***/ 152:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+function __export(m) {
+    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
+}
+Object.defineProperty(exports, "__esModule", { value: true });
+__export(__webpack_require__(162));
+__export(__webpack_require__(144));
+__export(__webpack_require__(776));
+//# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ 162:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+function filterType(input, ...filters) {
+    return filters.some((filter) => filter(input)) ? input : undefined;
+}
+exports.filterType = filterType;
+exports.filterArray = (input) => {
+    return Array.isArray(input);
+};
+exports.filterPrimitives = (input) => {
+    return /number|string|boolean/.test(typeof input);
+};
+exports.filterString = (input) => {
+    return typeof input === 'string';
+};
+exports.filterPlainObject = (input) => {
+    return !!input && Object.prototype.toString.call(input) === '[object Object]';
+};
+exports.filterFunction = (input) => {
+    return typeof input === 'function';
+};
+//# sourceMappingURL=argument-filters.js.map
+
+/***/ }),
+
+/***/ 167:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const api_1 = __webpack_require__(749);
+const utils_1 = __webpack_require__(152);
+function taskCallback(task, response, callback = utils_1.NOOP) {
+    const onSuccess = (data) => {
+        callback(null, data);
+    };
+    const onError = (err) => {
+        if ((err === null || err === void 0 ? void 0 : err.task) === task) {
+            if (err instanceof api_1.GitResponseError) {
+                return callback(addDeprecationNoticeToError(err));
+            }
+            callback(err);
+        }
+    };
+    response.then(onSuccess, onError);
+}
+exports.taskCallback = taskCallback;
+function addDeprecationNoticeToError(err) {
+    let log = (name) => {
+        console.warn(`simple-git deprecation notice: accessing GitResponseError.${name} should be GitResponseError.git.${name}`);
+        log = utils_1.NOOP;
+    };
+    return Object.create(err, Object.getOwnPropertyNames(err.git).reduce(descriptorReducer, {}));
+    function descriptorReducer(all, name) {
+        if (name in err) {
+            return all;
+        }
+        all[name] = {
+            enumerable: false,
+            configurable: false,
+            get() {
+                log(name);
+                return err.git[name];
+            },
+        };
+        return all;
+    }
+}
+//# sourceMappingURL=task-callback.js.map
+
+/***/ }),
+
+/***/ 209:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", {value: true});// Copyright 2018-2020 the Deno authors. All rights reserved. MIT license.
+
+// This is a specialised implementation of a System module loader.
+
+// @ts-nocheck
+/* eslint-disable */
+let System, __instantiateAsync, __instantiate;
+
+(() => {
+  const r = new Map();
+
+  System = {
+    register(id, d, f) {
+      r.set(id, { d, f, exp: {} });
+    },
+  };
+
+  async function dI(mid, src) {
+    let id = mid.replace(/\.\w+$/i, "");
+    if (id.includes("./")) {
+      const [o, ...ia] = id.split("/").reverse(),
+        [, ...sa] = src.split("/").reverse(),
+        oa = [o];
+      let s = 0,
+        i;
+      while ((i = ia.shift())) {
+        if (i === "..") s++;
+        else if (i === ".") break;
+        else oa.push(i);
+      }
+      if (s < sa.length) oa.push(...sa.slice(s));
+      id = oa.reverse().join("/");
+    }
+    return r.has(id) ? gExpA(id) : Promise.resolve().then(() => require(mid));
+  }
+
+  function gC(id, main) {
+    return {
+      id,
+      import: (m) => dI(m, id),
+      meta: { url: id, main },
+    };
+  }
+
+  function gE(exp) {
+    return (id, v) => {
+      v = typeof id === "string" ? { [id]: v } : id;
+      for (const [id, value] of Object.entries(v)) {
+        Object.defineProperty(exp, id, {
+          value,
+          writable: true,
+          enumerable: true,
+        });
+      }
+    };
+  }
+
+  function rF(main) {
+    for (const [id, m] of r.entries()) {
+      const { f, exp } = m;
+      const { execute: e, setters: s } = f(gE(exp), gC(id, id === main));
+      delete m.f;
+      m.e = e;
+      m.s = s;
+    }
+  }
+
+  async function gExpA(id) {
+    if (!r.has(id)) return;
+    const m = r.get(id);
+    if (m.s) {
+      const { d, e, s } = m;
+      delete m.s;
+      delete m.e;
+      for (let i = 0; i < s.length; i++) s[i](await gExpA(d[i]));
+      const r = e();
+      if (r) await r;
+    }
+    return m.exp;
+  }
+
+  function gExp(id) {
+    if (!r.has(id)) return;
+    const m = r.get(id);
+    if (m.s) {
+      const { d, e, s } = m;
+      delete m.s;
+      delete m.e;
+      for (let i = 0; i < s.length; i++) s[i](gExp(d[i]));
+      e();
+    }
+    return m.exp;
+  }
+
+  __instantiateAsync = async (m) => {
+    System = __instantiateAsync = __instantiate = undefined;
+    rF(m);
+    return gExpA(m);
+  };
+
+  __instantiate = (m) => {
+    System = __instantiateAsync = __instantiate = undefined;
+    rF(m);
+    return gExp(m);
+  };
+})();
+
+System.register("version", [], function (exports_1, context_1) {
+  "use strict";
+  var __moduleName = context_1 && context_1.id;
+  return {
+    setters: [],
+    execute: function () {
+      exports_1("default", "3.0.2");
+    },
+  };
+});
+System.register("mod", ["version"], function (exports_2, context_2) {
+  "use strict";
+  var version_ts_1,
+    DEFAULT_UUID_LENGTH,
+    DIGIT_FIRST_ASCII,
+    DIGIT_LAST_ASCII,
+    ALPHA_LOWER_FIRST_ASCII,
+    ALPHA_LOWER_LAST_ASCII,
+    ALPHA_UPPER_FIRST_ASCII,
+    ALPHA_UPPER_LAST_ASCII,
+    DICT_RANGES,
+    DEFAULT_OPTIONS,
+    ShortUniqueId;
+  var __moduleName = context_2 && context_2.id;
+  return {
+    setters: [
+      function (version_ts_1_1) {
+        version_ts_1 = version_ts_1_1;
+      },
+    ],
+    execute: function () {
+      /**
+             * 6 was chosen as the default UUID length since for most cases
+             * it will be more than aptly suitable to provide millions of UUIDs
+             * with a very low probability of producing a duplicate UUID.
+             *
+             * For example, with a dictionary including digits from 0 to 9,
+             * as well as the alphabet from a to z both in UPPER and lower case,
+             * the probability of generating a duplicate in 1,000,000 rounds
+             * is ~0.00000002, or about 1 in 50,000,000.
+             */
+      DEFAULT_UUID_LENGTH = 6;
+      DIGIT_FIRST_ASCII = 48;
+      DIGIT_LAST_ASCII = 58;
+      ALPHA_LOWER_FIRST_ASCII = 97;
+      ALPHA_LOWER_LAST_ASCII = 123;
+      ALPHA_UPPER_FIRST_ASCII = 65;
+      ALPHA_UPPER_LAST_ASCII = 91;
+      DICT_RANGES = {
+        digits: [DIGIT_FIRST_ASCII, DIGIT_LAST_ASCII],
+        lowerCase: [ALPHA_LOWER_FIRST_ASCII, ALPHA_LOWER_LAST_ASCII],
+        upperCase: [ALPHA_UPPER_FIRST_ASCII, ALPHA_UPPER_LAST_ASCII],
+      };
+      DEFAULT_OPTIONS = {
+        dictionary: [],
+        shuffle: true,
+        debug: false,
+        length: DEFAULT_UUID_LENGTH,
+      };
+      /**
+             * Generate random or sequential UUID of any length.
+             *
+             * ### Use as module
+             *
+             * ```js
+             * // Deno (web module) Import
+             * import ShortUniqueId from 'https://cdn.jsdelivr.net/npm/short-unique-id@latest/short_uuid/mod.ts';
+             *
+             * // ES6 / TypeScript Import
+             * import ShortUniqueId from 'short-unique-id';
+             *
+             * //or Node.js require
+             * const {default: ShortUniqueId} = require('short-unique-id');
+             *
+             * //Instantiate
+             * const uid = new ShortUniqueId();
+             *
+             * // Random UUID
+             * console.log(uid());
+             *
+             * // Sequential UUID
+             * console.log(uid.seq());
+             * ```
+             *
+             * ### Use in browser
+             *
+             * ```html
+             * <!-- Import -->
+             * <script src="https://cdn.jsdelivr.net/npm/short-unique-id@latest/dist/short-unique-id.min.js"></script>
+             *
+             * <!-- Usage -->
+             * <script>
+             *   // Instantiate
+             *   var uid = new ShortUniqueId();
+             *
+             *   // Random UUID
+             *   document.write(uid());
+             *
+             *   // Sequential UUID
+             *   document.write(uid.seq());
+             * </script>
+             * ```
+             *
+             * ### Options
+             *
+             * Options can be passed when instantiating `uid`:
+             *
+             * ```js
+             * const options = { ... };
+             *
+             * const uid = new ShortUniqueId(options);
+             * ```
+             *
+             * For more information take a look at the [Options type definition](/globals.html#options).
+             */
+      ShortUniqueId = class ShortUniqueId extends Function {
+        /* tslint:enable consistent-return */
+        constructor(argOptions = {}) {
+          super("...args", "return this.randomUUID(...args)");
+          this.dictIndex = 0;
+          this.dictRange = [];
+          this.lowerBound = 0;
+          this.upperBound = 0;
+          this.dictLength = 0;
+          const options = {
+            ...DEFAULT_OPTIONS,
+            ...argOptions,
+          };
+          this.counter = 0;
+          this.debug = false;
+          this.dict = [];
+          this.version = version_ts_1.default;
+          const { dictionary: userDict, shuffle, length } = options;
+          this.uuidLength = length;
+          if (userDict && userDict.length > 1) {
+            this.setDictionary(userDict);
+          } else {
+            let i;
+            this.dictIndex = i = 0;
+            Object.keys(DICT_RANGES).forEach((rangeType) => {
+              const rangeTypeKey = rangeType;
+              this.dictRange = DICT_RANGES[rangeTypeKey];
+              this.lowerBound = this.dictRange[0];
+              this.upperBound = this.dictRange[1];
+              for (
+                this.dictIndex = i = this.lowerBound;
+                this.lowerBound <= this.upperBound
+                  ? i < this.upperBound
+                  : i > this.upperBound;
+                this.dictIndex = this.lowerBound <= this.upperBound
+                  ? i += 1
+                  : i -= 1
+              ) {
+                this.dict.push(String.fromCharCode(this.dictIndex));
+              }
+            });
+          }
+          if (shuffle) {
+            // Shuffle Dictionary for removing selection bias.
+            const PROBABILITY = 0.5;
+            this.setDictionary(
+              this.dict.sort(() => Math.random() - PROBABILITY),
+            );
+          } else {
+            this.setDictionary(this.dict);
+          }
+          this.debug = options.debug;
+          this.log(this.dict);
+          this.log(
+            (`Generator instantiated with Dictionary Size ${this.dictLength}`),
+          );
+          const instance = this.bind(this);
+          Object.getOwnPropertyNames(this).forEach((prop) => {
+            if (!(/arguments|caller|callee|length|name|prototype/).test(prop)) {
+              const propKey = prop;
+              instance[prop] = this[propKey];
+            }
+          });
+          return instance;
+        }
+        /* tslint:disable consistent-return */
+        log(...args) {
+          const finalArgs = [...args];
+          finalArgs[0] = `[short-unique-id] ${args[0]}`;
+          /* tslint:disable no-console */
+          if (this.debug === true) {
+            if (typeof console !== "undefined" && console !== null) {
+              return console.log(...finalArgs);
+            }
+          }
+          /* tslint:enable no-console */
+        }
+        /** Change the dictionary after initialization. */
+        setDictionary(dictionary) {
+          this.dict = dictionary;
+          // Cache Dictionary Length for future usage.
+          this.dictLength = this.dict.length; // Resets internal counter.
+          this.counter = 0;
+        }
+        seq() {
+          return this.sequentialUUID();
+        }
+        /**
+                 * Generates UUID based on internal counter that's incremented after each ID generation.
+                 * @alias `const uid = new ShortUniqueId(); uid.seq();`
+                 */
+        sequentialUUID() {
+          let counterDiv;
+          let counterRem;
+          let id = "";
+          counterDiv = this.counter;
+          /* tslint:disable no-constant-condition */
+          while (true) {
+            counterRem = counterDiv % this.dictLength;
+            counterDiv = Math.trunc(counterDiv / this.dictLength);
+            id += this.dict[counterRem];
+            if (counterDiv === 0) {
+              break;
+            }
+          }
+          /* tslint:enable no-constant-condition */
+          this.counter += 1;
+          return id;
+        }
+        /**
+                 * Generates UUID by creating each part randomly.
+                 * @alias `const uid = new ShortUniqueId(); uid(uuidLength: number);`
+                 */
+        randomUUID(uuidLength = this.uuidLength || DEFAULT_UUID_LENGTH) {
+          let id;
+          let randomPartIdx;
+          let j;
+          let idIndex;
+          if (
+            (uuidLength === null || typeof uuidLength === "undefined") ||
+            uuidLength < 1
+          ) {
+            throw new Error("Invalid UUID Length Provided");
+          }
+          // Generate random ID parts from Dictionary.
+          id = "";
+          for (
+            idIndex = j = 0;
+            0 <= uuidLength ? j < uuidLength : j > uuidLength;
+            idIndex = 0 <= uuidLength ? j += 1 : j -= 1
+          ) {
+            randomPartIdx =
+              parseInt((Math.random() * this.dictLength).toFixed(0), 10) %
+              this.dictLength;
+            id += this.dict[randomPartIdx];
+          }
+          // Return random generated ID.
+          return id;
+        }
+        /**
+                 * Calculates total number of possible UUIDs.
+                 *
+                 * Given that:
+                 *
+                 * - `H` is the total number of possible UUIDs
+                 * - `n` is the number of unique characters in the dictionary
+                 * - `l` is the UUID length
+                 *
+                 * Then `H` is defined as `n` to the power of `l`:
+                 *
+                 * ![](https://render.githubusercontent.com/render/math?math=%5CHuge%20H=n%5El)
+                 *
+                 * This function returns `H`.
+                 */
+        availableUUIDs(uuidLength = this.uuidLength) {
+          return parseFloat(
+            Math.pow([...new Set(this.dict)].length, uuidLength).toFixed(0),
+          );
+        }
+        /**
+                 * Calculates approximate number of hashes before first collision.
+                 *
+                 * Given that:
+                 *
+                 * - `H` is the total number of possible UUIDs, or in terms of this library,
+                 * the result of running `availableUUIDs()`
+                 * - the expected number of values we have to choose before finding the
+                 * first collision can be expressed as the quantity `Q(H)`
+                 *
+                 * Then `Q(H)` can be approximated as the square root of the of the product
+                 * of half of pi times `H`:
+                 *
+                 * ![](https://render.githubusercontent.com/render/math?math=%5CHuge%20Q(H)%5Capprox%5Csqrt%7B%5Cfrac%7B%5Cpi%7D%7B2%7DH%7D)
+                 *
+                 * This function returns `Q(H)`.
+                 */
+        approxMaxBeforeCollision(
+          rounds = this.availableUUIDs(this.uuidLength),
+        ) {
+          return parseFloat(Math.sqrt((Math.PI / 2) * rounds).toFixed(20));
+        }
+        /**
+                 * Calculates probability of generating duplicate UUIDs (a collision) in a
+                 * given number of UUID generation rounds.
+                 *
+                 * Given that:
+                 *
+                 * - `r` is the maximum number of times that `randomUUID()` will be called,
+                 * or better said the number of _rounds_
+                 * - `H` is the total number of possible UUIDs, or in terms of this library,
+                 * the result of running `availableUUIDs()`
+                 *
+                 * Then the probability of collision `p(r; H)` can be approximated as the result
+                 * of dividing the square root of the of the product of half of pi times `H` by `H`:
+                 *
+                 * ![](https://render.githubusercontent.com/render/math?math=%5CHuge%20p(r%3B%20H)%5Capprox%5Cfrac%7B%5Csqrt%7B%5Cfrac%7B%5Cpi%7D%7B2%7Dr%7D%7D%7BH%7D)
+                 *
+                 * This function returns `p(r; H)`.
+                 *
+                 * (Useful if you are wondering _"If I use this lib and expect to perform at most
+                 * `r` rounds of UUID generations, what is the probability that I will hit a duplicate UUID?"_.)
+                 */
+        collisionProbability(
+          rounds = this.availableUUIDs(this.uuidLength),
+          uuidLength = this.uuidLength,
+        ) {
+          return parseFloat(
+            (this.approxMaxBeforeCollision(rounds) /
+              this.availableUUIDs(uuidLength)).toFixed(20),
+          );
+        }
+        /**
+                 * Calculate a "uniqueness" score (from 0 to 1) of UUIDs based on size of
+                 * dictionary and chosen UUID length.
+                 *
+                 * Given that:
+                 *
+                 * - `H` is the total number of possible UUIDs, or in terms of this library,
+                 * the result of running `availableUUIDs()`
+                 * - `Q(H)` is the approximate number of hashes before first collision,
+                 * or in terms of this library, the result of running `approxMaxBeforeCollision()`
+                 *
+                 * Then `uniqueness` can be expressed as the additive inverse of the probability of
+                 * generating a "word" I had previously generated (a duplicate) at any given iteration
+                 * up to the the total number of possible UUIDs expressed as the quotiend of `Q(H)` and `H`:
+                 *
+                 * ![](https://render.githubusercontent.com/render/math?math=%5CHuge%201-%5Cfrac%7BQ(H)%7D%7BH%7D)
+                 *
+                 * (Useful if you need a value to rate the "quality" of the combination of given dictionary
+                 * and UUID length. The closer to 1, higher the uniqueness and thus better the quality.)
+                 */
+        uniqueness(rounds = this.availableUUIDs(this.uuidLength)) {
+          const score = parseFloat(
+            (1 - (this.approxMaxBeforeCollision(rounds) / rounds)).toFixed(20),
+          );
+          return (score > 1) ? (1) : ((score < 0) ? 0 : score);
+        }
+        /**
+                 * Return the version of this module.
+                 */
+        getVersion() {
+          return this.version;
+        }
+      };
+      exports_2("default", ShortUniqueId);
+    },
+  };
+});
+
+const __exp = __instantiate("mod");
+exports. default = __exp["default"];
+
+
+/***/ }),
+
+/***/ 213:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * The `GitError` is thrown when the underlying `git` process throws a
+ * fatal exception (eg an `ENOENT` exception when attempting to use a
+ * non-writable directory as the root for your repo), and acts as the
+ * base class for more specific errors thrown by the parsing of the
+ * git response or errors in the configuration of the task about to
+ * be run.
+ *
+ * When an exception is thrown, pending tasks in the same instance will
+ * not be executed. The recommended way to run a series of tasks that
+ * can independently fail without needing to prevent future tasks from
+ * running is to catch them individually:
+ *
+ * ```typescript
+ import { gitP, SimpleGit, GitError, PullResult } from 'simple-git';
+
+ function catchTask (e: GitError) {
+   return e.
+ }
+
+ const git = gitP(repoWorkingDir);
+ const pulled: PullResult | GitError = await git.pull().catch(catchTask);
+ const pushed: string | GitError = await git.pushTags().catch(catchTask);
+ ```
+ */
+class GitError extends Error {
+    constructor(task, message) {
+        super(message);
+        this.task = task;
+        Object.setPrototypeOf(this, new.target.prototype);
+    }
+}
+exports.GitError = GitError;
+//# sourceMappingURL=git-error.js.map
+
+/***/ }),
+
+/***/ 247:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 
-const {gitExportFactory} = __webpack_require__(367);
-const {gitP} = __webpack_require__(223);
+module.exports = ListLogSummary;
 
-module.exports = gitExportFactory(gitP);
+var DiffSummary = __webpack_require__(51);
+
+/**
+ * The ListLogSummary is returned as a response to getting `git().log()` or `git().stashList()`
+ *
+ * @constructor
+ */
+function ListLogSummary (all) {
+   this.all = all;
+   this.latest = all.length && all[0] || null;
+   this.total = all.length;
+}
+
+/**
+ * Detail for each of the log lines
+ * @type {ListLogLine[]}
+ */
+ListLogSummary.prototype.all = null;
+
+/**
+ * Most recent entry in the log
+ * @type {ListLogLine}
+ */
+ListLogSummary.prototype.latest = null;
+
+/**
+ * Number of items in the log
+ * @type {number}
+ */
+ListLogSummary.prototype.total = 0;
+
+function ListLogLine (line, fields) {
+   for (var k = 0; k < fields.length; k++) {
+      this[fields[k]] = line[k] || '';
+   }
+}
+
+/**
+ * When the log was generated with a summary, the `diff` property contains as much detail
+ * as was provided in the log (whether generated with `--stat` or `--shortstat`.
+ * @type {DiffSummary}
+ */
+ListLogLine.prototype.diff = null;
+
+ListLogSummary.START_BOUNDARY = 'òòòòòò ';
+
+ListLogSummary.COMMIT_BOUNDARY = ' òò';
+
+ListLogSummary.SPLITTER = ' ò ';
+
+ListLogSummary.parse = function (text, splitter, fields) {
+   fields = fields || ['hash', 'date', 'message', 'refs', 'author_name', 'author_email'];
+   return new ListLogSummary(
+      text
+         .trim()
+         .split(ListLogSummary.START_BOUNDARY)
+         .filter(function(item) { return !!item.trim(); })
+         .map(function (item) {
+            var lineDetail = item.trim().split(ListLogSummary.COMMIT_BOUNDARY);
+            var listLogLine = new ListLogLine(lineDetail[0].trim().split(splitter), fields);
+
+            if (lineDetail.length > 1 && !!lineDetail[1].trim()) {
+               listLogLine.diff = DiffSummary.parse(lineDetail[1]);
+            }
+
+            return listLogLine;
+         })
+   );
+};
 
 
 /***/ }),
 
-/***/ 60:
+/***/ 292:
+/***/ (function(module) {
+
+"use strict";
+
+
+function FetchSummary (raw) {
+   this.raw = raw;
+
+   this.remote = null;
+   this.branches = [];
+   this.tags = [];
+}
+
+FetchSummary.parsers = [
+   [
+      /From (.+)$/, function (fetchSummary, matches) {
+         fetchSummary.remote = matches[0];
+      }
+   ],
+   [
+      /\* \[new branch\]\s+(\S+)\s*\-> (.+)$/, function (fetchSummary, matches) {
+         fetchSummary.branches.push({
+            name: matches[0],
+            tracking: matches[1]
+         });
+      }
+   ],
+   [
+      /\* \[new tag\]\s+(\S+)\s*\-> (.+)$/, function (fetchSummary, matches) {
+         fetchSummary.tags.push({
+            name: matches[0],
+            tracking: matches[1]
+         });
+      }
+   ]
+];
+
+FetchSummary.parse = function (data) {
+   var fetchSummary = new FetchSummary(data);
+
+   String(data)
+      .trim()
+      .split('\n')
+      .forEach(function (line) {
+         var original = line.trim();
+         FetchSummary.parsers.some(function (parser) {
+            var parsed = parser[0].exec(original);
+            if (parsed) {
+               parser[1](fetchSummary, parsed.slice(1));
+               return true;
+            }
+         });
+      });
+
+   return fetchSummary;
+};
+
+module.exports = FetchSummary;
+
+
+/***/ }),
+
+/***/ 293:
+/***/ (function(module) {
+
+module.exports = require("buffer");
+
+/***/ }),
+
+/***/ 303:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const child_process = __webpack_require__(129);
+const cli_table_2_json_1 = __webpack_require__(370);
+const nodeify_ts_1 = __webpack_require__(895);
+const os = __webpack_require__(87);
+const exec = child_process.exec;
+const extractResult = function (result) {
+    const extracterArray = [
+        {
+            re: / ls /,
+            run(resultp) {
+                const obj = JSON.parse(resultp.raw);
+                const lines = obj.split(os.EOL);
+                resultp.machineList = cli_table_2_json_1.cliTable2Json(lines);
+                return resultp;
+            },
+        },
+        {
+            re: / config /,
+            run(resultp) {
+                const obj = JSON.parse(resultp.raw);
+                const str = obj;
+                const config = str.split(os.EOL).join(" ");
+                const extractValue = function (strp, name, rep) {
+                    const re = rep || new RegExp("--" + name + '="([\\S]*)"', "i");
+                    const m = re.exec(strp);
+                    if (m !== null) {
+                        if (m.index === re.lastIndex) {
+                            re.lastIndex++;
+                        }
+                    }
+                    return (m && m[1]) ? m[1] : null;
+                };
+                resultp.machine = {
+                    config,
+                    host: extractValue(str, null, /-H=tcp:\/\/(.*):/),
+                    port: extractValue(str, null, /-H=tcp:\/\/.*:(\d*)/),
+                    tlscacert: extractValue(str, "tlscacert"),
+                    tlscert: extractValue(str, "tlscert"),
+                    tlskey: extractValue(str, "tlskey"),
+                    tlsverify: function (strp) {
+                        const re = /--tlsverify/;
+                        const m = re.exec(strp);
+                        if (m !== null) {
+                            if (m.index === re.lastIndex) {
+                                re.lastIndex++;
+                            }
+                        }
+                        return (m && m[0] && m[0] === "--tlsverify") || false;
+                    }(str),
+                };
+                return resultp;
+            },
+        },
+        {
+            re: / inspect /,
+            run(resultp) {
+                try {
+                    const obj = JSON.parse(resultp.raw);
+                    resultp.machine = JSON.parse(obj);
+                }
+                catch (e) {
+                }
+                return resultp;
+            },
+        },
+    ];
+    extracterArray.forEach(function (extracter) {
+        const re = extracter.re;
+        const str = result.command;
+        const m = re.exec(str);
+        if (m !== null) {
+            if (m.index === re.lastIndex) {
+                re.lastIndex++;
+            }
+            return extracter.run(result);
+        }
+    });
+    return result;
+};
+class DockerMachine {
+    constructor(options = new Options()) {
+        this.options = options;
+    }
+    command(command, callback) {
+        const dockerMachine = this;
+        let execCommand = "docker-machine " + command;
+        const promise = Promise.resolve().then(function () {
+            const params = dockerMachine.options.toParams();
+            execCommand += " " + params;
+            const execOptions = {
+                cwd: dockerMachine.options.currentWorkingDirectory,
+                env: {
+                    DEBUG: "",
+                    HOME: process.env.HOME,
+                    PATH: process.env.PATH,
+                },
+                maxBuffer: 200 * 1024 * 1024,
+            };
+            return new Promise(function (resolve, reject) {
+                exec(execCommand, execOptions, (error, stdout, stderr) => {
+                    if (error) {
+                        const message = `error: '${error}' stdout = '${stdout}' stderr = '${stderr}'`;
+                        console.error(message);
+                        reject(message);
+                    }
+                    resolve(stdout);
+                });
+            });
+        }).then(function (data) {
+            const result = {
+                command: execCommand,
+                raw: JSON.stringify(data),
+            };
+            return extractResult(result);
+        });
+        return nodeify_ts_1.default(promise, callback);
+    }
+}
+exports.DockerMachine = DockerMachine;
+class Options {
+    constructor(keyValueObject = {}, currentWorkingDirectory = null) {
+        this.keyValueObject = keyValueObject;
+        this.currentWorkingDirectory = currentWorkingDirectory;
+    }
+    toParams() {
+        const result = Object.keys(this.keyValueObject).reduce((previous, key) => {
+            const value = this.keyValueObject[key];
+            return `${previous} --${key} ${value}`;
+        }, "");
+        return result;
+    }
+}
+exports.Options = Options;
+//# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ 307:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const child_process_1 = __webpack_require__(129);
-const git_error_1 = __webpack_require__(574);
-const task_1 = __webpack_require__(894);
-class GitExecutor {
-    constructor(binary = 'git', cwd, env, outputHandler) {
-        this.binary = binary;
-        this.cwd = cwd;
-        this.env = env;
-        this.outputHandler = outputHandler;
-        this._chain = Promise.resolve();
+const child_process = __webpack_require__(129);
+const cli_table_2_json_1 = __webpack_require__(370);
+const dockermachine_cli_js_1 = __webpack_require__(303);
+//import * as _ from "lodash";
+const snakeCase = __webpack_require__(556);
+const nodeify_ts_1 = __webpack_require__(895);
+const exec = child_process.exec;
+const splitLines = function (input) {
+    return input.replace(/\r/g, "").split("\n");
+};
+const array2Oject = function (lines) {
+    return lines.reduce(function (object, linep) {
+        const line = linep.trim();
+        if (line.length === 0) {
+            return object;
+        }
+        const parts = line.split(":");
+        let key = parts[0];
+        const value = parts.slice(1).join(":");
+        key = snakeCase(key);
+        object[key] = value.trim();
+        return object;
+    }, {});
+};
+const extractResult = function (result) {
+    const extracterArray = [
+        {
+            re: / build /,
+            run(resultp) {
+                const lines = splitLines(resultp.raw);
+                lines.forEach(function (line) {
+                    const re = /Successfully built (.*)$/;
+                    const str = line;
+                    const m = re.exec(str);
+                    if (m !== null) {
+                        if (m.index === re.lastIndex) {
+                            re.lastIndex++;
+                        }
+                        // View your result using the m-variable.
+                        // eg m[0] etc.
+                        resultp.success = true;
+                        resultp.imageId = m[1];
+                    }
+                });
+                resultp.response = lines;
+                return resultp;
+            },
+        },
+        {
+            re: / run /,
+            run(resultp) {
+                resultp.containerId = resultp.raw.trim();
+                return resultp;
+            },
+        },
+        {
+            re: / ps /,
+            run(resultp) {
+                const lines = splitLines(resultp.raw);
+                resultp.containerList = cli_table_2_json_1.cliTable2Json(lines);
+                return resultp;
+            },
+        },
+        {
+            re: / images /,
+            run(resultp) {
+                const lines = splitLines(resultp.raw);
+                //const debug = require('debug')('docker-cli-js:lib/index.js extractResult images');
+                //debug(lines);
+                resultp.images = cli_table_2_json_1.cliTable2Json(lines);
+                return resultp;
+            },
+        },
+        {
+            re: / network ls /,
+            run(resultp) {
+                const lines = splitLines(resultp.raw);
+                //const debug = require('debug')('docker-cli-js:lib/index.js extractResult images');
+                //debug(lines);
+                resultp.network = cli_table_2_json_1.cliTable2Json(lines);
+                return resultp;
+            },
+        },
+        {
+            re: / inspect /,
+            run(resultp) {
+                const object = JSON.parse(resultp.raw);
+                resultp.object = object;
+                return resultp;
+            },
+        },
+        {
+            re: / info /,
+            run(resultp) {
+                const lines = splitLines(resultp.raw);
+                resultp.object = array2Oject(lines);
+                return resultp;
+            },
+        },
+        {
+            re: / search /,
+            run(resultp) {
+                const lines = splitLines(resultp.raw);
+                resultp.images = cli_table_2_json_1.cliTable2Json(lines);
+                return resultp;
+            },
+        },
+        {
+            re: / login /,
+            run(resultp) {
+                resultp.login = resultp.raw.trim();
+                return resultp;
+            },
+        },
+        {
+            re: / pull /,
+            run(resultp) {
+                resultp.login = resultp.raw.trim();
+                return resultp;
+            },
+        },
+        {
+            re: / push /,
+            run(resultp) {
+                resultp.login = resultp.raw.trim();
+                return resultp;
+            },
+        },
+    ];
+    extracterArray.forEach(function (extracter) {
+        const re = extracter.re;
+        const str = result.command;
+        const m = re.exec(str + " ");
+        if (m !== null) {
+            if (m.index === re.lastIndex) {
+                re.lastIndex++;
+            }
+            // View your result using the m-constiable.
+            // eg m[0] etc.
+            return extracter.run(result);
+        }
+    });
+    return result;
+};
+exports.dockerCommand = (command, options = {
+    currentWorkingDirectory: undefined,
+    echo: true,
+    machineName: undefined,
+}) => __awaiter(this, void 0, void 0, function* () {
+    let machineconfig = "";
+    if (options.machineName) {
+        machineconfig = yield new dockermachine_cli_js_1.DockerMachine()
+            .command(`config ${options.machineName}`)
+            .then((data) => data.machine.config);
     }
-    push(task) {
-        return this._chain = this._chain.then(() => __awaiter(this, void 0, void 0, function* () {
-            try {
-                if (task_1.isEmptyTask(task)) {
-                    return task.parser('');
-                }
-                const raw = yield this.gitResponse(this.binary, task.commands, this.outputHandler);
-                const data = yield this.handleTaskData(task, raw);
-                return task_1.isBufferTask(task) ? task.parser(data) : task.parser(data.toString(task.format));
+    const execCommand = `docker ${machineconfig} ${command}`;
+    const execOptions = {
+        cwd: options.currentWorkingDirectory,
+        env: {
+            DEBUG: "",
+            HOME: process.env.HOME,
+            PATH: process.env.PATH,
+        },
+        maxBuffer: 200 * 1024 * 1024,
+    };
+    const raw = yield new Promise((resolve, reject) => {
+        const childProcess = exec(execCommand, execOptions, (error, stdout, stderr) => {
+            if (error) {
+                return reject(Object.assign(new Error(`Error: stdout ${stdout}, stderr ${stderr}`), Object.assign({}, error, { stdout, stderr, innerError: error })));
             }
-            catch (e) {
-                this._chain = Promise.resolve();
-                if (e instanceof git_error_1.GitError) {
-                    e.task = task;
-                    throw e;
-                }
-                throw new git_error_1.GitError(task, e && String(e));
-            }
-        }));
-    }
-    handleTaskData({ onError, concatStdErr }, { exitCode, stdOut, stdErr }) {
-        return new Promise((done, fail) => {
-            if (exitCode && stdErr.length && onError) {
-                return onError(exitCode, Buffer.concat([...(concatStdErr ? stdOut : []), ...stdErr]).toString('utf-8'), (result) => {
-                    done(Buffer.from(Buffer.isBuffer(result) ? result : String(result)));
-                }, fail);
-            }
-            if (exitCode && stdErr.length) {
-                return fail(Buffer.concat(stdErr).toString('utf-8'));
-            }
-            if (concatStdErr) {
-                stdOut.push(...stdErr);
-            }
-            done(Buffer.concat(stdOut));
+            resolve(stdout);
         });
-    }
-    gitResponse(command, args, outputHandler) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const spawnOptions = {
-                cwd: this.cwd,
-                env: this.env,
-                windowsHide: true,
-            };
-            return new Promise((done) => {
-                const stdOut = [];
-                const stdErr = [];
-                let attempted = false;
-                function attemptClose(exitCode) {
-                    // closing when there is content, terminate immediately
-                    if (attempted || stdErr.length || stdOut.length) {
-                        done({
-                            stdOut,
-                            stdErr,
-                            exitCode,
-                        });
-                        attempted = true;
-                    }
-                    // first attempt at closing but no content yet, wait briefly for the close/exit that may follow
-                    if (!attempted) {
-                        attempted = true;
-                        setTimeout(() => attemptClose(exitCode), 50);
-                    }
-                }
-                const spawned = child_process_1.spawn(command, args, spawnOptions);
-                spawned.stdout.on('data', (buffer) => stdOut.push(buffer));
-                spawned.stderr.on('data', (buffer) => stdErr.push(buffer));
-                spawned.on('error', (err) => stdErr.push(Buffer.from(String(err.stack), 'ascii')));
-                spawned.on('close', (code) => attemptClose(code));
-                spawned.on('exit', attemptClose);
-                if (outputHandler) {
-                    outputHandler(command[0], spawned.stdout, spawned.stderr);
-                }
+        if (options.echo) {
+            childProcess.stdout.on("data", (chunk) => {
+                process.stdout.write(chunk.toString());
             });
-        });
+            childProcess.stderr.on("data", (chunk) => {
+                process.stderr.write(chunk.toString());
+            });
+        }
+    });
+    return extractResult({
+        command: execCommand,
+        raw,
+    });
+});
+class Docker {
+    constructor(options = {
+        currentWorkingDirectory: undefined,
+        echo: true,
+        machineName: undefined,
+    }) {
+        this.options = options;
+    }
+    command(command, callback) {
+        return nodeify_ts_1.default(exports.dockerCommand(command, this.options), callback);
     }
 }
-exports.GitExecutor = GitExecutor;
-//# sourceMappingURL=git-executor.js.map
+exports.Docker = Docker;
+class Options {
+    constructor(machineName, currentWorkingDirectory, echo = true) {
+        this.machineName = machineName;
+        this.currentWorkingDirectory = currentWorkingDirectory;
+        this.echo = echo;
+    }
+}
+exports.Options = Options;
+
 
 /***/ }),
 
-/***/ 71:
+/***/ 327:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+/**
+ * @fileoverview Extend node util module
+ * @author douzi <liaowei08@gmail.com> 
+ */
+var util = __webpack_require__(669);
+var toString = Object.prototype.toString;
+var isWindows = process.platform === 'win32';
+
+function isObject(value) {
+  return toString.call(value) === '[object Object]';
+}
+
+// And type check method: isFunction, isString, isNumber, isDate, isRegExp, isObject
+['Function', 'String', 'Number', 'Date', 'RegExp'].forEach(function(item) {
+  exports['is' + item]  = function(value) {
+    return toString.call(value) === '[object ' + item + ']';
+  };
+});
+
+/**
+ * @description
+ * Deep extend
+ * @example
+ * extend({ key: { k1: 'v1'} }, { key: { k2: 'v2' }, none: { k: 'v' } });
+ * extend({ arr: [] }, { arr: [ {}, {} ] });
+ */
+function extend(target, source) {
+  var value;
+
+  for (var key in source) {
+    value = source[key];
+
+    if (Array.isArray(value)) {
+      if (!Array.isArray(target[key])) {
+        target[key] = [];
+      }
+
+      extend(target[key], value);
+    } else if (isObject(value)) {
+      if (!isObject(target[key])) {
+        target[key]  = {};
+      }
+
+      extend(target[key], value);
+    } else {
+      target[key] = value;
+    }
+  }
+
+  return target;
+}
+
+extend(exports, util);
+
+// fixed util.isObject 
+exports.isObject = isObject;
+
+exports.extend = function() {
+  var args = Array.prototype.slice.call(arguments, 0);
+  var target = args.shift();
+
+  args.forEach(function(item) {
+    extend(target, item);
+  });
+
+  return target;
+};
+
+exports.isArray = Array.isArray;
+
+exports.isUndefined = function(value) {
+  return typeof value == 'undefined';
+};
+
+exports.noop = function() {};
+
+exports.unique = function(array) {
+  var result = [];
+
+  array.forEach(function(item) {
+    if (result.indexOf(item) == -1) {
+      result.push(item);
+    }
+  });
+
+  return result;
+};
+
+exports.escape = function(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+};
+
+exports.unescape = function(value) {
+  return String(value)
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+};
+
+exports.hrtime = function(time) {
+  if (time) {
+    var spend = process.hrtime(time);
+    
+    spend = (spend[0] + spend[1] / 1e9) * 1000 + 'ms';
+
+    return spend;
+  } else {
+    return process.hrtime();
+  }
+};
+
+/**
+ * @description
+ * Return a copy of the object with list keys
+ * @example
+ * util.pick({ key: 'value' }, 'key', 'key1');
+ * util.pick(obj, function(value, key, object) { });
+ */
+exports.pick = function(obj, iteratee) {
+  var result = {};
+
+  if (exports.isFunction(iteratee)) {
+    for (var key in obj) {
+      var value = obj[key];
+      if (iteratee(value, key, obj)) {
+        result[key] = value;
+      }
+    }
+  } else {
+    var keys = Array.prototype.slice.call(arguments, 1);
+
+    keys.forEach(function(key) {
+      if (key in obj) {
+        result[key] = obj[key];
+      }
+    });
+  }
+
+  return result;
+};
+
+exports.path = {};
+
+if (isWindows) {
+  // Regex to split a windows path into three parts: [*, device, slash,
+  // tail] windows-only
+  var splitDeviceRe =
+      /^([a-zA-Z]:|[\\\/]{2}[^\\\/]+[\\\/]+[^\\\/]+)?([\\\/])?([\s\S]*?)$/;
+
+  exports.path.isAbsolute = function(filepath) {
+    var result = splitDeviceRe.exec(filepath),
+        device = result[1] || '',
+        isUnc = !!device && device.charAt(1) !== ':';
+    // UNC paths are always absolute
+    return !!result[2] || isUnc;
+  };
+
+  // Normalize \\ paths to / paths.
+  exports.path.unixifyPath = function(filepath) {
+    return filepath.replace(/\\/g, '/');
+  };
+
+} else {
+  exports.path.isAbsolute = function(filepath) {
+    return filepath.charAt(0) === '/';
+  };
+
+  exports.path.unixifyPath = function(filepath) {
+    return filepath;
+  };
+}
+
+/***/ }),
+
+/***/ 329:
+/***/ (function(module) {
+
+
+module.exports = MoveSummary;
+
+/**
+ * The MoveSummary is returned as a response to getting `git().status()`
+ *
+ * @constructor
+ */
+function MoveSummary () {
+   this.moves = [];
+   this.sources = {};
+}
+
+MoveSummary.SUMMARY_REGEX = /^Renaming (.+) to (.+)$/;
+
+MoveSummary.parse = function (text) {
+   var lines = text.split('\n');
+   var summary = new MoveSummary();
+
+   for (var i = 0, iMax = lines.length, line; i < iMax; i++) {
+      line = MoveSummary.SUMMARY_REGEX.exec(lines[i].trim());
+
+      if (line) {
+         summary.moves.push({
+            from: line[1],
+            to: line[2]
+         });
+      }
+   }
+
+   return summary;
+};
+
+
+/***/ }),
+
+/***/ 338:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
-const exists = __webpack_require__(265);
-const responses = __webpack_require__(898);
+const exists = __webpack_require__(728);
+const responses = __webpack_require__(583);
 
-const {configurationErrorTask} = __webpack_require__(894);
-const {GitResponseError} = __webpack_require__(752);
-const {NOOP, asFunction, filterArray, filterFunction, filterPlainObject, filterPrimitives, filterString, filterType, isUserFunction} = __webpack_require__(532);
-const {GitExecutor} = __webpack_require__(60);
-const {GitLogger} = __webpack_require__(248);
-const {branchTask, branchLocalTask, deleteBranchesTask, deleteBranchTask} = __webpack_require__(733);
-const {taskCallback} = __webpack_require__(315);
-const {addConfigTask, listConfigTask} = __webpack_require__(312);
-const {cleanWithOptionsTask, isCleanOptionsArray} = __webpack_require__(152);
-const {addRemoteTask, getRemotesTask, listRemotesTask, remoteTask, removeRemoteTask} = __webpack_require__(453);
-const {statusTask} = __webpack_require__(695);
-const {addSubModuleTask, initSubModuleTask, subModuleTask, updateSubModuleTask} = __webpack_require__(587);
-const {addAnnotatedTagTask, addTagTask, tagListTask} = __webpack_require__(151);
-const {parseCheckIgnore} = __webpack_require__(37);
+const {configurationErrorTask} = __webpack_require__(901);
+const {GitResponseError} = __webpack_require__(749);
+const {NOOP, asFunction, filterArray, filterFunction, filterPlainObject, filterPrimitives, filterString, filterType, isUserFunction} = __webpack_require__(152);
+const {GitExecutor} = __webpack_require__(96);
+const {GitLogger} = __webpack_require__(733);
+const {branchTask, branchLocalTask, deleteBranchesTask, deleteBranchTask} = __webpack_require__(932);
+const {taskCallback} = __webpack_require__(167);
+const {addConfigTask, listConfigTask} = __webpack_require__(793);
+const {cleanWithOptionsTask, isCleanOptionsArray} = __webpack_require__(878);
+const {addRemoteTask, getRemotesTask, listRemotesTask, remoteTask, removeRemoteTask} = __webpack_require__(882);
+const {statusTask} = __webpack_require__(708);
+const {addSubModuleTask, initSubModuleTask, subModuleTask, updateSubModuleTask} = __webpack_require__(143);
+const {addAnnotatedTagTask, addTagTask, tagListTask} = __webpack_require__(883);
+const {parseCheckIgnore} = __webpack_require__(750);
 
 /**
  * Git handling for node. All public functions can be chained and all `then` handlers are optional.
@@ -2599,711 +4246,63 @@ function requireResponseHandler (type) {
 
 /***/ }),
 
-/***/ 87:
-/***/ (function(module) {
-
-module.exports = require("os");
-
-/***/ }),
-
-/***/ 104:
-/***/ (function(__unusedmodule, __unusedexports, __webpack_require__) {
-
-const core = __webpack_require__(470);
-const exec = __webpack_require__(986);
-const push = __webpack_require__(447);
-const util = __webpack_require__(702);
-
-async function run() {
-  const service = core.getInput('service');
-  const tag = process.env.GITHUB_RUN_ID;
-  const repoTag = `eu.gcr.io/bw-prod-artifacts/${service}:${tag}`;
-
-  try {
-    core.startGroup("Configuring Docker authentication");
-    await exec.exec('gcloud', ['auth', 'configure-docker', 'eu.gcr.io', '--quiet'], {});
-    core.endGroup();
-
-    core.startGroup(`Building Docker image: ${repoTag}`);
-    await push.buildImage({
-        dockerFile: core.getInput('dockerFile'),
-        contextPath: core.getInput('contextPath'),
-        repoTag,
-    })
-    core.endGroup();
-
-    core.startGroup(`Pushing Docker image: ${repoTag}`);
-    await push.pushImage({
-        repoTag,
-    })
-    core.endGroup();
-
-    core.startGroup("Pushing Slipstream metadata");
-    const data = await push.buildMetadata({
-      event: require(process.env.GITHUB_EVENT_PATH),
-      service: core.getInput('service'),
-      repoTag,
-      labels: core.getInput('labels'),
-    })
-    await push.pushMetadata(data);
-    core.endGroup();
-
-    core.setOutput('imageDigest', util.getImageDigest(data.dockerInspect));
-    core.info('success');
-    core.info(`Run 'slipstream list images -s ${service}' to view service images`);
-
-  } catch ( error ) {
-      core.setFailed(error.message);
-  }
-}
-
-run();
-
-
-/***/ }),
-
-/***/ 129:
-/***/ (function(module) {
-
-module.exports = require("child_process");
-
-/***/ }),
-
-/***/ 151:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const TagList_1 = __webpack_require__(850);
-/**
- * Task used by `git.tags`
- */
-function tagListTask(customArgs = []) {
-    const hasCustomSort = customArgs.some((option) => /^--sort=/.test(option));
-    return {
-        format: 'utf-8',
-        commands: ['tag', '-l', ...customArgs],
-        parser(text) {
-            return TagList_1.parseTagList(text, hasCustomSort);
-        },
-    };
-}
-exports.tagListTask = tagListTask;
-/**
- * Task used by `git.addTag`
- */
-function addTagTask(name) {
-    return {
-        format: 'utf-8',
-        commands: ['tag', name],
-        parser() {
-            return { name };
-        }
-    };
-}
-exports.addTagTask = addTagTask;
-/**
- * Task used by `git.addTag`
- */
-function addAnnotatedTagTask(name, tagMessage) {
-    return {
-        format: 'utf-8',
-        commands: ['tag', '-a', '-m', tagMessage, name],
-        parser() {
-            return { name };
-        }
-    };
-}
-exports.addAnnotatedTagTask = addAnnotatedTagTask;
-//# sourceMappingURL=tag.js.map
-
-/***/ }),
-
-/***/ 152:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const task_1 = __webpack_require__(894);
-const CleanSummary_1 = __webpack_require__(42);
-exports.CONFIG_ERROR_INTERACTIVE_MODE = 'Git clean interactive mode is not supported';
-exports.CONFIG_ERROR_MODE_REQUIRED = 'Git clean mode parameter ("n" or "f") is required';
-exports.CONFIG_ERROR_UNKNOWN_OPTION = 'Git clean unknown option found in: ';
-/**
- * All supported option switches available for use in a `git.clean` operation
- */
-var CleanOptions;
-(function (CleanOptions) {
-    CleanOptions["DRY_RUN"] = "n";
-    CleanOptions["FORCE"] = "f";
-    CleanOptions["IGNORED_INCLUDED"] = "x";
-    CleanOptions["IGNORED_ONLY"] = "X";
-    CleanOptions["EXCLUDING"] = "e";
-    CleanOptions["QUIET"] = "q";
-    CleanOptions["RECURSIVE"] = "d";
-})(CleanOptions = exports.CleanOptions || (exports.CleanOptions = {}));
-const CleanOptionValues = new Set([
-    'i',
-    // CleanOptions.DRY_RUN, CleanOptions.FORCE, CleanOptions.IGNORED_INCLUDED,
-    // CleanOptions.IGNORED_ONLY, CleanOptions.EXCLUDING, CleanOptions.QUIET,
-    // CleanOptions.RECURSIVE,
-    ...Object.values(CleanOptions)
-]);
-function cleanWithOptionsTask(mode, customArgs) {
-    const { cleanMode, options, valid } = getCleanOptions(mode);
-    if (!cleanMode) {
-        return task_1.configurationErrorTask(exports.CONFIG_ERROR_MODE_REQUIRED);
-    }
-    if (!valid.options) {
-        return task_1.configurationErrorTask(exports.CONFIG_ERROR_UNKNOWN_OPTION + JSON.stringify(mode));
-    }
-    options.push(...customArgs);
-    if (options.some(isInteractiveMode)) {
-        return task_1.configurationErrorTask(exports.CONFIG_ERROR_INTERACTIVE_MODE);
-    }
-    return cleanTask(cleanMode, options);
-}
-exports.cleanWithOptionsTask = cleanWithOptionsTask;
-function cleanTask(mode, customArgs) {
-    const commands = ['clean', `-${mode}`, ...customArgs];
-    return {
-        commands,
-        format: 'utf-8',
-        parser(text) {
-            return CleanSummary_1.cleanSummaryParser(mode === CleanOptions.DRY_RUN, text);
-        }
-    };
-}
-exports.cleanTask = cleanTask;
-function isCleanOptionsArray(input) {
-    return Array.isArray(input) && input.every(test => CleanOptionValues.has(test));
-}
-exports.isCleanOptionsArray = isCleanOptionsArray;
-function getCleanOptions(input) {
-    let cleanMode;
-    let options = [];
-    let valid = { cleanMode: false, options: true };
-    input.replace(/[^a-z]i/g, '').split('').forEach(char => {
-        if (isCleanMode(char)) {
-            cleanMode = char;
-            valid.cleanMode = true;
-        }
-        else {
-            valid.options = valid.options && isKnownOption(options[options.length] = (`-${char}`));
-        }
-    });
-    return {
-        cleanMode,
-        options,
-        valid,
-    };
-}
-function isCleanMode(cleanMode) {
-    return cleanMode === CleanOptions.FORCE || cleanMode === CleanOptions.DRY_RUN;
-}
-function isKnownOption(option) {
-    return /^-[a-z]$/i.test(option) && CleanOptionValues.has(option.charAt(1));
-}
-function isInteractiveMode(option) {
-    if (/^-[^\-]/.test(option)) {
-        return option.indexOf('i') > 0;
-    }
-    return option === '--interactive';
-}
-//# sourceMappingURL=clean.js.map
-
-/***/ }),
-
-/***/ 209:
+/***/ 343:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
-Object.defineProperty(exports, "__esModule", {value: true});// Copyright 2018-2020 the Deno authors. All rights reserved. MIT license.
 
-// This is a specialised implementation of a System module loader.
-
-// @ts-nocheck
-/* eslint-disable */
-let System, __instantiateAsync, __instantiate;
-
-(() => {
-  const r = new Map();
-
-  System = {
-    register(id, d, f) {
-      r.set(id, { d, f, exp: {} });
-    },
-  };
-
-  async function dI(mid, src) {
-    let id = mid.replace(/\.\w+$/i, "");
-    if (id.includes("./")) {
-      const [o, ...ia] = id.split("/").reverse(),
-        [, ...sa] = src.split("/").reverse(),
-        oa = [o];
-      let s = 0,
-        i;
-      while ((i = ia.shift())) {
-        if (i === "..") s++;
-        else if (i === ".") break;
-        else oa.push(i);
-      }
-      if (s < sa.length) oa.push(...sa.slice(s));
-      id = oa.reverse().join("/");
+Object.defineProperty(exports, "__esModule", { value: true });
+class BranchSummaryResult {
+    constructor() {
+        this.all = [];
+        this.branches = {};
+        this.current = '';
+        this.detached = false;
     }
-    return r.has(id) ? gExpA(id) : Promise.resolve().then(() => require(mid));
-  }
-
-  function gC(id, main) {
-    return {
-      id,
-      import: (m) => dI(m, id),
-      meta: { url: id, main },
-    };
-  }
-
-  function gE(exp) {
-    return (id, v) => {
-      v = typeof id === "string" ? { [id]: v } : id;
-      for (const [id, value] of Object.entries(v)) {
-        Object.defineProperty(exp, id, {
-          value,
-          writable: true,
-          enumerable: true,
-        });
-      }
-    };
-  }
-
-  function rF(main) {
-    for (const [id, m] of r.entries()) {
-      const { f, exp } = m;
-      const { execute: e, setters: s } = f(gE(exp), gC(id, id === main));
-      delete m.f;
-      m.e = e;
-      m.s = s;
+    push(current, detached, name, commit, label) {
+        if (current) {
+            this.detached = detached;
+            this.current = name;
+        }
+        this.all.push(name);
+        this.branches[name] = {
+            current: current,
+            name: name,
+            commit: commit,
+            label: label
+        };
     }
-  }
-
-  async function gExpA(id) {
-    if (!r.has(id)) return;
-    const m = r.get(id);
-    if (m.s) {
-      const { d, e, s } = m;
-      delete m.s;
-      delete m.e;
-      for (let i = 0; i < s.length; i++) s[i](await gExpA(d[i]));
-      const r = e();
-      if (r) await r;
-    }
-    return m.exp;
-  }
-
-  function gExp(id) {
-    if (!r.has(id)) return;
-    const m = r.get(id);
-    if (m.s) {
-      const { d, e, s } = m;
-      delete m.s;
-      delete m.e;
-      for (let i = 0; i < s.length; i++) s[i](gExp(d[i]));
-      e();
-    }
-    return m.exp;
-  }
-
-  __instantiateAsync = async (m) => {
-    System = __instantiateAsync = __instantiate = undefined;
-    rF(m);
-    return gExpA(m);
-  };
-
-  __instantiate = (m) => {
-    System = __instantiateAsync = __instantiate = undefined;
-    rF(m);
-    return gExp(m);
-  };
-})();
-
-System.register("version", [], function (exports_1, context_1) {
-  "use strict";
-  var __moduleName = context_1 && context_1.id;
-  return {
-    setters: [],
-    execute: function () {
-      exports_1("default", "3.0.2");
-    },
-  };
-});
-System.register("mod", ["version"], function (exports_2, context_2) {
-  "use strict";
-  var version_ts_1,
-    DEFAULT_UUID_LENGTH,
-    DIGIT_FIRST_ASCII,
-    DIGIT_LAST_ASCII,
-    ALPHA_LOWER_FIRST_ASCII,
-    ALPHA_LOWER_LAST_ASCII,
-    ALPHA_UPPER_FIRST_ASCII,
-    ALPHA_UPPER_LAST_ASCII,
-    DICT_RANGES,
-    DEFAULT_OPTIONS,
-    ShortUniqueId;
-  var __moduleName = context_2 && context_2.id;
-  return {
-    setters: [
-      function (version_ts_1_1) {
-        version_ts_1 = version_ts_1_1;
-      },
-    ],
-    execute: function () {
-      /**
-             * 6 was chosen as the default UUID length since for most cases
-             * it will be more than aptly suitable to provide millions of UUIDs
-             * with a very low probability of producing a duplicate UUID.
-             *
-             * For example, with a dictionary including digits from 0 to 9,
-             * as well as the alphabet from a to z both in UPPER and lower case,
-             * the probability of generating a duplicate in 1,000,000 rounds
-             * is ~0.00000002, or about 1 in 50,000,000.
-             */
-      DEFAULT_UUID_LENGTH = 6;
-      DIGIT_FIRST_ASCII = 48;
-      DIGIT_LAST_ASCII = 58;
-      ALPHA_LOWER_FIRST_ASCII = 97;
-      ALPHA_LOWER_LAST_ASCII = 123;
-      ALPHA_UPPER_FIRST_ASCII = 65;
-      ALPHA_UPPER_LAST_ASCII = 91;
-      DICT_RANGES = {
-        digits: [DIGIT_FIRST_ASCII, DIGIT_LAST_ASCII],
-        lowerCase: [ALPHA_LOWER_FIRST_ASCII, ALPHA_LOWER_LAST_ASCII],
-        upperCase: [ALPHA_UPPER_FIRST_ASCII, ALPHA_UPPER_LAST_ASCII],
-      };
-      DEFAULT_OPTIONS = {
-        dictionary: [],
-        shuffle: true,
-        debug: false,
-        length: DEFAULT_UUID_LENGTH,
-      };
-      /**
-             * Generate random or sequential UUID of any length.
-             *
-             * ### Use as module
-             *
-             * ```js
-             * // Deno (web module) Import
-             * import ShortUniqueId from 'https://cdn.jsdelivr.net/npm/short-unique-id@latest/short_uuid/mod.ts';
-             *
-             * // ES6 / TypeScript Import
-             * import ShortUniqueId from 'short-unique-id';
-             *
-             * //or Node.js require
-             * const {default: ShortUniqueId} = require('short-unique-id');
-             *
-             * //Instantiate
-             * const uid = new ShortUniqueId();
-             *
-             * // Random UUID
-             * console.log(uid());
-             *
-             * // Sequential UUID
-             * console.log(uid.seq());
-             * ```
-             *
-             * ### Use in browser
-             *
-             * ```html
-             * <!-- Import -->
-             * <script src="https://cdn.jsdelivr.net/npm/short-unique-id@latest/dist/short-unique-id.min.js"></script>
-             *
-             * <!-- Usage -->
-             * <script>
-             *   // Instantiate
-             *   var uid = new ShortUniqueId();
-             *
-             *   // Random UUID
-             *   document.write(uid());
-             *
-             *   // Sequential UUID
-             *   document.write(uid.seq());
-             * </script>
-             * ```
-             *
-             * ### Options
-             *
-             * Options can be passed when instantiating `uid`:
-             *
-             * ```js
-             * const options = { ... };
-             *
-             * const uid = new ShortUniqueId(options);
-             * ```
-             *
-             * For more information take a look at the [Options type definition](/globals.html#options).
-             */
-      ShortUniqueId = class ShortUniqueId extends Function {
-        /* tslint:enable consistent-return */
-        constructor(argOptions = {}) {
-          super("...args", "return this.randomUUID(...args)");
-          this.dictIndex = 0;
-          this.dictRange = [];
-          this.lowerBound = 0;
-          this.upperBound = 0;
-          this.dictLength = 0;
-          const options = {
-            ...DEFAULT_OPTIONS,
-            ...argOptions,
-          };
-          this.counter = 0;
-          this.debug = false;
-          this.dict = [];
-          this.version = version_ts_1.default;
-          const { dictionary: userDict, shuffle, length } = options;
-          this.uuidLength = length;
-          if (userDict && userDict.length > 1) {
-            this.setDictionary(userDict);
-          } else {
-            let i;
-            this.dictIndex = i = 0;
-            Object.keys(DICT_RANGES).forEach((rangeType) => {
-              const rangeTypeKey = rangeType;
-              this.dictRange = DICT_RANGES[rangeTypeKey];
-              this.lowerBound = this.dictRange[0];
-              this.upperBound = this.dictRange[1];
-              for (
-                this.dictIndex = i = this.lowerBound;
-                this.lowerBound <= this.upperBound
-                  ? i < this.upperBound
-                  : i > this.upperBound;
-                this.dictIndex = this.lowerBound <= this.upperBound
-                  ? i += 1
-                  : i -= 1
-              ) {
-                this.dict.push(String.fromCharCode(this.dictIndex));
-              }
-            });
-          }
-          if (shuffle) {
-            // Shuffle Dictionary for removing selection bias.
-            const PROBABILITY = 0.5;
-            this.setDictionary(
-              this.dict.sort(() => Math.random() - PROBABILITY),
-            );
-          } else {
-            this.setDictionary(this.dict);
-          }
-          this.debug = options.debug;
-          this.log(this.dict);
-          this.log(
-            (`Generator instantiated with Dictionary Size ${this.dictLength}`),
-          );
-          const instance = this.bind(this);
-          Object.getOwnPropertyNames(this).forEach((prop) => {
-            if (!(/arguments|caller|callee|length|name|prototype/).test(prop)) {
-              const propKey = prop;
-              instance[prop] = this[propKey];
-            }
-          });
-          return instance;
+}
+exports.BranchSummaryResult = BranchSummaryResult;
+exports.detachedRegex = /^(\*?\s+)\((?:HEAD )?detached (?:from|at) (\S+)\)\s+([a-z0-9]+)\s(.*)$/;
+exports.branchRegex = /^(\*?\s+)(\S+)\s+([a-z0-9]+)\s(.*)$/;
+exports.parseBranchSummary = function (commit) {
+    const branchSummary = new BranchSummaryResult();
+    commit.split('\n')
+        .forEach(function (line) {
+        let detached = true;
+        let branch = exports.detachedRegex.exec(line);
+        if (!branch) {
+            detached = false;
+            branch = exports.branchRegex.exec(line);
         }
-        /* tslint:disable consistent-return */
-        log(...args) {
-          const finalArgs = [...args];
-          finalArgs[0] = `[short-unique-id] ${args[0]}`;
-          /* tslint:disable no-console */
-          if (this.debug === true) {
-            if (typeof console !== "undefined" && console !== null) {
-              return console.log(...finalArgs);
-            }
-          }
-          /* tslint:enable no-console */
+        if (branch) {
+            branchSummary.push(branch[1].charAt(0) === '*', detached, branch[2], branch[3], branch[4]);
         }
-        /** Change the dictionary after initialization. */
-        setDictionary(dictionary) {
-          this.dict = dictionary;
-          // Cache Dictionary Length for future usage.
-          this.dictLength = this.dict.length; // Resets internal counter.
-          this.counter = 0;
-        }
-        seq() {
-          return this.sequentialUUID();
-        }
-        /**
-                 * Generates UUID based on internal counter that's incremented after each ID generation.
-                 * @alias `const uid = new ShortUniqueId(); uid.seq();`
-                 */
-        sequentialUUID() {
-          let counterDiv;
-          let counterRem;
-          let id = "";
-          counterDiv = this.counter;
-          /* tslint:disable no-constant-condition */
-          while (true) {
-            counterRem = counterDiv % this.dictLength;
-            counterDiv = Math.trunc(counterDiv / this.dictLength);
-            id += this.dict[counterRem];
-            if (counterDiv === 0) {
-              break;
-            }
-          }
-          /* tslint:enable no-constant-condition */
-          this.counter += 1;
-          return id;
-        }
-        /**
-                 * Generates UUID by creating each part randomly.
-                 * @alias `const uid = new ShortUniqueId(); uid(uuidLength: number);`
-                 */
-        randomUUID(uuidLength = this.uuidLength || DEFAULT_UUID_LENGTH) {
-          let id;
-          let randomPartIdx;
-          let j;
-          let idIndex;
-          if (
-            (uuidLength === null || typeof uuidLength === "undefined") ||
-            uuidLength < 1
-          ) {
-            throw new Error("Invalid UUID Length Provided");
-          }
-          // Generate random ID parts from Dictionary.
-          id = "";
-          for (
-            idIndex = j = 0;
-            0 <= uuidLength ? j < uuidLength : j > uuidLength;
-            idIndex = 0 <= uuidLength ? j += 1 : j -= 1
-          ) {
-            randomPartIdx =
-              parseInt((Math.random() * this.dictLength).toFixed(0), 10) %
-              this.dictLength;
-            id += this.dict[randomPartIdx];
-          }
-          // Return random generated ID.
-          return id;
-        }
-        /**
-                 * Calculates total number of possible UUIDs.
-                 *
-                 * Given that:
-                 *
-                 * - `H` is the total number of possible UUIDs
-                 * - `n` is the number of unique characters in the dictionary
-                 * - `l` is the UUID length
-                 *
-                 * Then `H` is defined as `n` to the power of `l`:
-                 *
-                 * ![](https://render.githubusercontent.com/render/math?math=%5CHuge%20H=n%5El)
-                 *
-                 * This function returns `H`.
-                 */
-        availableUUIDs(uuidLength = this.uuidLength) {
-          return parseFloat(
-            Math.pow([...new Set(this.dict)].length, uuidLength).toFixed(0),
-          );
-        }
-        /**
-                 * Calculates approximate number of hashes before first collision.
-                 *
-                 * Given that:
-                 *
-                 * - `H` is the total number of possible UUIDs, or in terms of this library,
-                 * the result of running `availableUUIDs()`
-                 * - the expected number of values we have to choose before finding the
-                 * first collision can be expressed as the quantity `Q(H)`
-                 *
-                 * Then `Q(H)` can be approximated as the square root of the of the product
-                 * of half of pi times `H`:
-                 *
-                 * ![](https://render.githubusercontent.com/render/math?math=%5CHuge%20Q(H)%5Capprox%5Csqrt%7B%5Cfrac%7B%5Cpi%7D%7B2%7DH%7D)
-                 *
-                 * This function returns `Q(H)`.
-                 */
-        approxMaxBeforeCollision(
-          rounds = this.availableUUIDs(this.uuidLength),
-        ) {
-          return parseFloat(Math.sqrt((Math.PI / 2) * rounds).toFixed(20));
-        }
-        /**
-                 * Calculates probability of generating duplicate UUIDs (a collision) in a
-                 * given number of UUID generation rounds.
-                 *
-                 * Given that:
-                 *
-                 * - `r` is the maximum number of times that `randomUUID()` will be called,
-                 * or better said the number of _rounds_
-                 * - `H` is the total number of possible UUIDs, or in terms of this library,
-                 * the result of running `availableUUIDs()`
-                 *
-                 * Then the probability of collision `p(r; H)` can be approximated as the result
-                 * of dividing the square root of the of the product of half of pi times `H` by `H`:
-                 *
-                 * ![](https://render.githubusercontent.com/render/math?math=%5CHuge%20p(r%3B%20H)%5Capprox%5Cfrac%7B%5Csqrt%7B%5Cfrac%7B%5Cpi%7D%7B2%7Dr%7D%7D%7BH%7D)
-                 *
-                 * This function returns `p(r; H)`.
-                 *
-                 * (Useful if you are wondering _"If I use this lib and expect to perform at most
-                 * `r` rounds of UUID generations, what is the probability that I will hit a duplicate UUID?"_.)
-                 */
-        collisionProbability(
-          rounds = this.availableUUIDs(this.uuidLength),
-          uuidLength = this.uuidLength,
-        ) {
-          return parseFloat(
-            (this.approxMaxBeforeCollision(rounds) /
-              this.availableUUIDs(uuidLength)).toFixed(20),
-          );
-        }
-        /**
-                 * Calculate a "uniqueness" score (from 0 to 1) of UUIDs based on size of
-                 * dictionary and chosen UUID length.
-                 *
-                 * Given that:
-                 *
-                 * - `H` is the total number of possible UUIDs, or in terms of this library,
-                 * the result of running `availableUUIDs()`
-                 * - `Q(H)` is the approximate number of hashes before first collision,
-                 * or in terms of this library, the result of running `approxMaxBeforeCollision()`
-                 *
-                 * Then `uniqueness` can be expressed as the additive inverse of the probability of
-                 * generating a "word" I had previously generated (a duplicate) at any given iteration
-                 * up to the the total number of possible UUIDs expressed as the quotiend of `Q(H)` and `H`:
-                 *
-                 * ![](https://render.githubusercontent.com/render/math?math=%5CHuge%201-%5Cfrac%7BQ(H)%7D%7BH%7D)
-                 *
-                 * (Useful if you need a value to rate the "quality" of the combination of given dictionary
-                 * and UUID length. The closer to 1, higher the uniqueness and thus better the quality.)
-                 */
-        uniqueness(rounds = this.availableUUIDs(this.uuidLength)) {
-          const score = parseFloat(
-            (1 - (this.approxMaxBeforeCollision(rounds) / rounds)).toFixed(20),
-          );
-          return (score > 1) ? (1) : ((score < 0) ? 0 : score);
-        }
-        /**
-                 * Return the version of this module.
-                 */
-        getVersion() {
-          return this.version;
-        }
-      };
-      exports_2("default", ShortUniqueId);
-    },
-  };
-});
-
-const __exp = __instantiate("mod");
-exports. default = __exp["default"];
-
+    });
+    return branchSummary;
+};
+//# sourceMappingURL=BranchSummary.js.map
 
 /***/ }),
 
-/***/ 223:
+/***/ 352:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const git_response_error_1 = __webpack_require__(430);
+const git_response_error_1 = __webpack_require__(142);
 const functionNamesBuilderApi = [
     'customBinary', 'env', 'outputHandler', 'silent',
 ];
@@ -3366,7 +4365,7 @@ const functionNamesPromiseApi = [
     'tags',
     'updateServerInfo'
 ];
-const { gitInstanceFactory } = __webpack_require__(367);
+const { gitInstanceFactory } = __webpack_require__(552);
 function gitP(baseDir) {
     let git;
     let chain = Promise.resolve();
@@ -3435,765 +4434,6 @@ function toError(error) {
 
 /***/ }),
 
-/***/ 248:
-/***/ (function(__unusedmodule, exports) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-/**
- * The `GitLogger` is used by the main `SimpleGit` runner to handle logging
- * any warnings or errors.
- */
-class GitLogger {
-    constructor(_silentLogging) {
-        this._silentLogging = _silentLogging;
-    }
-    silent(silence = false) {
-        this._silentLogging = silence;
-    }
-    error(message) {
-        if (!this._silentLogging) {
-            console.error(message);
-        }
-    }
-    warn(message) {
-        if (!this._silentLogging) {
-            console.warn(message);
-        }
-    }
-}
-exports.GitLogger = GitLogger;
-//# sourceMappingURL=git-logger.js.map
-
-/***/ }),
-
-/***/ 265:
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-
-var fs = __webpack_require__(747);
-
-function exists (path, isFile, isDirectory) {
-   try {
-      var matches = false;
-      var stat = fs.statSync(path);
-
-      matches = matches || isFile && stat.isFile();
-      matches = matches || isDirectory && stat.isDirectory();
-
-      return matches;
-   }
-   catch (e) {
-      if (e.code === 'ENOENT') {
-         return false;
-      }
-
-      throw e;
-   }
-}
-
-module.exports = function (path, type) {
-   if (!type) {
-      return exists(path, true, true);
-   }
-
-   return exists(path, type & 1, type & 2);
-};
-
-module.exports.FILE = 1;
-
-module.exports.FOLDER = 2;
-
-
-/***/ }),
-
-/***/ 293:
-/***/ (function(module) {
-
-module.exports = require("buffer");
-
-/***/ }),
-
-/***/ 294:
-/***/ (function(__unusedmodule, exports) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function parseGetRemotes(text) {
-    const remotes = {};
-    forEach(text, ([name]) => remotes[name] = { name });
-    return Object.values(remotes);
-}
-exports.parseGetRemotes = parseGetRemotes;
-function parseGetRemotesVerbose(text) {
-    const remotes = {};
-    forEach(text, ([name, url, purpose]) => {
-        if (!remotes.hasOwnProperty(name)) {
-            remotes[name] = {
-                name: name,
-                refs: { fetch: '', push: '' },
-            };
-        }
-        if (purpose && url) {
-            remotes[name].refs[purpose.replace(/[^a-z]/g, '')] = url;
-        }
-    });
-    return Object.values(remotes);
-}
-exports.parseGetRemotesVerbose = parseGetRemotesVerbose;
-function forEach(text, handler) {
-    text.split('\n').forEach(line => {
-        const row = line.trim();
-        if (!row) {
-            return;
-        }
-        if (row) {
-            handler(row.split(/\s+/));
-        }
-    });
-}
-//# sourceMappingURL=GetRemoteSummary.js.map
-
-/***/ }),
-
-/***/ 303:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const child_process = __webpack_require__(129);
-const cli_table_2_json_1 = __webpack_require__(370);
-const nodeify_ts_1 = __webpack_require__(895);
-const os = __webpack_require__(87);
-const exec = child_process.exec;
-const extractResult = function (result) {
-    const extracterArray = [
-        {
-            re: / ls /,
-            run(resultp) {
-                const obj = JSON.parse(resultp.raw);
-                const lines = obj.split(os.EOL);
-                resultp.machineList = cli_table_2_json_1.cliTable2Json(lines);
-                return resultp;
-            },
-        },
-        {
-            re: / config /,
-            run(resultp) {
-                const obj = JSON.parse(resultp.raw);
-                const str = obj;
-                const config = str.split(os.EOL).join(" ");
-                const extractValue = function (strp, name, rep) {
-                    const re = rep || new RegExp("--" + name + '="([\\S]*)"', "i");
-                    const m = re.exec(strp);
-                    if (m !== null) {
-                        if (m.index === re.lastIndex) {
-                            re.lastIndex++;
-                        }
-                    }
-                    return (m && m[1]) ? m[1] : null;
-                };
-                resultp.machine = {
-                    config,
-                    host: extractValue(str, null, /-H=tcp:\/\/(.*):/),
-                    port: extractValue(str, null, /-H=tcp:\/\/.*:(\d*)/),
-                    tlscacert: extractValue(str, "tlscacert"),
-                    tlscert: extractValue(str, "tlscert"),
-                    tlskey: extractValue(str, "tlskey"),
-                    tlsverify: function (strp) {
-                        const re = /--tlsverify/;
-                        const m = re.exec(strp);
-                        if (m !== null) {
-                            if (m.index === re.lastIndex) {
-                                re.lastIndex++;
-                            }
-                        }
-                        return (m && m[0] && m[0] === "--tlsverify") || false;
-                    }(str),
-                };
-                return resultp;
-            },
-        },
-        {
-            re: / inspect /,
-            run(resultp) {
-                try {
-                    const obj = JSON.parse(resultp.raw);
-                    resultp.machine = JSON.parse(obj);
-                }
-                catch (e) {
-                }
-                return resultp;
-            },
-        },
-    ];
-    extracterArray.forEach(function (extracter) {
-        const re = extracter.re;
-        const str = result.command;
-        const m = re.exec(str);
-        if (m !== null) {
-            if (m.index === re.lastIndex) {
-                re.lastIndex++;
-            }
-            return extracter.run(result);
-        }
-    });
-    return result;
-};
-class DockerMachine {
-    constructor(options = new Options()) {
-        this.options = options;
-    }
-    command(command, callback) {
-        const dockerMachine = this;
-        let execCommand = "docker-machine " + command;
-        const promise = Promise.resolve().then(function () {
-            const params = dockerMachine.options.toParams();
-            execCommand += " " + params;
-            const execOptions = {
-                cwd: dockerMachine.options.currentWorkingDirectory,
-                env: {
-                    DEBUG: "",
-                    HOME: process.env.HOME,
-                    PATH: process.env.PATH,
-                },
-                maxBuffer: 200 * 1024 * 1024,
-            };
-            return new Promise(function (resolve, reject) {
-                exec(execCommand, execOptions, (error, stdout, stderr) => {
-                    if (error) {
-                        const message = `error: '${error}' stdout = '${stdout}' stderr = '${stderr}'`;
-                        console.error(message);
-                        reject(message);
-                    }
-                    resolve(stdout);
-                });
-            });
-        }).then(function (data) {
-            const result = {
-                command: execCommand,
-                raw: JSON.stringify(data),
-            };
-            return extractResult(result);
-        });
-        return nodeify_ts_1.default(promise, callback);
-    }
-}
-exports.DockerMachine = DockerMachine;
-class Options {
-    constructor(keyValueObject = {}, currentWorkingDirectory = null) {
-        this.keyValueObject = keyValueObject;
-        this.currentWorkingDirectory = currentWorkingDirectory;
-    }
-    toParams() {
-        const result = Object.keys(this.keyValueObject).reduce((previous, key) => {
-            const value = this.keyValueObject[key];
-            return `${previous} --${key} ${value}`;
-        }, "");
-        return result;
-    }
-}
-exports.Options = Options;
-//# sourceMappingURL=index.js.map
-
-/***/ }),
-
-/***/ 307:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const child_process = __webpack_require__(129);
-const cli_table_2_json_1 = __webpack_require__(370);
-const dockermachine_cli_js_1 = __webpack_require__(303);
-//import * as _ from "lodash";
-const snakeCase = __webpack_require__(556);
-const nodeify_ts_1 = __webpack_require__(895);
-const exec = child_process.exec;
-const splitLines = function (input) {
-    return input.replace(/\r/g, "").split("\n");
-};
-const array2Oject = function (lines) {
-    return lines.reduce(function (object, linep) {
-        const line = linep.trim();
-        if (line.length === 0) {
-            return object;
-        }
-        const parts = line.split(":");
-        let key = parts[0];
-        const value = parts.slice(1).join(":");
-        key = snakeCase(key);
-        object[key] = value.trim();
-        return object;
-    }, {});
-};
-const extractResult = function (result) {
-    const extracterArray = [
-        {
-            re: / build /,
-            run(resultp) {
-                const lines = splitLines(resultp.raw);
-                lines.forEach(function (line) {
-                    const re = /Successfully built (.*)$/;
-                    const str = line;
-                    const m = re.exec(str);
-                    if (m !== null) {
-                        if (m.index === re.lastIndex) {
-                            re.lastIndex++;
-                        }
-                        // View your result using the m-variable.
-                        // eg m[0] etc.
-                        resultp.success = true;
-                        resultp.imageId = m[1];
-                    }
-                });
-                resultp.response = lines;
-                return resultp;
-            },
-        },
-        {
-            re: / run /,
-            run(resultp) {
-                resultp.containerId = resultp.raw.trim();
-                return resultp;
-            },
-        },
-        {
-            re: / ps /,
-            run(resultp) {
-                const lines = splitLines(resultp.raw);
-                resultp.containerList = cli_table_2_json_1.cliTable2Json(lines);
-                return resultp;
-            },
-        },
-        {
-            re: / images /,
-            run(resultp) {
-                const lines = splitLines(resultp.raw);
-                //const debug = require('debug')('docker-cli-js:lib/index.js extractResult images');
-                //debug(lines);
-                resultp.images = cli_table_2_json_1.cliTable2Json(lines);
-                return resultp;
-            },
-        },
-        {
-            re: / network ls /,
-            run(resultp) {
-                const lines = splitLines(resultp.raw);
-                //const debug = require('debug')('docker-cli-js:lib/index.js extractResult images');
-                //debug(lines);
-                resultp.network = cli_table_2_json_1.cliTable2Json(lines);
-                return resultp;
-            },
-        },
-        {
-            re: / inspect /,
-            run(resultp) {
-                const object = JSON.parse(resultp.raw);
-                resultp.object = object;
-                return resultp;
-            },
-        },
-        {
-            re: / info /,
-            run(resultp) {
-                const lines = splitLines(resultp.raw);
-                resultp.object = array2Oject(lines);
-                return resultp;
-            },
-        },
-        {
-            re: / search /,
-            run(resultp) {
-                const lines = splitLines(resultp.raw);
-                resultp.images = cli_table_2_json_1.cliTable2Json(lines);
-                return resultp;
-            },
-        },
-        {
-            re: / login /,
-            run(resultp) {
-                resultp.login = resultp.raw.trim();
-                return resultp;
-            },
-        },
-        {
-            re: / pull /,
-            run(resultp) {
-                resultp.login = resultp.raw.trim();
-                return resultp;
-            },
-        },
-        {
-            re: / push /,
-            run(resultp) {
-                resultp.login = resultp.raw.trim();
-                return resultp;
-            },
-        },
-    ];
-    extracterArray.forEach(function (extracter) {
-        const re = extracter.re;
-        const str = result.command;
-        const m = re.exec(str + " ");
-        if (m !== null) {
-            if (m.index === re.lastIndex) {
-                re.lastIndex++;
-            }
-            // View your result using the m-constiable.
-            // eg m[0] etc.
-            return extracter.run(result);
-        }
-    });
-    return result;
-};
-exports.dockerCommand = (command, options = {
-    currentWorkingDirectory: undefined,
-    echo: true,
-    machineName: undefined,
-}) => __awaiter(this, void 0, void 0, function* () {
-    let machineconfig = "";
-    if (options.machineName) {
-        machineconfig = yield new dockermachine_cli_js_1.DockerMachine()
-            .command(`config ${options.machineName}`)
-            .then((data) => data.machine.config);
-    }
-    const execCommand = `docker ${machineconfig} ${command}`;
-    const execOptions = {
-        cwd: options.currentWorkingDirectory,
-        env: {
-            DEBUG: "",
-            HOME: process.env.HOME,
-            PATH: process.env.PATH,
-        },
-        maxBuffer: 200 * 1024 * 1024,
-    };
-    const raw = yield new Promise((resolve, reject) => {
-        const childProcess = exec(execCommand, execOptions, (error, stdout, stderr) => {
-            if (error) {
-                return reject(Object.assign(new Error(`Error: stdout ${stdout}, stderr ${stderr}`), Object.assign({}, error, { stdout, stderr, innerError: error })));
-            }
-            resolve(stdout);
-        });
-        if (options.echo) {
-            childProcess.stdout.on("data", (chunk) => {
-                process.stdout.write(chunk.toString());
-            });
-            childProcess.stderr.on("data", (chunk) => {
-                process.stderr.write(chunk.toString());
-            });
-        }
-    });
-    return extractResult({
-        command: execCommand,
-        raw,
-    });
-});
-class Docker {
-    constructor(options = {
-        currentWorkingDirectory: undefined,
-        echo: true,
-        machineName: undefined,
-    }) {
-        this.options = options;
-    }
-    command(command, callback) {
-        return nodeify_ts_1.default(exports.dockerCommand(command, this.options), callback);
-    }
-}
-exports.Docker = Docker;
-class Options {
-    constructor(machineName, currentWorkingDirectory, echo = true) {
-        this.machineName = machineName;
-        this.currentWorkingDirectory = currentWorkingDirectory;
-        this.echo = echo;
-    }
-}
-exports.Options = Options;
-
-
-/***/ }),
-
-/***/ 312:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const ConfigList_1 = __webpack_require__(402);
-function addConfigTask(key, value, append = false) {
-    const commands = ['config', '--local'];
-    if (append) {
-        commands.push('--add');
-    }
-    commands.push(key, value);
-    return {
-        commands,
-        format: 'utf-8',
-        parser(text) {
-            return text;
-        }
-    };
-}
-exports.addConfigTask = addConfigTask;
-function listConfigTask() {
-    return {
-        commands: ['config', '--list', '--show-origin', '--null'],
-        format: 'utf-8',
-        parser(text) {
-            return ConfigList_1.configListParser(text);
-        },
-    };
-}
-exports.listConfigTask = listConfigTask;
-//# sourceMappingURL=config.js.map
-
-/***/ }),
-
-/***/ 315:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const api_1 = __webpack_require__(752);
-const utils_1 = __webpack_require__(532);
-function taskCallback(task, response, callback = utils_1.NOOP) {
-    const onSuccess = (data) => {
-        callback(null, data);
-    };
-    const onError = (err) => {
-        if ((err === null || err === void 0 ? void 0 : err.task) === task) {
-            if (err instanceof api_1.GitResponseError) {
-                return callback(addDeprecationNoticeToError(err));
-            }
-            callback(err);
-        }
-    };
-    response.then(onSuccess, onError);
-}
-exports.taskCallback = taskCallback;
-function addDeprecationNoticeToError(err) {
-    let log = (name) => {
-        console.warn(`simple-git deprecation notice: accessing GitResponseError.${name} should be GitResponseError.git.${name}`);
-        log = utils_1.NOOP;
-    };
-    return Object.create(err, Object.getOwnPropertyNames(err.git).reduce(descriptorReducer, {}));
-    function descriptorReducer(all, name) {
-        if (name in err) {
-            return all;
-        }
-        all[name] = {
-            enumerable: false,
-            configurable: false,
-            get() {
-                log(name);
-                return err.git[name];
-            },
-        };
-        return all;
-    }
-}
-//# sourceMappingURL=task-callback.js.map
-
-/***/ }),
-
-/***/ 327:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-/**
- * @fileoverview Extend node util module
- * @author douzi <liaowei08@gmail.com> 
- */
-var util = __webpack_require__(669);
-var toString = Object.prototype.toString;
-var isWindows = process.platform === 'win32';
-
-function isObject(value) {
-  return toString.call(value) === '[object Object]';
-}
-
-// And type check method: isFunction, isString, isNumber, isDate, isRegExp, isObject
-['Function', 'String', 'Number', 'Date', 'RegExp'].forEach(function(item) {
-  exports['is' + item]  = function(value) {
-    return toString.call(value) === '[object ' + item + ']';
-  };
-});
-
-/**
- * @description
- * Deep extend
- * @example
- * extend({ key: { k1: 'v1'} }, { key: { k2: 'v2' }, none: { k: 'v' } });
- * extend({ arr: [] }, { arr: [ {}, {} ] });
- */
-function extend(target, source) {
-  var value;
-
-  for (var key in source) {
-    value = source[key];
-
-    if (Array.isArray(value)) {
-      if (!Array.isArray(target[key])) {
-        target[key] = [];
-      }
-
-      extend(target[key], value);
-    } else if (isObject(value)) {
-      if (!isObject(target[key])) {
-        target[key]  = {};
-      }
-
-      extend(target[key], value);
-    } else {
-      target[key] = value;
-    }
-  }
-
-  return target;
-}
-
-extend(exports, util);
-
-// fixed util.isObject 
-exports.isObject = isObject;
-
-exports.extend = function() {
-  var args = Array.prototype.slice.call(arguments, 0);
-  var target = args.shift();
-
-  args.forEach(function(item) {
-    extend(target, item);
-  });
-
-  return target;
-};
-
-exports.isArray = Array.isArray;
-
-exports.isUndefined = function(value) {
-  return typeof value == 'undefined';
-};
-
-exports.noop = function() {};
-
-exports.unique = function(array) {
-  var result = [];
-
-  array.forEach(function(item) {
-    if (result.indexOf(item) == -1) {
-      result.push(item);
-    }
-  });
-
-  return result;
-};
-
-exports.escape = function(value) {
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-};
-
-exports.unescape = function(value) {
-  return String(value)
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>');
-};
-
-exports.hrtime = function(time) {
-  if (time) {
-    var spend = process.hrtime(time);
-    
-    spend = (spend[0] + spend[1] / 1e9) * 1000 + 'ms';
-
-    return spend;
-  } else {
-    return process.hrtime();
-  }
-};
-
-/**
- * @description
- * Return a copy of the object with list keys
- * @example
- * util.pick({ key: 'value' }, 'key', 'key1');
- * util.pick(obj, function(value, key, object) { });
- */
-exports.pick = function(obj, iteratee) {
-  var result = {};
-
-  if (exports.isFunction(iteratee)) {
-    for (var key in obj) {
-      var value = obj[key];
-      if (iteratee(value, key, obj)) {
-        result[key] = value;
-      }
-    }
-  } else {
-    var keys = Array.prototype.slice.call(arguments, 1);
-
-    keys.forEach(function(key) {
-      if (key in obj) {
-        result[key] = obj[key];
-      }
-    });
-  }
-
-  return result;
-};
-
-exports.path = {};
-
-if (isWindows) {
-  // Regex to split a windows path into three parts: [*, device, slash,
-  // tail] windows-only
-  var splitDeviceRe =
-      /^([a-zA-Z]:|[\\\/]{2}[^\\\/]+[\\\/]+[^\\\/]+)?([\\\/])?([\s\S]*?)$/;
-
-  exports.path.isAbsolute = function(filepath) {
-    var result = splitDeviceRe.exec(filepath),
-        device = result[1] || '',
-        isUnc = !!device && device.charAt(1) !== ':';
-    // UNC paths are always absolute
-    return !!result[2] || isUnc;
-  };
-
-  // Normalize \\ paths to / paths.
-  exports.path.unixifyPath = function(filepath) {
-    return filepath.replace(/\\/g, '/');
-  };
-
-} else {
-  exports.path.isAbsolute = function(filepath) {
-    return filepath.charAt(0) === '/';
-  };
-
-  exports.path.unixifyPath = function(filepath) {
-    return filepath;
-  };
-}
-
-/***/ }),
-
 /***/ 357:
 /***/ (function(module) {
 
@@ -4201,37 +4441,111 @@ module.exports = require("assert");
 
 /***/ }),
 
-/***/ 367:
+/***/ 362:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
-const Git = __webpack_require__(71);
+module.exports = MergeSummary;
+module.exports.MergeConflict = MergeConflict;
 
-const api = Object.create(null);
-for (let imported = __webpack_require__(752), keys = Object.keys(imported), i = 0; i < keys.length; i++) {
-   const name = keys[i];
-   if (/^[A-Z]/.test(name)) {
-      api[name] = imported[name];
+var PullSummary = __webpack_require__(115);
+
+function MergeConflict (reason, file, meta) {
+   this.reason = reason;
+   this.file = file;
+   if (meta) {
+      this.meta = meta;
    }
 }
 
-module.exports.gitExportFactory = function gitExportFactory (factory, extra) {
-   return Object.assign(function () {
-         return factory.apply(null, arguments);
-      },
-      api,
-      extra || {},
-   );
+MergeConflict.prototype.meta = null;
+
+MergeConflict.prototype.toString = function () {
+   return this.file + ':' + this.reason;
 };
 
-module.exports.gitInstanceFactory = function gitInstanceFactory (baseDir) {
+function MergeSummary () {
+   PullSummary.call(this);
 
-   const dependencies = __webpack_require__(970);
+   this.conflicts = [];
+   this.merges = [];
+}
 
-   if (baseDir && !dependencies.exists(baseDir, dependencies.exists.FOLDER)) {
-      throw new Error("Cannot use simple-git on a directory that does not exist.");
+MergeSummary.prototype = Object.create(PullSummary.prototype);
+
+MergeSummary.prototype.result = 'success';
+
+MergeSummary.prototype.toString = function () {
+   if (this.conflicts.length) {
+      return 'CONFLICTS: ' + this.conflicts.join(', ');
+   }
+   return 'OK';
+};
+
+Object.defineProperty(MergeSummary.prototype, 'failed', {
+   get: function () {
+      return this.conflicts.length > 0;
+   }
+});
+
+MergeSummary.parsers = [
+   {
+      test: /^Auto-merging\s+(.+)$/,
+      handle: function (result, mergeSummary) {
+         mergeSummary.merges.push(result[1]);
+      }
+   },
+   {
+      // Parser for standard merge conflicts
+      test: /^CONFLICT\s+\((.+)\): Merge conflict in (.+)$/,
+      handle: function (result, mergeSummary) {
+         mergeSummary.conflicts.push(new MergeConflict(result[1], result[2]));
+      }
+   },
+   {
+      // Parser for modify/delete merge conflicts (modified by us/them, deleted by them/us)
+      test: /^CONFLICT\s+\((.+\/delete)\): (.+) deleted in (.+) and/,
+      handle: function (result, mergeSummary) {
+         mergeSummary.conflicts.push(
+            new MergeConflict(result[1], result[2], {deleteRef: result[3]})
+         );
+      }
+   },
+   {
+      // Catch-all parser for unknown/unparsed conflicts
+      test: /^CONFLICT\s+\((.+)\):/,
+      handle: function (result, mergeSummary) {
+         mergeSummary.conflicts.push(new MergeConflict(result[1], null));
+      }
+   },
+   {
+      test: /^Automatic merge failed;\s+(.+)$/,
+      handle: function (result, mergeSummary) {
+         mergeSummary.reason = mergeSummary.result = result[1];
+      }
+   }
+];
+
+MergeSummary.parse = function (output) {
+   let mergeSummary = new MergeSummary();
+
+   output.trim().split('\n').forEach(function (line) {
+      for (var i = 0, iMax = MergeSummary.parsers.length; i < iMax; i++) {
+         let parser = MergeSummary.parsers[i];
+
+         var result = parser.test.exec(line);
+         if (result) {
+            parser.handle(result, mergeSummary);
+            break;
+         }
+      }
+   });
+
+   let pullSummary = PullSummary.parse(output);
+   if (pullSummary.summary.changes) {
+      Object.assign(mergeSummary, pullSummary);
    }
 
-   return new Git(baseDir || process.cwd(), dependencies.childProcess(), dependencies.buffer());
+   return mergeSummary;
 };
 
 
@@ -4273,151 +4587,6 @@ function cliTable2Json(lines) {
 }
 exports.cliTable2Json = cliTable2Json;
 //# sourceMappingURL=index.js.map
-
-/***/ }),
-
-/***/ 383:
-/***/ (function(__unusedmodule, exports) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-/**
- * Known process exit codes used by the task parsers to determine whether an error
- * was one they can automatically handle
- */
-var ExitCodes;
-(function (ExitCodes) {
-    ExitCodes[ExitCodes["SUCCESS"] = 0] = "SUCCESS";
-    ExitCodes[ExitCodes["ERROR"] = 1] = "ERROR";
-})(ExitCodes = exports.ExitCodes || (exports.ExitCodes = {}));
-//# sourceMappingURL=exit-codes.js.map
-
-/***/ }),
-
-/***/ 402:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const util_1 = __webpack_require__(778);
-class ConfigList {
-    constructor() {
-        this.files = [];
-        this.values = Object.create(null);
-    }
-    get all() {
-        if (!this._all) {
-            this._all = Object.assign({}, ...this.files.map(file => this.values[file]));
-        }
-        return this._all;
-    }
-    addFile(file) {
-        if (!(file in this.values)) {
-            const latest = util_1.last(this.files);
-            this.values[file] = latest ? Object.create(this.values[latest]) : {};
-            this.files.push(file);
-        }
-        return this.values[file];
-    }
-    addValue(file, key, value) {
-        const values = this.addFile(file);
-        if (!values.hasOwnProperty(key)) {
-            values[key] = value;
-        }
-        else if (Array.isArray(values[key])) {
-            values[key].push(value);
-        }
-        else {
-            values[key] = [values[key], value];
-        }
-        this._all = undefined;
-    }
-}
-exports.ConfigList = ConfigList;
-function configListParser(text) {
-    const config = new ConfigList();
-    const lines = text.split('\0');
-    for (let i = 0, max = lines.length - 1; i < max;) {
-        const file = configFilePath(lines[i++]);
-        const [key, value] = util_1.splitOn(lines[i++], '\n');
-        config.addValue(file, key, value);
-    }
-    return config;
-}
-exports.configListParser = configListParser;
-function configFilePath(filePath) {
-    return filePath.replace(/^(file):/, '');
-}
-//# sourceMappingURL=ConfigList.js.map
-
-/***/ }),
-
-/***/ 427:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const git_error_1 = __webpack_require__(574);
-/**
- * The `TaskConfigurationError` is thrown when a command was incorrectly
- * configured. An error of this kind means that no attempt was made to
- * run your command through the underlying `git` binary.
- *
- * Check the `.message` property for more detail on why your configuration
- * resulted in an error.
- */
-class TaskConfigurationError extends git_error_1.GitError {
-    constructor(message) {
-        super(undefined, message);
-    }
-}
-exports.TaskConfigurationError = TaskConfigurationError;
-//# sourceMappingURL=task-configuration-error.js.map
-
-/***/ }),
-
-/***/ 430:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const git_error_1 = __webpack_require__(574);
-/**
- * The `GitResponseError` is the wrapper for a parsed response that is treated as
- * a fatal error, for example attempting a `merge` can leave the repo in a corrupted
- * state when there are conflicts so the task will reject rather than resolve.
- *
- * For example, catching the merge conflict exception:
- *
- * ```typescript
- import { gitP, SimpleGit, GitResponseError, MergeSummary } from 'simple-git';
-
- const git = gitP(repoRoot);
- const mergeOptions: string[] = ['--no-ff', 'other-branch'];
- const mergeSummary: MergeSummary = await git.merge(mergeOptions)
-      .catch((e: GitResponseError<MergeSummary>) => e.git);
-
- if (mergeSummary.failed) {
-   // deal with the error
- }
- ```
- */
-class GitResponseError extends git_error_1.GitError {
-    constructor(
-    /**
-     * `.git` access the parsed response that is treated as being an error
-     */
-    git, message) {
-        super(undefined, message || String(git));
-        this.git = git;
-    }
-}
-exports.GitResponseError = GitResponseError;
-//# sourceMappingURL=git-response-error.js.map
 
 /***/ }),
 
@@ -4861,13 +5030,70 @@ exports.copySync = function(dirpath, destpath, options) {
 
 /***/ }),
 
-/***/ 436:
+/***/ 447:
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+const exec = __webpack_require__(986);
+const fs  = __webpack_require__(435);
+const metadata = __webpack_require__(490);
+const { default: ShortUniqueId } = __webpack_require__(209);
+const { dockerCommand } = __webpack_require__(307);
+
+async function buildImage(input) {
+  await dockerCommand(`build -t ${input.repoTag} -f ${input.dockerFile} ${input.contextPath}`);
+}
+
+async function pushImage(input) {
+  await dockerCommand(`push ${input.repoTag}`);
+}
+
+async function buildMetadata(input) {
+  const data = {
+    type: 'image',
+    service: input.service,
+  };
+
+  data.commit = await metadata.getCommitData();
+  data.build = metadata.getBuildData(input);
+  data.labels = metadata.getLabels(input.labels);
+
+  const dockerInspect = await dockerCommand(`inspect ${input.repoTag}`, {echo: false});
+  data.dockerInspect = dockerInspect.object;
+
+  return data;
+}
+
+async function pushMetadata(data) {
+  fs.writeFile("metadata.json", JSON.stringify(data, null, '  '), function (err) {
+    if (err) {
+      throw Error(`failed to write temp JSON metadata file because ${err.message}`);
+    }
+  })
+
+  // Github uses the same build number for re-runs, so we add an extra id to the
+  // generated filenames, so re-runs don't cause files to be overwritten.
+  const uid = new ShortUniqueId({length: 3});
+  const filename = `github-build.${data.build.id}.${uid()}.json`;
+  await exec.exec('gsutil', ['cp', './metadata.json', `gs://bw-prod-artifacts-metadata/${data.service}/${filename}`], {});
+}
+
+module.exports = {
+  buildImage,
+  pushImage,
+  buildMetadata,
+  pushMetadata,
+}
+
+
+/***/ }),
+
+/***/ 463:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const utils_1 = __webpack_require__(532);
+const utils_1 = __webpack_require__(152);
 class BranchDeletionBatch {
     constructor() {
         this.all = [];
@@ -4915,326 +5141,6 @@ function toBranchDeletion(line) {
     return result && new BranchDeletion(result[1], result.length > 1 && result[2] || null);
 }
 //# sourceMappingURL=BranchDeleteSummary.js.map
-
-/***/ }),
-
-/***/ 442:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const FileStatusSummary_1 = __webpack_require__(671);
-/**
- * The StatusSummary is returned as a response to getting `git().status()`
- */
-class StatusSummary {
-    constructor() {
-        this.not_added = [];
-        this.conflicted = [];
-        this.created = [];
-        this.deleted = [];
-        this.modified = [];
-        this.renamed = [];
-        /**
-         * All files represented as an array of objects containing the `path` and status in `index` and
-         * in the `working_dir`.
-         */
-        this.files = [];
-        this.staged = [];
-        /**
-         * Number of commits ahead of the tracked branch
-         */
-        this.ahead = 0;
-        /**
-         *Number of commits behind the tracked branch
-         */
-        this.behind = 0;
-        /**
-         * Name of the current branch
-         */
-        this.current = null;
-        /**
-         * Name of the branch being tracked
-         */
-        this.tracking = null;
-    }
-    /**
-     * Gets whether this StatusSummary represents a clean working branch.
-     */
-    isClean() {
-        return !this.files.length;
-    }
-}
-exports.StatusSummary = StatusSummary;
-exports.StatusSummaryParsers = {
-    '##': function (line, status) {
-        const aheadReg = /ahead (\d+)/;
-        const behindReg = /behind (\d+)/;
-        const currentReg = /^(.+?(?=(?:\.{3}|\s|$)))/;
-        const trackingReg = /\.{3}(\S*)/;
-        let regexResult;
-        regexResult = aheadReg.exec(line);
-        status.ahead = regexResult && +regexResult[1] || 0;
-        regexResult = behindReg.exec(line);
-        status.behind = regexResult && +regexResult[1] || 0;
-        regexResult = currentReg.exec(line);
-        status.current = regexResult && regexResult[1];
-        regexResult = trackingReg.exec(line);
-        status.tracking = regexResult && regexResult[1];
-    },
-    '??': function (line, status) {
-        status.not_added.push(line);
-    },
-    A: function (line, status) {
-        status.created.push(line);
-    },
-    AM: function (line, status) {
-        status.created.push(line);
-    },
-    D: function (line, status) {
-        status.deleted.push(line);
-    },
-    M: function (line, status, indexState) {
-        status.modified.push(line);
-        if (indexState === 'M') {
-            status.staged.push(line);
-        }
-    },
-    R: function (line, status) {
-        const detail = /^(.+) -> (.+)$/.exec(line) || [null, line, line];
-        status.renamed.push({
-            from: String(detail[1]),
-            to: String(detail[2])
-        });
-    },
-    UU: function (line, status) {
-        status.conflicted.push(line);
-    }
-};
-exports.StatusSummaryParsers.MM = exports.StatusSummaryParsers.M;
-/* Map all unmerged status code combinations to UU to mark as conflicted */
-exports.StatusSummaryParsers.AA = exports.StatusSummaryParsers.UU;
-exports.StatusSummaryParsers.UD = exports.StatusSummaryParsers.UU;
-exports.StatusSummaryParsers.DU = exports.StatusSummaryParsers.UU;
-exports.StatusSummaryParsers.DD = exports.StatusSummaryParsers.UU;
-exports.StatusSummaryParsers.AU = exports.StatusSummaryParsers.UU;
-exports.StatusSummaryParsers.UA = exports.StatusSummaryParsers.UU;
-exports.parseStatusSummary = function (text) {
-    let file;
-    const lines = text.trim().split('\n');
-    const status = new StatusSummary();
-    for (let i = 0, l = lines.length; i < l; i++) {
-        file = splitLine(lines[i]);
-        if (!file) {
-            continue;
-        }
-        if (file.handler) {
-            file.handler(file.path, status, file.index, file.workingDir);
-        }
-        if (file.code !== '##') {
-            status.files.push(new FileStatusSummary_1.FileStatusSummary(file.path, file.index, file.workingDir));
-        }
-    }
-    return status;
-};
-function splitLine(lineStr) {
-    let line = lineStr.trim().match(/(..?)(\s+)(.*)/);
-    if (!line || !line[1].trim()) {
-        line = lineStr.trim().match(/(..?)\s+(.*)/);
-    }
-    if (!line) {
-        return;
-    }
-    let code = line[1];
-    if (line[2].length > 1) {
-        code += ' ';
-    }
-    if (code.length === 1 && line[2].length === 1) {
-        code = ' ' + code;
-    }
-    return {
-        raw: code,
-        code: code.trim(),
-        index: code.charAt(0),
-        workingDir: code.charAt(1),
-        handler: exports.StatusSummaryParsers[code.trim()],
-        path: line[3]
-    };
-}
-//# sourceMappingURL=StatusSummary.js.map
-
-/***/ }),
-
-/***/ 447:
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-const exec = __webpack_require__(986);
-const fs  = __webpack_require__(435);
-const git = __webpack_require__(57);
-const { default: ShortUniqueId } = __webpack_require__(209);
-const { dockerCommand } = __webpack_require__(307);
-
-async function buildImage(input) {
-  await dockerCommand(`build -t ${input.repoTag} -f ${input.dockerFile} ${input.contextPath}`);
-}
-
-async function pushImage(input) {
-  await dockerCommand(`push ${input.repoTag}`);
-}
-
-async function buildMetadata(input) {
-  const dockerInspect = await dockerCommand(`inspect ${input.repoTag}`, {echo: false});
-
-  const log = await git()
-      .raw(['log', '-1', `--pretty=format:{%n  "commit": "%H",%n  "author": "%an",%n  "author_email": "%ae",%n  "date": "%ad",%n  "message": "%s"%n}`], (err, res) => {
-      return res });
-  const commit = JSON.parse(log);
-
-  const repositoryUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}`;
-  const checkSuffix = `checks?check_suite_id=${process.env.GITHUB_RUN_ID}`;
-  let buildUrl = `${repositoryUrl}/commit/${process.env.GITHUB_SHA}/${checkSuffix}`;
-  if (input.event.pull_request && input.event.pull_request.number) {
-    buildUrl = `${repositoryUrl}/pull/${input.event.pull_request.number}/${checkSuffix}`
-   }
-
-  let labels = {}
-  if (input.labels) {
-      let labelPairs = input.labels.split(',');
-      labelPairs.forEach(labelPair => {
-          const kv = labelPair.split('=');
-          if (kv.length == 2) {
-              labels[kv[0]] = kv[1];
-          }
-      });
-   }
-
-  return {
-      type: 'image',
-      service: input.service,
-      commit: {
-          author: commit.author,
-          message: commit.message,
-          sha: commit.commit,
-          url: `https://github.com/${process.env.GITHUB_REPOSITORY}/commit/${commit.commit}`,
-      },
-      build: {
-          id: `${process.env.GITHUB_RUN_NUMBER}`,
-          url: buildUrl,
-      },
-      dockerInspect: dockerInspect.object,
-      labels,
-  };
-}
-
-async function pushMetadata(data) {
-  fs.writeFile("metadata.json", JSON.stringify(data, null, '  '), function (err) {
-    if (err) {
-      throw Error(`failed to write temp JSON metadata file because ${err.message}`);
-    }
-  })
-
-  // Github uses the same build number for re-runs, so we add an extra id to the
-  // generated filenames, so re-runs don't cause files to be overwritten.
-  const uid = new ShortUniqueId({length: 3});
-  const filename = `github-build.${data.build.id}.${uid()}.json`;
-  await exec.exec('gsutil', ['cp', './metadata.json', `gs://bw-prod-artifacts-metadata/${data.service}/${filename}`], {});
-}
-
-module.exports = {
-  buildImage,
-  pushImage,
-  buildMetadata,
-  pushMetadata,
-}
-
-
-/***/ }),
-
-/***/ 453:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const task_1 = __webpack_require__(894);
-const GetRemoteSummary_1 = __webpack_require__(294);
-function addRemoteTask(remoteName, remoteRepo, customArgs = []) {
-    return task_1.straightThroughStringTask(['remote', 'add', ...customArgs, remoteName, remoteRepo]);
-}
-exports.addRemoteTask = addRemoteTask;
-function getRemotesTask(verbose) {
-    const commands = ['remote'];
-    if (verbose) {
-        commands.push('-v');
-    }
-    return {
-        commands,
-        format: 'utf-8',
-        parser: verbose ? GetRemoteSummary_1.parseGetRemotesVerbose : GetRemoteSummary_1.parseGetRemotes,
-    };
-}
-exports.getRemotesTask = getRemotesTask;
-function listRemotesTask(customArgs = []) {
-    const commands = [...customArgs];
-    if (commands[0] !== 'ls-remote') {
-        commands.unshift('ls-remote');
-    }
-    return task_1.straightThroughStringTask(commands);
-}
-exports.listRemotesTask = listRemotesTask;
-function remoteTask(customArgs = []) {
-    const commands = [...customArgs];
-    if (commands[0] !== 'remote') {
-        commands.unshift('remote');
-    }
-    return task_1.straightThroughStringTask(commands);
-}
-exports.remoteTask = remoteTask;
-function removeRemoteTask(remoteName) {
-    return task_1.straightThroughStringTask(['remote', 'remove', remoteName]);
-}
-exports.removeRemoteTask = removeRemoteTask;
-//# sourceMappingURL=remote.js.map
-
-/***/ }),
-
-/***/ 466:
-/***/ (function(module) {
-
-
-module.exports = MoveSummary;
-
-/**
- * The MoveSummary is returned as a response to getting `git().status()`
- *
- * @constructor
- */
-function MoveSummary () {
-   this.moves = [];
-   this.sources = {};
-}
-
-MoveSummary.SUMMARY_REGEX = /^Renaming (.+) to (.+)$/;
-
-MoveSummary.parse = function (text) {
-   var lines = text.split('\n');
-   var summary = new MoveSummary();
-
-   for (var i = 0, iMax = lines.length, line; i < iMax; i++) {
-      line = MoveSummary.SUMMARY_REGEX.exec(lines[i].trim());
-
-      if (line) {
-         summary.moves.push({
-            from: line[1],
-            to: line[2]
-         });
-      }
-   }
-
-   return summary;
-};
-
 
 /***/ }),
 
@@ -5467,113 +5373,288 @@ exports.getState = getState;
 
 /***/ }),
 
-/***/ 495:
+/***/ 486:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-function filterType(input, ...filters) {
-    return filters.some((filter) => filter(input)) ? input : undefined;
+exports.fromPathRegex = /^(.+) -> (.+)$/;
+class FileStatusSummary {
+    constructor(path, index, working_dir) {
+        this.path = path;
+        this.index = index;
+        this.working_dir = working_dir;
+        if ('R' === (index + working_dir)) {
+            const detail = exports.fromPathRegex.exec(path) || [null, path, path];
+            this.from = detail[1] || '';
+            this.path = detail[2] || '';
+        }
+    }
 }
-exports.filterType = filterType;
-exports.filterArray = (input) => {
-    return Array.isArray(input);
-};
-exports.filterPrimitives = (input) => {
-    return /number|string|boolean/.test(typeof input);
-};
-exports.filterString = (input) => {
-    return typeof input === 'string';
-};
-exports.filterPlainObject = (input) => {
-    return !!input && Object.prototype.toString.call(input) === '[object Object]';
-};
-exports.filterFunction = (input) => {
-    return typeof input === 'function';
-};
-//# sourceMappingURL=argument-filters.js.map
+exports.FileStatusSummary = FileStatusSummary;
+//# sourceMappingURL=FileStatusSummary.js.map
 
 /***/ }),
 
-/***/ 532:
+/***/ 490:
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+const git = __webpack_require__(724);
+
+async function getCommitData() {
+  const log = await git()
+    .raw([
+      'log',
+      '-1',
+      `--pretty=format:{%n  "commit": "%H",%n  "author": "%an",%n  "author_email": "%ae",%n  "date": "%ad",%n  "message": "%s"%n}`
+    ], (err, res) => {
+      return res
+    });
+  const commit = JSON.parse(log);
+
+  return {
+    author: commit.author,
+    message: commit.message,
+    sha: commit.commit,
+    url: `https://github.com/${process.env.GITHUB_REPOSITORY}/commit/${commit.commit}`,
+  }
+}
+
+function getBuildData(githubEvent) {
+  const repositoryUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}`;
+  const checkSuffix = `checks?check_suite_id=${process.env.GITHUB_RUN_ID}`;
+  let buildUrl = `${repositoryUrl}/commit/${process.env.GITHUB_SHA}/${checkSuffix}`;
+  if (githubEvent.pull_request && githubEvent.pull_request.number) {
+    buildUrl = `${repositoryUrl}/pull/${githubEvent.pull_request.number}/${checkSuffix}`
+  }
+  return {
+    id: `${process.env.GITHUB_RUN_NUMBER}`,
+    url: buildUrl,
+  }
+}
+
+function getLabels(l) {
+  let labels = {};
+  if (l) {
+    let labelPairs = l.split(',');
+    labelPairs.forEach(labelPair => {
+      const kv = labelPair.split('=');
+      if (kv.length == 2) {
+        labels[kv[0]] = kv[1];
+      }
+    });
+  }
+  return labels;
+}
+
+module.exports = {
+  getCommitData,
+  getBuildData,
+  getLabels,
+}
+
+
+/***/ }),
+
+/***/ 505:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
-function __export(m) {
-    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
-}
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(495));
-__export(__webpack_require__(383));
-__export(__webpack_require__(778));
-//# sourceMappingURL=index.js.map
+const FileStatusSummary_1 = __webpack_require__(486);
+/**
+ * The StatusSummary is returned as a response to getting `git().status()`
+ */
+class StatusSummary {
+    constructor() {
+        this.not_added = [];
+        this.conflicted = [];
+        this.created = [];
+        this.deleted = [];
+        this.modified = [];
+        this.renamed = [];
+        /**
+         * All files represented as an array of objects containing the `path` and status in `index` and
+         * in the `working_dir`.
+         */
+        this.files = [];
+        this.staged = [];
+        /**
+         * Number of commits ahead of the tracked branch
+         */
+        this.ahead = 0;
+        /**
+         *Number of commits behind the tracked branch
+         */
+        this.behind = 0;
+        /**
+         * Name of the current branch
+         */
+        this.current = null;
+        /**
+         * Name of the branch being tracked
+         */
+        this.tracking = null;
+    }
+    /**
+     * Gets whether this StatusSummary represents a clean working branch.
+     */
+    isClean() {
+        return !this.files.length;
+    }
+}
+exports.StatusSummary = StatusSummary;
+exports.StatusSummaryParsers = {
+    '##': function (line, status) {
+        const aheadReg = /ahead (\d+)/;
+        const behindReg = /behind (\d+)/;
+        const currentReg = /^(.+?(?=(?:\.{3}|\s|$)))/;
+        const trackingReg = /\.{3}(\S*)/;
+        let regexResult;
+        regexResult = aheadReg.exec(line);
+        status.ahead = regexResult && +regexResult[1] || 0;
+        regexResult = behindReg.exec(line);
+        status.behind = regexResult && +regexResult[1] || 0;
+        regexResult = currentReg.exec(line);
+        status.current = regexResult && regexResult[1];
+        regexResult = trackingReg.exec(line);
+        status.tracking = regexResult && regexResult[1];
+    },
+    '??': function (line, status) {
+        status.not_added.push(line);
+    },
+    A: function (line, status) {
+        status.created.push(line);
+    },
+    AM: function (line, status) {
+        status.created.push(line);
+    },
+    D: function (line, status) {
+        status.deleted.push(line);
+    },
+    M: function (line, status, indexState) {
+        status.modified.push(line);
+        if (indexState === 'M') {
+            status.staged.push(line);
+        }
+    },
+    R: function (line, status) {
+        const detail = /^(.+) -> (.+)$/.exec(line) || [null, line, line];
+        status.renamed.push({
+            from: String(detail[1]),
+            to: String(detail[2])
+        });
+    },
+    UU: function (line, status) {
+        status.conflicted.push(line);
+    }
+};
+exports.StatusSummaryParsers.MM = exports.StatusSummaryParsers.M;
+/* Map all unmerged status code combinations to UU to mark as conflicted */
+exports.StatusSummaryParsers.AA = exports.StatusSummaryParsers.UU;
+exports.StatusSummaryParsers.UD = exports.StatusSummaryParsers.UU;
+exports.StatusSummaryParsers.DU = exports.StatusSummaryParsers.UU;
+exports.StatusSummaryParsers.DD = exports.StatusSummaryParsers.UU;
+exports.StatusSummaryParsers.AU = exports.StatusSummaryParsers.UU;
+exports.StatusSummaryParsers.UA = exports.StatusSummaryParsers.UU;
+exports.parseStatusSummary = function (text) {
+    let file;
+    const lines = text.trim().split('\n');
+    const status = new StatusSummary();
+    for (let i = 0, l = lines.length; i < l; i++) {
+        file = splitLine(lines[i]);
+        if (!file) {
+            continue;
+        }
+        if (file.handler) {
+            file.handler(file.path, status, file.index, file.workingDir);
+        }
+        if (file.code !== '##') {
+            status.files.push(new FileStatusSummary_1.FileStatusSummary(file.path, file.index, file.workingDir));
+        }
+    }
+    return status;
+};
+function splitLine(lineStr) {
+    let line = lineStr.trim().match(/(..?)(\s+)(.*)/);
+    if (!line || !line[1].trim()) {
+        line = lineStr.trim().match(/(..?)\s+(.*)/);
+    }
+    if (!line) {
+        return;
+    }
+    let code = line[1];
+    if (line[2].length > 1) {
+        code += ' ';
+    }
+    if (code.length === 1 && line[2].length === 1) {
+        code = ' ' + code;
+    }
+    return {
+        raw: code,
+        code: code.trim(),
+        index: code.charAt(0),
+        workingDir: code.charAt(1),
+        handler: exports.StatusSummaryParsers[code.trim()],
+        path: line[3]
+    };
+}
+//# sourceMappingURL=StatusSummary.js.map
 
 /***/ }),
 
-/***/ 533:
-/***/ (function(module) {
+/***/ 519:
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+/**
+ * Exports the utilities `simple-git` depends upon to allow for mocking during a test
+ */
+module.exports = {
+
+   buffer: function () { return __webpack_require__(293).Buffer; },
+
+   childProcess: function () { return __webpack_require__(129); },
+
+   exists: __webpack_require__(728)
+
+};
 
 
-module.exports = CommitSummary;
+/***/ }),
 
-function CommitSummary () {
-   this.branch = '';
-   this.commit = '';
-   this.summary = {
-      changes: 0,
-      insertions: 0,
-      deletions: 0
-   };
-   this.author = null;
-}
+/***/ 552:
+/***/ (function(module, __unusedexports, __webpack_require__) {
 
-var COMMIT_BRANCH_MESSAGE_REGEX = /\[([^\s]+) ([^\]]+)/;
-var COMMIT_AUTHOR_MESSAGE_REGEX = /\s*Author:\s(.+)/i;
+const Git = __webpack_require__(338);
 
-function setBranchFromCommit (commitSummary, commitData) {
-   if (commitData) {
-      commitSummary.branch = commitData[1];
-      commitSummary.commit = commitData[2];
+const api = Object.create(null);
+for (let imported = __webpack_require__(749), keys = Object.keys(imported), i = 0; i < keys.length; i++) {
+   const name = keys[i];
+   if (/^[A-Z]/.test(name)) {
+      api[name] = imported[name];
    }
 }
 
-function setSummaryFromCommit (commitSummary, commitData) {
-   if (commitSummary.branch && commitData) {
-      commitSummary.summary.changes = parseInt(commitData[1], 10) || 0;
-      commitSummary.summary.insertions = parseInt(commitData[2], 10) || 0;
-      commitSummary.summary.deletions = parseInt(commitData[3], 10) || 0;
-   }
-}
+module.exports.gitExportFactory = function gitExportFactory (factory, extra) {
+   return Object.assign(function () {
+         return factory.apply(null, arguments);
+      },
+      api,
+      extra || {},
+   );
+};
 
-function setAuthorFromCommit (commitSummary, commitData) {
-   var parts = commitData[1].split('<');
-   var email = parts.pop();
+module.exports.gitInstanceFactory = function gitInstanceFactory (baseDir) {
 
-   if (email.indexOf('@') <= 0) {
-      return;
-   }
+   const dependencies = __webpack_require__(519);
 
-   commitSummary.author = {
-      email: email.substr(0, email.length - 1),
-      name: parts.join('<').trim()
-   };
-}
-
-CommitSummary.parse = function (commit) {
-   var lines = commit.trim().split('\n');
-   var commitSummary = new CommitSummary();
-
-   setBranchFromCommit(commitSummary, COMMIT_BRANCH_MESSAGE_REGEX.exec(lines.shift()));
-
-   if (COMMIT_AUTHOR_MESSAGE_REGEX.test(lines[0])) {
-      setAuthorFromCommit(commitSummary, COMMIT_AUTHOR_MESSAGE_REGEX.exec(lines.shift()));
+   if (baseDir && !dependencies.exists(baseDir, dependencies.exists.FOLDER)) {
+      throw new Error("Cannot use simple-git on a directory that does not exist.");
    }
 
-   setSummaryFromCommit(commitSummary, /(\d+)[^,]*(?:,\s*(\d+)[^,]*)?(?:,\s*(\d+))?/g.exec(lines.shift()));
-
-   return commitSummary;
+   return new Git(baseDir || process.cwd(), dependencies.childProcess(), dependencies.buffer());
 };
 
 
@@ -23141,77 +23222,87 @@ module.exports = snakeCase;
 
 /***/ }),
 
-/***/ 574:
-/***/ (function(__unusedmodule, exports) {
+/***/ 566:
+/***/ (function(module) {
 
-"use strict";
 
-Object.defineProperty(exports, "__esModule", { value: true });
-/**
- * The `GitError` is thrown when the underlying `git` process throws a
- * fatal exception (eg an `ENOENT` exception when attempting to use a
- * non-writable directory as the root for your repo), and acts as the
- * base class for more specific errors thrown by the parsing of the
- * git response or errors in the configuration of the task about to
- * be run.
- *
- * When an exception is thrown, pending tasks in the same instance will
- * not be executed. The recommended way to run a series of tasks that
- * can independently fail without needing to prevent future tasks from
- * running is to catch them individually:
- *
- * ```typescript
- import { gitP, SimpleGit, GitError, PullResult } from 'simple-git';
+module.exports = CommitSummary;
 
- function catchTask (e: GitError) {
-   return e.
- }
-
- const git = gitP(repoWorkingDir);
- const pulled: PullResult | GitError = await git.pull().catch(catchTask);
- const pushed: string | GitError = await git.pushTags().catch(catchTask);
- ```
- */
-class GitError extends Error {
-    constructor(task, message) {
-        super(message);
-        this.task = task;
-        Object.setPrototypeOf(this, new.target.prototype);
-    }
+function CommitSummary () {
+   this.branch = '';
+   this.commit = '';
+   this.summary = {
+      changes: 0,
+      insertions: 0,
+      deletions: 0
+   };
+   this.author = null;
 }
-exports.GitError = GitError;
-//# sourceMappingURL=git-error.js.map
+
+var COMMIT_BRANCH_MESSAGE_REGEX = /\[([^\s]+) ([^\]]+)/;
+var COMMIT_AUTHOR_MESSAGE_REGEX = /\s*Author:\s(.+)/i;
+
+function setBranchFromCommit (commitSummary, commitData) {
+   if (commitData) {
+      commitSummary.branch = commitData[1];
+      commitSummary.commit = commitData[2];
+   }
+}
+
+function setSummaryFromCommit (commitSummary, commitData) {
+   if (commitSummary.branch && commitData) {
+      commitSummary.summary.changes = parseInt(commitData[1], 10) || 0;
+      commitSummary.summary.insertions = parseInt(commitData[2], 10) || 0;
+      commitSummary.summary.deletions = parseInt(commitData[3], 10) || 0;
+   }
+}
+
+function setAuthorFromCommit (commitSummary, commitData) {
+   var parts = commitData[1].split('<');
+   var email = parts.pop();
+
+   if (email.indexOf('@') <= 0) {
+      return;
+   }
+
+   commitSummary.author = {
+      email: email.substr(0, email.length - 1),
+      name: parts.join('<').trim()
+   };
+}
+
+CommitSummary.parse = function (commit) {
+   var lines = commit.trim().split('\n');
+   var commitSummary = new CommitSummary();
+
+   setBranchFromCommit(commitSummary, COMMIT_BRANCH_MESSAGE_REGEX.exec(lines.shift()));
+
+   if (COMMIT_AUTHOR_MESSAGE_REGEX.test(lines[0])) {
+      setAuthorFromCommit(commitSummary, COMMIT_AUTHOR_MESSAGE_REGEX.exec(lines.shift()));
+   }
+
+   setSummaryFromCommit(commitSummary, /(\d+)[^,]*(?:,\s*(\d+)[^,]*)?(?:,\s*(\d+))?/g.exec(lines.shift()));
+
+   return commitSummary;
+};
+
 
 /***/ }),
 
-/***/ 587:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
+/***/ 583:
+/***/ (function(module, __unusedexports, __webpack_require__) {
 
-"use strict";
 
-Object.defineProperty(exports, "__esModule", { value: true });
-const task_1 = __webpack_require__(894);
-function addSubModuleTask(repo, path) {
-    return subModuleTask(['add', repo, path]);
-}
-exports.addSubModuleTask = addSubModuleTask;
-function initSubModuleTask(customArgs) {
-    return subModuleTask(['init', ...customArgs]);
-}
-exports.initSubModuleTask = initSubModuleTask;
-function subModuleTask(customArgs) {
-    const commands = [...customArgs];
-    if (commands[0] !== 'submodule') {
-        commands.unshift('submodule');
-    }
-    return task_1.straightThroughStringTask(commands);
-}
-exports.subModuleTask = subModuleTask;
-function updateSubModuleTask(customArgs) {
-    return subModuleTask(['update', ...customArgs]);
-}
-exports.updateSubModuleTask = updateSubModuleTask;
-//# sourceMappingURL=sub-module.js.map
+module.exports = {
+   CommitSummary: __webpack_require__(566),
+   DiffSummary: __webpack_require__(51),
+   FetchSummary: __webpack_require__(292),
+   ListLogSummary: __webpack_require__(247),
+   MergeSummary: __webpack_require__(362),
+   MoveSummary: __webpack_require__(329),
+   PullSummary: __webpack_require__(115),
+};
+
 
 /***/ }),
 
@@ -23229,306 +23320,10 @@ module.exports = require("path");
 
 /***/ }),
 
-/***/ 628:
-/***/ (function(module) {
-
-
-module.exports = DiffSummary;
-
-/**
- * The DiffSummary is returned as a response to getting `git().status()`
- *
- * @constructor
- */
-function DiffSummary () {
-   this.files = [];
-   this.insertions = 0;
-   this.deletions = 0;
-   this.changed = 0;
-}
-
-/**
- * Number of lines added
- * @type {number}
- */
-DiffSummary.prototype.insertions = 0;
-
-/**
- * Number of lines deleted
- * @type {number}
- */
-DiffSummary.prototype.deletions = 0;
-
-/**
- * Number of files changed
- * @type {number}
- */
-DiffSummary.prototype.changed = 0;
-
-DiffSummary.parse = function (text) {
-   var line, handler;
-
-   var lines = text.trim().split('\n');
-   var status = new DiffSummary();
-
-   var summary = lines.pop();
-   if (summary) {
-      summary.trim().split(', ').forEach(function (text) {
-         var summary = /(\d+)\s([a-z]+)/.exec(text);
-         if (!summary) {
-            return;
-         }
-
-         if (/files?/.test(summary[2])) {
-            status.changed = parseInt(summary[1], 10);
-         }
-         else {
-            status[summary[2].replace(/s$/, '') + 's'] = parseInt(summary[1], 10);
-         }
-      });
-   }
-
-   while (line = lines.shift()) {
-      textFileChange(line, status.files) || binaryFileChange(line, status.files);
-   }
-
-   return status;
-};
-
-function textFileChange (line, files) {
-   line = line.trim().match(/^(.+)\s+\|\s+(\d+)(\s+[+\-]+)?$/);
-
-   if (line) {
-      var alterations = (line[3] || '').trim();
-      files.push({
-         file: line[1].trim(),
-         changes: parseInt(line[2], 10),
-         insertions: alterations.replace(/-/g, '').length,
-         deletions: alterations.replace(/\+/g, '').length,
-         binary: false
-      });
-
-      return true;
-   }
-}
-
-function binaryFileChange (line, files) {
-   line = line.match(/^(.+) \|\s+Bin ([0-9.]+) -> ([0-9.]+) ([a-z]+)$/);
-   if (line) {
-      files.push({
-         file: line[1].trim(),
-         before: +line[2],
-         after: +line[3],
-         binary: true
-      });
-      return true;
-   }
-}
-
-
-/***/ }),
-
-/***/ 656:
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-module.exports = MergeSummary;
-module.exports.MergeConflict = MergeConflict;
-
-var PullSummary = __webpack_require__(39);
-
-function MergeConflict (reason, file, meta) {
-   this.reason = reason;
-   this.file = file;
-   if (meta) {
-      this.meta = meta;
-   }
-}
-
-MergeConflict.prototype.meta = null;
-
-MergeConflict.prototype.toString = function () {
-   return this.file + ':' + this.reason;
-};
-
-function MergeSummary () {
-   PullSummary.call(this);
-
-   this.conflicts = [];
-   this.merges = [];
-}
-
-MergeSummary.prototype = Object.create(PullSummary.prototype);
-
-MergeSummary.prototype.result = 'success';
-
-MergeSummary.prototype.toString = function () {
-   if (this.conflicts.length) {
-      return 'CONFLICTS: ' + this.conflicts.join(', ');
-   }
-   return 'OK';
-};
-
-Object.defineProperty(MergeSummary.prototype, 'failed', {
-   get: function () {
-      return this.conflicts.length > 0;
-   }
-});
-
-MergeSummary.parsers = [
-   {
-      test: /^Auto-merging\s+(.+)$/,
-      handle: function (result, mergeSummary) {
-         mergeSummary.merges.push(result[1]);
-      }
-   },
-   {
-      // Parser for standard merge conflicts
-      test: /^CONFLICT\s+\((.+)\): Merge conflict in (.+)$/,
-      handle: function (result, mergeSummary) {
-         mergeSummary.conflicts.push(new MergeConflict(result[1], result[2]));
-      }
-   },
-   {
-      // Parser for modify/delete merge conflicts (modified by us/them, deleted by them/us)
-      test: /^CONFLICT\s+\((.+\/delete)\): (.+) deleted in (.+) and/,
-      handle: function (result, mergeSummary) {
-         mergeSummary.conflicts.push(
-            new MergeConflict(result[1], result[2], {deleteRef: result[3]})
-         );
-      }
-   },
-   {
-      // Catch-all parser for unknown/unparsed conflicts
-      test: /^CONFLICT\s+\((.+)\):/,
-      handle: function (result, mergeSummary) {
-         mergeSummary.conflicts.push(new MergeConflict(result[1], null));
-      }
-   },
-   {
-      test: /^Automatic merge failed;\s+(.+)$/,
-      handle: function (result, mergeSummary) {
-         mergeSummary.reason = mergeSummary.result = result[1];
-      }
-   }
-];
-
-MergeSummary.parse = function (output) {
-   let mergeSummary = new MergeSummary();
-
-   output.trim().split('\n').forEach(function (line) {
-      for (var i = 0, iMax = MergeSummary.parsers.length; i < iMax; i++) {
-         let parser = MergeSummary.parsers[i];
-
-         var result = parser.test.exec(line);
-         if (result) {
-            parser.handle(result, mergeSummary);
-            break;
-         }
-      }
-   });
-
-   let pullSummary = PullSummary.parse(output);
-   if (pullSummary.summary.changes) {
-      Object.assign(mergeSummary, pullSummary);
-   }
-
-   return mergeSummary;
-};
-
-
-/***/ }),
-
-/***/ 662:
-/***/ (function(module) {
-
-"use strict";
-
-
-function FetchSummary (raw) {
-   this.raw = raw;
-
-   this.remote = null;
-   this.branches = [];
-   this.tags = [];
-}
-
-FetchSummary.parsers = [
-   [
-      /From (.+)$/, function (fetchSummary, matches) {
-         fetchSummary.remote = matches[0];
-      }
-   ],
-   [
-      /\* \[new branch\]\s+(\S+)\s*\-> (.+)$/, function (fetchSummary, matches) {
-         fetchSummary.branches.push({
-            name: matches[0],
-            tracking: matches[1]
-         });
-      }
-   ],
-   [
-      /\* \[new tag\]\s+(\S+)\s*\-> (.+)$/, function (fetchSummary, matches) {
-         fetchSummary.tags.push({
-            name: matches[0],
-            tracking: matches[1]
-         });
-      }
-   ]
-];
-
-FetchSummary.parse = function (data) {
-   var fetchSummary = new FetchSummary(data);
-
-   String(data)
-      .trim()
-      .split('\n')
-      .forEach(function (line) {
-         var original = line.trim();
-         FetchSummary.parsers.some(function (parser) {
-            var parsed = parser[0].exec(original);
-            if (parsed) {
-               parser[1](fetchSummary, parsed.slice(1));
-               return true;
-            }
-         });
-      });
-
-   return fetchSummary;
-};
-
-module.exports = FetchSummary;
-
-
-/***/ }),
-
 /***/ 669:
 /***/ (function(module) {
 
 module.exports = require("util");
-
-/***/ }),
-
-/***/ 671:
-/***/ (function(__unusedmodule, exports) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.fromPathRegex = /^(.+) -> (.+)$/;
-class FileStatusSummary {
-    constructor(path, index, working_dir) {
-        this.path = path;
-        this.index = index;
-        this.working_dir = working_dir;
-        if ('R' === (index + working_dir)) {
-            const detail = exports.fromPathRegex.exec(path) || [null, path, path];
-            this.from = detail[1] || '';
-            this.path = detail[2] || '';
-        }
-    }
-}
-exports.FileStatusSummary = FileStatusSummary;
-//# sourceMappingURL=FileStatusSummary.js.map
 
 /***/ }),
 
@@ -23734,27 +23529,6 @@ function isUnixExecutable(stats) {
 
 /***/ }),
 
-/***/ 695:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const StatusSummary_1 = __webpack_require__(442);
-function statusTask() {
-    return {
-        format: 'utf-8',
-        commands: ['status', '--porcelain', '-b', '-u'],
-        parser(text) {
-            return StatusSummary_1.parseStatusSummary(text);
-        }
-    };
-}
-exports.statusTask = statusTask;
-//# sourceMappingURL=status.js.map
-
-/***/ }),
-
 /***/ 702:
 /***/ (function(module) {
 
@@ -23771,82 +23545,177 @@ module.exports = {
 
 /***/ }),
 
-/***/ 733:
+/***/ 708:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const git_response_error_1 = __webpack_require__(430);
-const BranchSummary_1 = __webpack_require__(904);
-const BranchDeleteSummary_1 = __webpack_require__(436);
-function containsDeleteBranchCommand(commands) {
-    const deleteCommands = ['-d', '-D', '--delete'];
-    return commands.some(command => deleteCommands.includes(command));
+const StatusSummary_1 = __webpack_require__(505);
+function statusTask() {
+    return {
+        format: 'utf-8',
+        commands: ['status', '--porcelain', '-b', '-u'],
+        parser(text) {
+            return StatusSummary_1.parseStatusSummary(text);
+        }
+    };
 }
-exports.containsDeleteBranchCommand = containsDeleteBranchCommand;
-function branchTask(customArgs) {
-    const isDelete = containsDeleteBranchCommand(customArgs);
-    const commands = ['branch', ...customArgs];
-    if (commands.length === 1) {
-        commands.push('-a');
+exports.statusTask = statusTask;
+//# sourceMappingURL=status.js.map
+
+/***/ }),
+
+/***/ 715:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const git_error_1 = __webpack_require__(213);
+/**
+ * The `TaskConfigurationError` is thrown when a command was incorrectly
+ * configured. An error of this kind means that no attempt was made to
+ * run your command through the underlying `git` binary.
+ *
+ * Check the `.message` property for more detail on why your configuration
+ * resulted in an error.
+ */
+class TaskConfigurationError extends git_error_1.GitError {
+    constructor(message) {
+        super(undefined, message);
     }
-    if (!commands.includes('-v')) {
-        commands.splice(1, 0, '-v');
+}
+exports.TaskConfigurationError = TaskConfigurationError;
+//# sourceMappingURL=task-configuration-error.js.map
+
+/***/ }),
+
+/***/ 724:
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+
+const {gitExportFactory} = __webpack_require__(552);
+const {gitP} = __webpack_require__(352);
+
+module.exports = gitExportFactory(gitP);
+
+
+/***/ }),
+
+/***/ 728:
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+
+var fs = __webpack_require__(747);
+
+function exists (path, isFile, isDirectory) {
+   try {
+      var matches = false;
+      var stat = fs.statSync(path);
+
+      matches = matches || isFile && stat.isFile();
+      matches = matches || isDirectory && stat.isDirectory();
+
+      return matches;
+   }
+   catch (e) {
+      if (e.code === 'ENOENT') {
+         return false;
+      }
+
+      throw e;
+   }
+}
+
+module.exports = function (path, type) {
+   if (!type) {
+      return exists(path, true, true);
+   }
+
+   return exists(path, type & 1, type & 2);
+};
+
+module.exports.FILE = 1;
+
+module.exports.FOLDER = 2;
+
+
+/***/ }),
+
+/***/ 733:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * The `GitLogger` is used by the main `SimpleGit` runner to handle logging
+ * any warnings or errors.
+ */
+class GitLogger {
+    constructor(_silentLogging) {
+        this._silentLogging = _silentLogging;
     }
-    return {
-        format: 'utf-8',
-        commands,
-        parser(text) {
-            return isDelete ? BranchDeleteSummary_1.parseBranchDeletions(text).all[0] : BranchSummary_1.parseBranchSummary(text);
-        },
-    };
+    silent(silence = false) {
+        this._silentLogging = silence;
+    }
+    error(message) {
+        if (!this._silentLogging) {
+            console.error(message);
+        }
+    }
+    warn(message) {
+        if (!this._silentLogging) {
+            console.warn(message);
+        }
+    }
 }
-exports.branchTask = branchTask;
-function branchLocalTask() {
-    return {
-        format: 'utf-8',
-        commands: ['branch', '-v'],
-        parser(text) {
-            return BranchSummary_1.parseBranchSummary(text);
-        },
-    };
+exports.GitLogger = GitLogger;
+//# sourceMappingURL=git-logger.js.map
+
+/***/ }),
+
+/***/ 745:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+function parseGetRemotes(text) {
+    const remotes = {};
+    forEach(text, ([name]) => remotes[name] = { name });
+    return Object.values(remotes);
 }
-exports.branchLocalTask = branchLocalTask;
-function deleteBranchesTask(branches, forceDelete = false) {
-    return {
-        format: 'utf-8',
-        commands: ['branch', '-v', forceDelete ? '-D' : '-d', ...branches],
-        parser(text) {
-            return BranchDeleteSummary_1.parseBranchDeletions(text);
-        },
-        onError(exitCode, error, done, fail) {
-            if (!BranchDeleteSummary_1.hasBranchDeletionError(error, exitCode)) {
-                return fail(error);
-            }
-            done(error);
-        },
-        concatStdErr: true,
-    };
+exports.parseGetRemotes = parseGetRemotes;
+function parseGetRemotesVerbose(text) {
+    const remotes = {};
+    forEach(text, ([name, url, purpose]) => {
+        if (!remotes.hasOwnProperty(name)) {
+            remotes[name] = {
+                name: name,
+                refs: { fetch: '', push: '' },
+            };
+        }
+        if (purpose && url) {
+            remotes[name].refs[purpose.replace(/[^a-z]/g, '')] = url;
+        }
+    });
+    return Object.values(remotes);
 }
-exports.deleteBranchesTask = deleteBranchesTask;
-function deleteBranchTask(branch, forceDelete = false) {
-    const parser = (text) => BranchDeleteSummary_1.parseBranchDeletions(text).branches[branch];
-    return {
-        format: 'utf-8',
-        commands: ['branch', '-v', forceDelete ? '-D' : '-d', branch],
-        parser,
-        onError(exitCode, error, _, fail) {
-            if (!BranchDeleteSummary_1.hasBranchDeletionError(error, exitCode)) {
-                return fail(error);
-            }
-            throw new git_response_error_1.GitResponseError(parser(error), error);
-        },
-        concatStdErr: true,
-    };
+exports.parseGetRemotesVerbose = parseGetRemotesVerbose;
+function forEach(text, handler) {
+    text.split('\n').forEach(line => {
+        const row = line.trim();
+        if (!row) {
+            return;
+        }
+        if (row) {
+            handler(row.split(/\s+/));
+        }
+    });
 }
-exports.deleteBranchTask = deleteBranchTask;
-//# sourceMappingURL=branch.js.map
+//# sourceMappingURL=GetRemoteSummary.js.map
 
 /***/ }),
 
@@ -23857,25 +23726,43 @@ module.exports = require("fs");
 
 /***/ }),
 
-/***/ 752:
+/***/ 749:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var clean_1 = __webpack_require__(152);
+var clean_1 = __webpack_require__(878);
 exports.CleanOptions = clean_1.CleanOptions;
-var git_error_1 = __webpack_require__(574);
+var git_error_1 = __webpack_require__(213);
 exports.GitError = git_error_1.GitError;
-var git_response_error_1 = __webpack_require__(430);
+var git_response_error_1 = __webpack_require__(142);
 exports.GitResponseError = git_response_error_1.GitResponseError;
-var task_configuration_error_1 = __webpack_require__(427);
+var task_configuration_error_1 = __webpack_require__(715);
 exports.TaskConfigurationError = task_configuration_error_1.TaskConfigurationError;
 //# sourceMappingURL=api.js.map
 
 /***/ }),
 
-/***/ 778:
+/***/ 750:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * Parser for the `check-ignore` command - returns each file as a string array
+ */
+exports.parseCheckIgnore = (text) => {
+    return text.split(/\n/g)
+        .map(line => line.trim())
+        .filter(file => !!file);
+};
+//# sourceMappingURL=CheckIgnore.js.map
+
+/***/ }),
+
+/***/ 776:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -23929,86 +23816,43 @@ exports.toLinesWithContent = toLinesWithContent;
 
 /***/ }),
 
-/***/ 816:
-/***/ (function(module, __unusedexports, __webpack_require__) {
+/***/ 793:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
+"use strict";
 
-module.exports = ListLogSummary;
-
-var DiffSummary = __webpack_require__(628);
-
-/**
- * The ListLogSummary is returned as a response to getting `git().log()` or `git().stashList()`
- *
- * @constructor
- */
-function ListLogSummary (all) {
-   this.all = all;
-   this.latest = all.length && all[0] || null;
-   this.total = all.length;
+Object.defineProperty(exports, "__esModule", { value: true });
+const ConfigList_1 = __webpack_require__(19);
+function addConfigTask(key, value, append = false) {
+    const commands = ['config', '--local'];
+    if (append) {
+        commands.push('--add');
+    }
+    commands.push(key, value);
+    return {
+        commands,
+        format: 'utf-8',
+        parser(text) {
+            return text;
+        }
+    };
 }
-
-/**
- * Detail for each of the log lines
- * @type {ListLogLine[]}
- */
-ListLogSummary.prototype.all = null;
-
-/**
- * Most recent entry in the log
- * @type {ListLogLine}
- */
-ListLogSummary.prototype.latest = null;
-
-/**
- * Number of items in the log
- * @type {number}
- */
-ListLogSummary.prototype.total = 0;
-
-function ListLogLine (line, fields) {
-   for (var k = 0; k < fields.length; k++) {
-      this[fields[k]] = line[k] || '';
-   }
+exports.addConfigTask = addConfigTask;
+function listConfigTask() {
+    return {
+        commands: ['config', '--list', '--show-origin', '--null'],
+        format: 'utf-8',
+        parser(text) {
+            return ConfigList_1.configListParser(text);
+        },
+    };
 }
-
-/**
- * When the log was generated with a summary, the `diff` property contains as much detail
- * as was provided in the log (whether generated with `--stat` or `--shortstat`.
- * @type {DiffSummary}
- */
-ListLogLine.prototype.diff = null;
-
-ListLogSummary.START_BOUNDARY = 'òòòòòò ';
-
-ListLogSummary.COMMIT_BOUNDARY = ' òò';
-
-ListLogSummary.SPLITTER = ' ò ';
-
-ListLogSummary.parse = function (text, splitter, fields) {
-   fields = fields || ['hash', 'date', 'message', 'refs', 'author_name', 'author_email'];
-   return new ListLogSummary(
-      text
-         .trim()
-         .split(ListLogSummary.START_BOUNDARY)
-         .filter(function(item) { return !!item.trim(); })
-         .map(function (item) {
-            var lineDetail = item.trim().split(ListLogSummary.COMMIT_BOUNDARY);
-            var listLogLine = new ListLogLine(lineDetail[0].trim().split(splitter), fields);
-
-            if (lineDetail.length > 1 && !!lineDetail[1].trim()) {
-               listLogLine.diff = DiffSummary.parse(lineDetail[1]);
-            }
-
-            return listLogLine;
-         })
-   );
-};
-
+exports.listConfigTask = listConfigTask;
+//# sourceMappingURL=config.js.map
 
 /***/ }),
 
-/***/ 850:
+/***/ 860:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -24069,43 +23913,198 @@ function toNumber(input) {
 
 /***/ }),
 
-/***/ 894:
+/***/ 878:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const task_configuration_error_1 = __webpack_require__(427);
-exports.EMPTY_COMMANDS = [];
-function configurationErrorTask(error) {
-    return {
-        commands: exports.EMPTY_COMMANDS,
-        format: 'utf-8',
-        parser() {
-            throw typeof error === 'string' ? new task_configuration_error_1.TaskConfigurationError(error) : error;
-        }
-    };
+const task_1 = __webpack_require__(901);
+const CleanSummary_1 = __webpack_require__(64);
+exports.CONFIG_ERROR_INTERACTIVE_MODE = 'Git clean interactive mode is not supported';
+exports.CONFIG_ERROR_MODE_REQUIRED = 'Git clean mode parameter ("n" or "f") is required';
+exports.CONFIG_ERROR_UNKNOWN_OPTION = 'Git clean unknown option found in: ';
+/**
+ * All supported option switches available for use in a `git.clean` operation
+ */
+var CleanOptions;
+(function (CleanOptions) {
+    CleanOptions["DRY_RUN"] = "n";
+    CleanOptions["FORCE"] = "f";
+    CleanOptions["IGNORED_INCLUDED"] = "x";
+    CleanOptions["IGNORED_ONLY"] = "X";
+    CleanOptions["EXCLUDING"] = "e";
+    CleanOptions["QUIET"] = "q";
+    CleanOptions["RECURSIVE"] = "d";
+})(CleanOptions = exports.CleanOptions || (exports.CleanOptions = {}));
+const CleanOptionValues = new Set([
+    'i',
+    // CleanOptions.DRY_RUN, CleanOptions.FORCE, CleanOptions.IGNORED_INCLUDED,
+    // CleanOptions.IGNORED_ONLY, CleanOptions.EXCLUDING, CleanOptions.QUIET,
+    // CleanOptions.RECURSIVE,
+    ...Object.values(CleanOptions)
+]);
+function cleanWithOptionsTask(mode, customArgs) {
+    const { cleanMode, options, valid } = getCleanOptions(mode);
+    if (!cleanMode) {
+        return task_1.configurationErrorTask(exports.CONFIG_ERROR_MODE_REQUIRED);
+    }
+    if (!valid.options) {
+        return task_1.configurationErrorTask(exports.CONFIG_ERROR_UNKNOWN_OPTION + JSON.stringify(mode));
+    }
+    options.push(...customArgs);
+    if (options.some(isInteractiveMode)) {
+        return task_1.configurationErrorTask(exports.CONFIG_ERROR_INTERACTIVE_MODE);
+    }
+    return cleanTask(cleanMode, options);
 }
-exports.configurationErrorTask = configurationErrorTask;
-function straightThroughStringTask(commands) {
+exports.cleanWithOptionsTask = cleanWithOptionsTask;
+function cleanTask(mode, customArgs) {
+    const commands = ['clean', `-${mode}`, ...customArgs];
     return {
         commands,
         format: 'utf-8',
         parser(text) {
-            return text;
+            return CleanSummary_1.cleanSummaryParser(mode === CleanOptions.DRY_RUN, text);
+        }
+    };
+}
+exports.cleanTask = cleanTask;
+function isCleanOptionsArray(input) {
+    return Array.isArray(input) && input.every(test => CleanOptionValues.has(test));
+}
+exports.isCleanOptionsArray = isCleanOptionsArray;
+function getCleanOptions(input) {
+    let cleanMode;
+    let options = [];
+    let valid = { cleanMode: false, options: true };
+    input.replace(/[^a-z]i/g, '').split('').forEach(char => {
+        if (isCleanMode(char)) {
+            cleanMode = char;
+            valid.cleanMode = true;
+        }
+        else {
+            valid.options = valid.options && isKnownOption(options[options.length] = (`-${char}`));
+        }
+    });
+    return {
+        cleanMode,
+        options,
+        valid,
+    };
+}
+function isCleanMode(cleanMode) {
+    return cleanMode === CleanOptions.FORCE || cleanMode === CleanOptions.DRY_RUN;
+}
+function isKnownOption(option) {
+    return /^-[a-z]$/i.test(option) && CleanOptionValues.has(option.charAt(1));
+}
+function isInteractiveMode(option) {
+    if (/^-[^\-]/.test(option)) {
+        return option.indexOf('i') > 0;
+    }
+    return option === '--interactive';
+}
+//# sourceMappingURL=clean.js.map
+
+/***/ }),
+
+/***/ 882:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const task_1 = __webpack_require__(901);
+const GetRemoteSummary_1 = __webpack_require__(745);
+function addRemoteTask(remoteName, remoteRepo, customArgs = []) {
+    return task_1.straightThroughStringTask(['remote', 'add', ...customArgs, remoteName, remoteRepo]);
+}
+exports.addRemoteTask = addRemoteTask;
+function getRemotesTask(verbose) {
+    const commands = ['remote'];
+    if (verbose) {
+        commands.push('-v');
+    }
+    return {
+        commands,
+        format: 'utf-8',
+        parser: verbose ? GetRemoteSummary_1.parseGetRemotesVerbose : GetRemoteSummary_1.parseGetRemotes,
+    };
+}
+exports.getRemotesTask = getRemotesTask;
+function listRemotesTask(customArgs = []) {
+    const commands = [...customArgs];
+    if (commands[0] !== 'ls-remote') {
+        commands.unshift('ls-remote');
+    }
+    return task_1.straightThroughStringTask(commands);
+}
+exports.listRemotesTask = listRemotesTask;
+function remoteTask(customArgs = []) {
+    const commands = [...customArgs];
+    if (commands[0] !== 'remote') {
+        commands.unshift('remote');
+    }
+    return task_1.straightThroughStringTask(commands);
+}
+exports.remoteTask = remoteTask;
+function removeRemoteTask(remoteName) {
+    return task_1.straightThroughStringTask(['remote', 'remove', remoteName]);
+}
+exports.removeRemoteTask = removeRemoteTask;
+//# sourceMappingURL=remote.js.map
+
+/***/ }),
+
+/***/ 883:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const TagList_1 = __webpack_require__(860);
+/**
+ * Task used by `git.tags`
+ */
+function tagListTask(customArgs = []) {
+    const hasCustomSort = customArgs.some((option) => /^--sort=/.test(option));
+    return {
+        format: 'utf-8',
+        commands: ['tag', '-l', ...customArgs],
+        parser(text) {
+            return TagList_1.parseTagList(text, hasCustomSort);
         },
     };
 }
-exports.straightThroughStringTask = straightThroughStringTask;
-function isBufferTask(task) {
-    return task.format === 'buffer';
+exports.tagListTask = tagListTask;
+/**
+ * Task used by `git.addTag`
+ */
+function addTagTask(name) {
+    return {
+        format: 'utf-8',
+        commands: ['tag', name],
+        parser() {
+            return { name };
+        }
+    };
 }
-exports.isBufferTask = isBufferTask;
-function isEmptyTask(task) {
-    return !task.commands.length;
+exports.addTagTask = addTagTask;
+/**
+ * Task used by `git.addTag`
+ */
+function addAnnotatedTagTask(name, tagMessage) {
+    return {
+        format: 'utf-8',
+        commands: ['tag', '-a', '-m', tagMessage, name],
+        parser() {
+            return { name };
+        }
+    };
 }
-exports.isEmptyTask = isEmptyTask;
-//# sourceMappingURL=task.js.map
+exports.addAnnotatedTagTask = addAnnotatedTagTask;
+//# sourceMappingURL=tag.js.map
 
 /***/ }),
 
@@ -24126,23 +24125,6 @@ function default_1(promise, callback) {
     });
 }
 exports.default = default_1;
-
-
-/***/ }),
-
-/***/ 898:
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-
-module.exports = {
-   CommitSummary: __webpack_require__(533),
-   DiffSummary: __webpack_require__(628),
-   FetchSummary: __webpack_require__(662),
-   ListLogSummary: __webpack_require__(816),
-   MergeSummary: __webpack_require__(656),
-   MoveSummary: __webpack_require__(466),
-   PullSummary: __webpack_require__(39),
-};
 
 
 /***/ }),
@@ -24236,72 +24218,122 @@ module.exports = fileMatch;
 
 /***/ }),
 
-/***/ 904:
-/***/ (function(__unusedmodule, exports) {
+/***/ 901:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-class BranchSummaryResult {
-    constructor() {
-        this.all = [];
-        this.branches = {};
-        this.current = '';
-        this.detached = false;
-    }
-    push(current, detached, name, commit, label) {
-        if (current) {
-            this.detached = detached;
-            this.current = name;
+const task_configuration_error_1 = __webpack_require__(715);
+exports.EMPTY_COMMANDS = [];
+function configurationErrorTask(error) {
+    return {
+        commands: exports.EMPTY_COMMANDS,
+        format: 'utf-8',
+        parser() {
+            throw typeof error === 'string' ? new task_configuration_error_1.TaskConfigurationError(error) : error;
         }
-        this.all.push(name);
-        this.branches[name] = {
-            current: current,
-            name: name,
-            commit: commit,
-            label: label
-        };
-    }
+    };
 }
-exports.BranchSummaryResult = BranchSummaryResult;
-exports.detachedRegex = /^(\*?\s+)\((?:HEAD )?detached (?:from|at) (\S+)\)\s+([a-z0-9]+)\s(.*)$/;
-exports.branchRegex = /^(\*?\s+)(\S+)\s+([a-z0-9]+)\s(.*)$/;
-exports.parseBranchSummary = function (commit) {
-    const branchSummary = new BranchSummaryResult();
-    commit.split('\n')
-        .forEach(function (line) {
-        let detached = true;
-        let branch = exports.detachedRegex.exec(line);
-        if (!branch) {
-            detached = false;
-            branch = exports.branchRegex.exec(line);
-        }
-        if (branch) {
-            branchSummary.push(branch[1].charAt(0) === '*', detached, branch[2], branch[3], branch[4]);
-        }
-    });
-    return branchSummary;
-};
-//# sourceMappingURL=BranchSummary.js.map
+exports.configurationErrorTask = configurationErrorTask;
+function straightThroughStringTask(commands) {
+    return {
+        commands,
+        format: 'utf-8',
+        parser(text) {
+            return text;
+        },
+    };
+}
+exports.straightThroughStringTask = straightThroughStringTask;
+function isBufferTask(task) {
+    return task.format === 'buffer';
+}
+exports.isBufferTask = isBufferTask;
+function isEmptyTask(task) {
+    return !task.commands.length;
+}
+exports.isEmptyTask = isEmptyTask;
+//# sourceMappingURL=task.js.map
 
 /***/ }),
 
-/***/ 970:
-/***/ (function(module, __unusedexports, __webpack_require__) {
+/***/ 932:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
-/**
- * Exports the utilities `simple-git` depends upon to allow for mocking during a test
- */
-module.exports = {
+"use strict";
 
-   buffer: function () { return __webpack_require__(293).Buffer; },
-
-   childProcess: function () { return __webpack_require__(129); },
-
-   exists: __webpack_require__(265)
-
-};
-
+Object.defineProperty(exports, "__esModule", { value: true });
+const git_response_error_1 = __webpack_require__(142);
+const BranchSummary_1 = __webpack_require__(343);
+const BranchDeleteSummary_1 = __webpack_require__(463);
+function containsDeleteBranchCommand(commands) {
+    const deleteCommands = ['-d', '-D', '--delete'];
+    return commands.some(command => deleteCommands.includes(command));
+}
+exports.containsDeleteBranchCommand = containsDeleteBranchCommand;
+function branchTask(customArgs) {
+    const isDelete = containsDeleteBranchCommand(customArgs);
+    const commands = ['branch', ...customArgs];
+    if (commands.length === 1) {
+        commands.push('-a');
+    }
+    if (!commands.includes('-v')) {
+        commands.splice(1, 0, '-v');
+    }
+    return {
+        format: 'utf-8',
+        commands,
+        parser(text) {
+            return isDelete ? BranchDeleteSummary_1.parseBranchDeletions(text).all[0] : BranchSummary_1.parseBranchSummary(text);
+        },
+    };
+}
+exports.branchTask = branchTask;
+function branchLocalTask() {
+    return {
+        format: 'utf-8',
+        commands: ['branch', '-v'],
+        parser(text) {
+            return BranchSummary_1.parseBranchSummary(text);
+        },
+    };
+}
+exports.branchLocalTask = branchLocalTask;
+function deleteBranchesTask(branches, forceDelete = false) {
+    return {
+        format: 'utf-8',
+        commands: ['branch', '-v', forceDelete ? '-D' : '-d', ...branches],
+        parser(text) {
+            return BranchDeleteSummary_1.parseBranchDeletions(text);
+        },
+        onError(exitCode, error, done, fail) {
+            if (!BranchDeleteSummary_1.hasBranchDeletionError(error, exitCode)) {
+                return fail(error);
+            }
+            done(error);
+        },
+        concatStdErr: true,
+    };
+}
+exports.deleteBranchesTask = deleteBranchesTask;
+function deleteBranchTask(branch, forceDelete = false) {
+    const parser = (text) => BranchDeleteSummary_1.parseBranchDeletions(text).branches[branch];
+    return {
+        format: 'utf-8',
+        commands: ['branch', '-v', forceDelete ? '-D' : '-d', branch],
+        parser,
+        onError(exitCode, error, _, fail) {
+            if (!BranchDeleteSummary_1.hasBranchDeletionError(error, exitCode)) {
+                return fail(error);
+            }
+            throw new git_response_error_1.GitResponseError(parser(error), error);
+        },
+        concatStdErr: true,
+    };
+}
+exports.deleteBranchTask = deleteBranchTask;
+//# sourceMappingURL=branch.js.map
 
 /***/ }),
 

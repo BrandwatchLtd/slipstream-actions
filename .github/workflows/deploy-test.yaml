@@ -20,13 +20,11 @@ jobs:
     - uses: actions/setup-node@master
       with:
         node-version: 12.x
-
-    - name: npm install
-      run: npm install
+    - run: npm install
+      working-directory: ./lib
+    - run: npm install
       working-directory: ./deploy
-
-    - name: npm test
-      run: npm test
+    - run: npm test
       working-directory: ./deploy
   integration:
     name: Integration Test
@@ -41,7 +39,7 @@ jobs:
       with:
         service_account_key: ${{ secrets.BW_PROD_ARTIFACTS_KEY }}
         export_default_credentials: true
-    - uses: BrandwatchLtd/slipstream-installer-action@0.0.2
+    - uses: ./install-cli
 
     - name: Start fake slipstream API
       run: node scripts/fake-slipstream-server.js &
