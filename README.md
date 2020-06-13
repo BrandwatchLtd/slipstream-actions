@@ -1,8 +1,10 @@
 # Slipstream Actions
 
-A collection of GitHub Actions for working with Slipstream
+A collection of GitHub Actions for working with Slipstream. A full end-to-end example can be seen on the [slipstream-actions-example](https://github.com/BrandwatchLtd/slipstream-actions-example/blob/master/.github/workflows/build.yaml) repository.
 
-## Install CLI
+## Actions
+
+### Install CLI
 
 The `install-cli` action downloads and installs the Slipstream CLI. Useful for deployment requests, or querying for information about services and artifacts. NB: Requires the gcloud CLI to be installed and configured for authentication.
 
@@ -16,7 +18,7 @@ The `install-cli` action downloads and installs the Slipstream CLI. Useful for d
 
 See [Action definition](install-cli/action.yml) for additional details.
 
-## Push Image
+### Push Image
 
 The `push-image` action builds a Docker image and pushes it to an appropriate Google Cloud Registry for use by Kubernetes. Additionally it generates and pushes artifact metadata to Slipstream.
 
@@ -31,7 +33,7 @@ The `push-image` action builds a Docker image and pushes it to an appropriate Go
 
 See [Action definition](push-image/action.yml) for additional details.
 
-## Deploy
+### Deploy
 
 The `deploy` action can be used to create a deployment request for a given artifact. This is typically used immediately after building an image to request a deployment to stage.
 
@@ -45,6 +47,3 @@ The `deploy` action can be used to create a deployment request for a given artif
 ```
 
 See [Action definition](deploy/action.yml) for additional details.
-
-
-

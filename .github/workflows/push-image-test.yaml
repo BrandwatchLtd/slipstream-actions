@@ -20,11 +20,9 @@ jobs:
     - uses: actions/setup-node@master
       with:
         node-version: 12.x
-
-    - name: npm install
-      run: npm install
+    - run: npm install
+      working-directory: ./lib
+    - run: npm install
       working-directory: ./push-image
-
-    - name: npm test
-      run: npm test
+    - run: npm test
       working-directory: ./push-image

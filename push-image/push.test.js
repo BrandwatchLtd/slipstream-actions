@@ -24,10 +24,10 @@ test('builds correct metadata', async() => {
   expect(data.labels.k2).toBe('v2');
   expect(data.service).toBe('test-service');
   expect(typeof data.dockerInspect[0]).toBe('object');
-  expect(data.commit.author).not.toBe('');
-  expect(data.commit.message).not.toBe('');
-  expect(data.commit.sha).not.toBe('');
-  expect(data.commit.url).not.toBe('');
-  expect(data.build.id).not.toBe('');
-  expect(data.build.url).not.toBe('');
+  expect(data.commit.author).not.toBe(undefined);
+  expect(data.commit.message).not.toBe(undefined);
+  expect(data.commit.sha).not.toBe(undefined);
+  expect(data.commit.url).not.toBe(undefined);
+  expect(data.build.id).not.toBe(undefined);
+  expect(data.build.url).not.toBe(undefined);
 });
