@@ -1,0 +1,33 @@
+name: Slipstream Push Files
+description: Build and push files artifact and metadata to Slipstream
+inputs:
+  service:
+    description: Service name for the artifact.
+    required: true
+  labels:
+    description: Comma separated key=value labels.
+    required: false
+  filesDir:
+    description: The directory to upload to storage.
+    required: true
+  stageVersionCheckURL:
+    description: The URL that indicates the current version on stage.
+    required: true
+  productionVersionCheckURL:
+    description: The URL that indicates the current version on production.
+    required: true
+  artifactBucket:
+    description: The GCS bucket to store file artifacts.
+    required: false
+    default: gs://bw-prod-artifacts.bwcom.io
+  metadataBucket:
+    description: The GCS bucket to store artifact metadata to be picked up by Slipstream.
+    required: false
+    default: gs://bw-prod-artifacts-metadata
+
+outputs:
+  artifactID:
+    description: The ID (sha256 hash) of the uploaded files. This can be used to request a deployment.
+runs:
+  using: node12
+  main: dist/index.js

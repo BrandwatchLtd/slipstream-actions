@@ -6,10 +6,12 @@ on:
     paths:
     - 'push-image/**'
     - '.github/workflows/push-image-*'
+    - 'lib'
   pull_request:
     paths:
     - 'push-image/**'
     - '.github/workflows/push-image-*'
+    - 'lib'
 
 jobs:
   unit:
@@ -26,3 +28,19 @@ jobs:
       working-directory: ./push-image
     - run: npm test
       working-directory: ./push-image
+  integration:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@0.1.2
+        with:
+          service_account_key: ${{ secrets.BW_PROD_ARTIFACTS_KEY }}
+          export_default_credentials: true
+      - uses: ./push-image
+        with:
+          dockerFile: test-fixtures/Dockerfile
+          contextPath: test-fixtures
+          service: action-integration-test
+          dockerRegistry: eu.gcr.io/bw-stage-slipstream0
+          metadataBucket: gs://slipstream-github-action-test

@@ -6,10 +6,12 @@ on:
     paths:
     - 'install-cli/**'
     - '.github/workflows/install-cli-*'
+    - 'lib'
   pull_request:
     paths:
     - 'install-cli/**'
     - '.github/workflows/install-cli-*'
+    - 'lib'
 
 jobs:
   integration:

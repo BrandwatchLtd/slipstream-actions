@@ -6,15 +6,23 @@ inputs:
     required: false
     default: Dockerfile
   contextPath:
-    description: Path to Docker context. Probably the same directory as Dockerfile is in
+    description: Path to Docker context. Probably the same directory as Dockerfile is in.
     required: false
     default: '.'
   service:
-    description: Service name for the artifact
+    description: Service name for the artifact.
     required: true
   labels:
-    description: Comma separated key=value labels
+    description: Comma separated key=value labels.
     required: false
+  dockerRegistry:
+    description: The docker container registry to push Docker images to.
+    required: false
+    default: eu.gcr.io/bw-prod-artifacts
+  metadataBucket:
+    description: The GCS bucket to store artifact metadata to be picked up by Slipstream.
+    required: false
+    default: bw-prod-artifacts-metadata
 outputs:
   imageDigest:
     description: The image digest of the Docker image. Can be used to request a deployment.

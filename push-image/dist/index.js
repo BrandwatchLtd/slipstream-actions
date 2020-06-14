@@ -1260,13 +1260,15 @@ exports.GitExecutor = GitExecutor;
 
 const core = __webpack_require__(470);
 const exec = __webpack_require__(986);
+const { pushMetadata } = __webpack_require__(490);
 const push = __webpack_require__(447);
 const util = __webpack_require__(702);
 
 async function run() {
   const service = core.getInput('service');
+  const registry = core.getInput('dockerRegistry')
   const tag = process.env.GITHUB_RUN_ID;
-  const repoTag = `eu.gcr.io/bw-prod-artifacts/${service}:${tag}`;
+  const repoTag = `${registry}/${service}:${tag}`;
 
   try {
     core.startGroup("Configuring Docker authentication");
@@ -1294,7 +1296,7 @@ async function run() {
       repoTag,
       labels: core.getInput('labels'),
     })
-    await push.pushMetadata(data);
+    await pushMetadata(data);
     core.endGroup();
 
     core.setOutput('imageDigest', util.getImageDigest(data.dockerInspect));
@@ -1644,487 +1646,6 @@ function addDeprecationNoticeToError(err) {
     }
 }
 //# sourceMappingURL=task-callback.js.map
-
-/***/ }),
-
-/***/ 209:
-/***/ (function(__unusedmodule, exports) {
-
-"use strict";
-Object.defineProperty(exports, "__esModule", {value: true});// Copyright 2018-2020 the Deno authors. All rights reserved. MIT license.
-
-// This is a specialised implementation of a System module loader.
-
-// @ts-nocheck
-/* eslint-disable */
-let System, __instantiateAsync, __instantiate;
-
-(() => {
-  const r = new Map();
-
-  System = {
-    register(id, d, f) {
-      r.set(id, { d, f, exp: {} });
-    },
-  };
-
-  async function dI(mid, src) {
-    let id = mid.replace(/\.\w+$/i, "");
-    if (id.includes("./")) {
-      const [o, ...ia] = id.split("/").reverse(),
-        [, ...sa] = src.split("/").reverse(),
-        oa = [o];
-      let s = 0,
-        i;
-      while ((i = ia.shift())) {
-        if (i === "..") s++;
-        else if (i === ".") break;
-        else oa.push(i);
-      }
-      if (s < sa.length) oa.push(...sa.slice(s));
-      id = oa.reverse().join("/");
-    }
-    return r.has(id) ? gExpA(id) : Promise.resolve().then(() => require(mid));
-  }
-
-  function gC(id, main) {
-    return {
-      id,
-      import: (m) => dI(m, id),
-      meta: { url: id, main },
-    };
-  }
-
-  function gE(exp) {
-    return (id, v) => {
-      v = typeof id === "string" ? { [id]: v } : id;
-      for (const [id, value] of Object.entries(v)) {
-        Object.defineProperty(exp, id, {
-          value,
-          writable: true,
-          enumerable: true,
-        });
-      }
-    };
-  }
-
-  function rF(main) {
-    for (const [id, m] of r.entries()) {
-      const { f, exp } = m;
-      const { execute: e, setters: s } = f(gE(exp), gC(id, id === main));
-      delete m.f;
-      m.e = e;
-      m.s = s;
-    }
-  }
-
-  async function gExpA(id) {
-    if (!r.has(id)) return;
-    const m = r.get(id);
-    if (m.s) {
-      const { d, e, s } = m;
-      delete m.s;
-      delete m.e;
-      for (let i = 0; i < s.length; i++) s[i](await gExpA(d[i]));
-      const r = e();
-      if (r) await r;
-    }
-    return m.exp;
-  }
-
-  function gExp(id) {
-    if (!r.has(id)) return;
-    const m = r.get(id);
-    if (m.s) {
-      const { d, e, s } = m;
-      delete m.s;
-      delete m.e;
-      for (let i = 0; i < s.length; i++) s[i](gExp(d[i]));
-      e();
-    }
-    return m.exp;
-  }
-
-  __instantiateAsync = async (m) => {
-    System = __instantiateAsync = __instantiate = undefined;
-    rF(m);
-    return gExpA(m);
-  };
-
-  __instantiate = (m) => {
-    System = __instantiateAsync = __instantiate = undefined;
-    rF(m);
-    return gExp(m);
-  };
-})();
-
-System.register("version", [], function (exports_1, context_1) {
-  "use strict";
-  var __moduleName = context_1 && context_1.id;
-  return {
-    setters: [],
-    execute: function () {
-      exports_1("default", "3.0.2");
-    },
-  };
-});
-System.register("mod", ["version"], function (exports_2, context_2) {
-  "use strict";
-  var version_ts_1,
-    DEFAULT_UUID_LENGTH,
-    DIGIT_FIRST_ASCII,
-    DIGIT_LAST_ASCII,
-    ALPHA_LOWER_FIRST_ASCII,
-    ALPHA_LOWER_LAST_ASCII,
-    ALPHA_UPPER_FIRST_ASCII,
-    ALPHA_UPPER_LAST_ASCII,
-    DICT_RANGES,
-    DEFAULT_OPTIONS,
-    ShortUniqueId;
-  var __moduleName = context_2 && context_2.id;
-  return {
-    setters: [
-      function (version_ts_1_1) {
-        version_ts_1 = version_ts_1_1;
-      },
-    ],
-    execute: function () {
-      /**
-             * 6 was chosen as the default UUID length since for most cases
-             * it will be more than aptly suitable to provide millions of UUIDs
-             * with a very low probability of producing a duplicate UUID.
-             *
-             * For example, with a dictionary including digits from 0 to 9,
-             * as well as the alphabet from a to z both in UPPER and lower case,
-             * the probability of generating a duplicate in 1,000,000 rounds
-             * is ~0.00000002, or about 1 in 50,000,000.
-             */
-      DEFAULT_UUID_LENGTH = 6;
-      DIGIT_FIRST_ASCII = 48;
-      DIGIT_LAST_ASCII = 58;
-      ALPHA_LOWER_FIRST_ASCII = 97;
-      ALPHA_LOWER_LAST_ASCII = 123;
-      ALPHA_UPPER_FIRST_ASCII = 65;
-      ALPHA_UPPER_LAST_ASCII = 91;
-      DICT_RANGES = {
-        digits: [DIGIT_FIRST_ASCII, DIGIT_LAST_ASCII],
-        lowerCase: [ALPHA_LOWER_FIRST_ASCII, ALPHA_LOWER_LAST_ASCII],
-        upperCase: [ALPHA_UPPER_FIRST_ASCII, ALPHA_UPPER_LAST_ASCII],
-      };
-      DEFAULT_OPTIONS = {
-        dictionary: [],
-        shuffle: true,
-        debug: false,
-        length: DEFAULT_UUID_LENGTH,
-      };
-      /**
-             * Generate random or sequential UUID of any length.
-             *
-             * ### Use as module
-             *
-             * ```js
-             * // Deno (web module) Import
-             * import ShortUniqueId from 'https://cdn.jsdelivr.net/npm/short-unique-id@latest/short_uuid/mod.ts';
-             *
-             * // ES6 / TypeScript Import
-             * import ShortUniqueId from 'short-unique-id';
-             *
-             * //or Node.js require
-             * const {default: ShortUniqueId} = require('short-unique-id');
-             *
-             * //Instantiate
-             * const uid = new ShortUniqueId();
-             *
-             * // Random UUID
-             * console.log(uid());
-             *
-             * // Sequential UUID
-             * console.log(uid.seq());
-             * ```
-             *
-             * ### Use in browser
-             *
-             * ```html
-             * <!-- Import -->
-             * <script src="https://cdn.jsdelivr.net/npm/short-unique-id@latest/dist/short-unique-id.min.js"></script>
-             *
-             * <!-- Usage -->
-             * <script>
-             *   // Instantiate
-             *   var uid = new ShortUniqueId();
-             *
-             *   // Random UUID
-             *   document.write(uid());
-             *
-             *   // Sequential UUID
-             *   document.write(uid.seq());
-             * </script>
-             * ```
-             *
-             * ### Options
-             *
-             * Options can be passed when instantiating `uid`:
-             *
-             * ```js
-             * const options = { ... };
-             *
-             * const uid = new ShortUniqueId(options);
-             * ```
-             *
-             * For more information take a look at the [Options type definition](/globals.html#options).
-             */
-      ShortUniqueId = class ShortUniqueId extends Function {
-        /* tslint:enable consistent-return */
-        constructor(argOptions = {}) {
-          super("...args", "return this.randomUUID(...args)");
-          this.dictIndex = 0;
-          this.dictRange = [];
-          this.lowerBound = 0;
-          this.upperBound = 0;
-          this.dictLength = 0;
-          const options = {
-            ...DEFAULT_OPTIONS,
-            ...argOptions,
-          };
-          this.counter = 0;
-          this.debug = false;
-          this.dict = [];
-          this.version = version_ts_1.default;
-          const { dictionary: userDict, shuffle, length } = options;
-          this.uuidLength = length;
-          if (userDict && userDict.length > 1) {
-            this.setDictionary(userDict);
-          } else {
-            let i;
-            this.dictIndex = i = 0;
-            Object.keys(DICT_RANGES).forEach((rangeType) => {
-              const rangeTypeKey = rangeType;
-              this.dictRange = DICT_RANGES[rangeTypeKey];
-              this.lowerBound = this.dictRange[0];
-              this.upperBound = this.dictRange[1];
-              for (
-                this.dictIndex = i = this.lowerBound;
-                this.lowerBound <= this.upperBound
-                  ? i < this.upperBound
-                  : i > this.upperBound;
-                this.dictIndex = this.lowerBound <= this.upperBound
-                  ? i += 1
-                  : i -= 1
-              ) {
-                this.dict.push(String.fromCharCode(this.dictIndex));
-              }
-            });
-          }
-          if (shuffle) {
-            // Shuffle Dictionary for removing selection bias.
-            const PROBABILITY = 0.5;
-            this.setDictionary(
-              this.dict.sort(() => Math.random() - PROBABILITY),
-            );
-          } else {
-            this.setDictionary(this.dict);
-          }
-          this.debug = options.debug;
-          this.log(this.dict);
-          this.log(
-            (`Generator instantiated with Dictionary Size ${this.dictLength}`),
-          );
-          const instance = this.bind(this);
-          Object.getOwnPropertyNames(this).forEach((prop) => {
-            if (!(/arguments|caller|callee|length|name|prototype/).test(prop)) {
-              const propKey = prop;
-              instance[prop] = this[propKey];
-            }
-          });
-          return instance;
-        }
-        /* tslint:disable consistent-return */
-        log(...args) {
-          const finalArgs = [...args];
-          finalArgs[0] = `[short-unique-id] ${args[0]}`;
-          /* tslint:disable no-console */
-          if (this.debug === true) {
-            if (typeof console !== "undefined" && console !== null) {
-              return console.log(...finalArgs);
-            }
-          }
-          /* tslint:enable no-console */
-        }
-        /** Change the dictionary after initialization. */
-        setDictionary(dictionary) {
-          this.dict = dictionary;
-          // Cache Dictionary Length for future usage.
-          this.dictLength = this.dict.length; // Resets internal counter.
-          this.counter = 0;
-        }
-        seq() {
-          return this.sequentialUUID();
-        }
-        /**
-                 * Generates UUID based on internal counter that's incremented after each ID generation.
-                 * @alias `const uid = new ShortUniqueId(); uid.seq();`
-                 */
-        sequentialUUID() {
-          let counterDiv;
-          let counterRem;
-          let id = "";
-          counterDiv = this.counter;
-          /* tslint:disable no-constant-condition */
-          while (true) {
-            counterRem = counterDiv % this.dictLength;
-            counterDiv = Math.trunc(counterDiv / this.dictLength);
-            id += this.dict[counterRem];
-            if (counterDiv === 0) {
-              break;
-            }
-          }
-          /* tslint:enable no-constant-condition */
-          this.counter += 1;
-          return id;
-        }
-        /**
-                 * Generates UUID by creating each part randomly.
-                 * @alias `const uid = new ShortUniqueId(); uid(uuidLength: number);`
-                 */
-        randomUUID(uuidLength = this.uuidLength || DEFAULT_UUID_LENGTH) {
-          let id;
-          let randomPartIdx;
-          let j;
-          let idIndex;
-          if (
-            (uuidLength === null || typeof uuidLength === "undefined") ||
-            uuidLength < 1
-          ) {
-            throw new Error("Invalid UUID Length Provided");
-          }
-          // Generate random ID parts from Dictionary.
-          id = "";
-          for (
-            idIndex = j = 0;
-            0 <= uuidLength ? j < uuidLength : j > uuidLength;
-            idIndex = 0 <= uuidLength ? j += 1 : j -= 1
-          ) {
-            randomPartIdx =
-              parseInt((Math.random() * this.dictLength).toFixed(0), 10) %
-              this.dictLength;
-            id += this.dict[randomPartIdx];
-          }
-          // Return random generated ID.
-          return id;
-        }
-        /**
-                 * Calculates total number of possible UUIDs.
-                 *
-                 * Given that:
-                 *
-                 * - `H` is the total number of possible UUIDs
-                 * - `n` is the number of unique characters in the dictionary
-                 * - `l` is the UUID length
-                 *
-                 * Then `H` is defined as `n` to the power of `l`:
-                 *
-                 * ![](https://render.githubusercontent.com/render/math?math=%5CHuge%20H=n%5El)
-                 *
-                 * This function returns `H`.
-                 */
-        availableUUIDs(uuidLength = this.uuidLength) {
-          return parseFloat(
-            Math.pow([...new Set(this.dict)].length, uuidLength).toFixed(0),
-          );
-        }
-        /**
-                 * Calculates approximate number of hashes before first collision.
-                 *
-                 * Given that:
-                 *
-                 * - `H` is the total number of possible UUIDs, or in terms of this library,
-                 * the result of running `availableUUIDs()`
-                 * - the expected number of values we have to choose before finding the
-                 * first collision can be expressed as the quantity `Q(H)`
-                 *
-                 * Then `Q(H)` can be approximated as the square root of the of the product
-                 * of half of pi times `H`:
-                 *
-                 * ![](https://render.githubusercontent.com/render/math?math=%5CHuge%20Q(H)%5Capprox%5Csqrt%7B%5Cfrac%7B%5Cpi%7D%7B2%7DH%7D)
-                 *
-                 * This function returns `Q(H)`.
-                 */
-        approxMaxBeforeCollision(
-          rounds = this.availableUUIDs(this.uuidLength),
-        ) {
-          return parseFloat(Math.sqrt((Math.PI / 2) * rounds).toFixed(20));
-        }
-        /**
-                 * Calculates probability of generating duplicate UUIDs (a collision) in a
-                 * given number of UUID generation rounds.
-                 *
-                 * Given that:
-                 *
-                 * - `r` is the maximum number of times that `randomUUID()` will be called,
-                 * or better said the number of _rounds_
-                 * - `H` is the total number of possible UUIDs, or in terms of this library,
-                 * the result of running `availableUUIDs()`
-                 *
-                 * Then the probability of collision `p(r; H)` can be approximated as the result
-                 * of dividing the square root of the of the product of half of pi times `H` by `H`:
-                 *
-                 * ![](https://render.githubusercontent.com/render/math?math=%5CHuge%20p(r%3B%20H)%5Capprox%5Cfrac%7B%5Csqrt%7B%5Cfrac%7B%5Cpi%7D%7B2%7Dr%7D%7D%7BH%7D)
-                 *
-                 * This function returns `p(r; H)`.
-                 *
-                 * (Useful if you are wondering _"If I use this lib and expect to perform at most
-                 * `r` rounds of UUID generations, what is the probability that I will hit a duplicate UUID?"_.)
-                 */
-        collisionProbability(
-          rounds = this.availableUUIDs(this.uuidLength),
-          uuidLength = this.uuidLength,
-        ) {
-          return parseFloat(
-            (this.approxMaxBeforeCollision(rounds) /
-              this.availableUUIDs(uuidLength)).toFixed(20),
-          );
-        }
-        /**
-                 * Calculate a "uniqueness" score (from 0 to 1) of UUIDs based on size of
-                 * dictionary and chosen UUID length.
-                 *
-                 * Given that:
-                 *
-                 * - `H` is the total number of possible UUIDs, or in terms of this library,
-                 * the result of running `availableUUIDs()`
-                 * - `Q(H)` is the approximate number of hashes before first collision,
-                 * or in terms of this library, the result of running `approxMaxBeforeCollision()`
-                 *
-                 * Then `uniqueness` can be expressed as the additive inverse of the probability of
-                 * generating a "word" I had previously generated (a duplicate) at any given iteration
-                 * up to the the total number of possible UUIDs expressed as the quotiend of `Q(H)` and `H`:
-                 *
-                 * ![](https://render.githubusercontent.com/render/math?math=%5CHuge%201-%5Cfrac%7BQ(H)%7D%7BH%7D)
-                 *
-                 * (Useful if you need a value to rate the "quality" of the combination of given dictionary
-                 * and UUID length. The closer to 1, higher the uniqueness and thus better the quality.)
-                 */
-        uniqueness(rounds = this.availableUUIDs(this.uuidLength)) {
-          const score = parseFloat(
-            (1 - (this.approxMaxBeforeCollision(rounds) / rounds)).toFixed(20),
-          );
-          return (score > 1) ? (1) : ((score < 0) ? 0 : score);
-        }
-        /**
-                 * Return the version of this module.
-                 */
-        getVersion() {
-          return this.version;
-        }
-      };
-      exports_2("default", ShortUniqueId);
-    },
-  };
-});
-
-const __exp = __instantiate("mod");
-exports. default = __exp["default"];
-
 
 /***/ }),
 
@@ -2685,190 +2206,6 @@ class Options {
 }
 exports.Options = Options;
 
-
-/***/ }),
-
-/***/ 327:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-/**
- * @fileoverview Extend node util module
- * @author douzi <liaowei08@gmail.com> 
- */
-var util = __webpack_require__(669);
-var toString = Object.prototype.toString;
-var isWindows = process.platform === 'win32';
-
-function isObject(value) {
-  return toString.call(value) === '[object Object]';
-}
-
-// And type check method: isFunction, isString, isNumber, isDate, isRegExp, isObject
-['Function', 'String', 'Number', 'Date', 'RegExp'].forEach(function(item) {
-  exports['is' + item]  = function(value) {
-    return toString.call(value) === '[object ' + item + ']';
-  };
-});
-
-/**
- * @description
- * Deep extend
- * @example
- * extend({ key: { k1: 'v1'} }, { key: { k2: 'v2' }, none: { k: 'v' } });
- * extend({ arr: [] }, { arr: [ {}, {} ] });
- */
-function extend(target, source) {
-  var value;
-
-  for (var key in source) {
-    value = source[key];
-
-    if (Array.isArray(value)) {
-      if (!Array.isArray(target[key])) {
-        target[key] = [];
-      }
-
-      extend(target[key], value);
-    } else if (isObject(value)) {
-      if (!isObject(target[key])) {
-        target[key]  = {};
-      }
-
-      extend(target[key], value);
-    } else {
-      target[key] = value;
-    }
-  }
-
-  return target;
-}
-
-extend(exports, util);
-
-// fixed util.isObject 
-exports.isObject = isObject;
-
-exports.extend = function() {
-  var args = Array.prototype.slice.call(arguments, 0);
-  var target = args.shift();
-
-  args.forEach(function(item) {
-    extend(target, item);
-  });
-
-  return target;
-};
-
-exports.isArray = Array.isArray;
-
-exports.isUndefined = function(value) {
-  return typeof value == 'undefined';
-};
-
-exports.noop = function() {};
-
-exports.unique = function(array) {
-  var result = [];
-
-  array.forEach(function(item) {
-    if (result.indexOf(item) == -1) {
-      result.push(item);
-    }
-  });
-
-  return result;
-};
-
-exports.escape = function(value) {
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-};
-
-exports.unescape = function(value) {
-  return String(value)
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>');
-};
-
-exports.hrtime = function(time) {
-  if (time) {
-    var spend = process.hrtime(time);
-    
-    spend = (spend[0] + spend[1] / 1e9) * 1000 + 'ms';
-
-    return spend;
-  } else {
-    return process.hrtime();
-  }
-};
-
-/**
- * @description
- * Return a copy of the object with list keys
- * @example
- * util.pick({ key: 'value' }, 'key', 'key1');
- * util.pick(obj, function(value, key, object) { });
- */
-exports.pick = function(obj, iteratee) {
-  var result = {};
-
-  if (exports.isFunction(iteratee)) {
-    for (var key in obj) {
-      var value = obj[key];
-      if (iteratee(value, key, obj)) {
-        result[key] = value;
-      }
-    }
-  } else {
-    var keys = Array.prototype.slice.call(arguments, 1);
-
-    keys.forEach(function(key) {
-      if (key in obj) {
-        result[key] = obj[key];
-      }
-    });
-  }
-
-  return result;
-};
-
-exports.path = {};
-
-if (isWindows) {
-  // Regex to split a windows path into three parts: [*, device, slash,
-  // tail] windows-only
-  var splitDeviceRe =
-      /^([a-zA-Z]:|[\\\/]{2}[^\\\/]+[\\\/]+[^\\\/]+)?([\\\/])?([\s\S]*?)$/;
-
-  exports.path.isAbsolute = function(filepath) {
-    var result = splitDeviceRe.exec(filepath),
-        device = result[1] || '',
-        isUnc = !!device && device.charAt(1) !== ':';
-    // UNC paths are always absolute
-    return !!result[2] || isUnc;
-  };
-
-  // Normalize \\ paths to / paths.
-  exports.path.unixifyPath = function(filepath) {
-    return filepath.replace(/\\/g, '/');
-  };
-
-} else {
-  exports.path.isAbsolute = function(filepath) {
-    return filepath.charAt(0) === '/';
-  };
-
-  exports.path.unixifyPath = function(filepath) {
-    return filepath;
-  };
-}
 
 /***/ }),
 
@@ -4296,400 +3633,7 @@ exports.parseBranchSummary = function (commit) {
 
 /***/ }),
 
-/***/ 352:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const git_response_error_1 = __webpack_require__(142);
-const functionNamesBuilderApi = [
-    'customBinary', 'env', 'outputHandler', 'silent',
-];
-const functionNamesPromiseApi = [
-    'add',
-    'addAnnotatedTag',
-    'addConfig',
-    'addRemote',
-    'addTag',
-    'binaryCatFile',
-    'branch',
-    'branchLocal',
-    'catFile',
-    'checkIgnore',
-    'checkIsRepo',
-    'checkout',
-    'checkoutBranch',
-    'checkoutLatestTag',
-    'checkoutLocalBranch',
-    'clean',
-    'clone',
-    'commit',
-    'cwd',
-    'deleteLocalBranch',
-    'deleteLocalBranches',
-    'diff',
-    'diffSummary',
-    'exec',
-    'fetch',
-    'getRemotes',
-    'init',
-    'listConfig',
-    'listRemote',
-    'log',
-    'merge',
-    'mergeFromTo',
-    'mirror',
-    'mv',
-    'pull',
-    'push',
-    'pushTags',
-    'raw',
-    'rebase',
-    'remote',
-    'removeRemote',
-    'reset',
-    'revert',
-    'revparse',
-    'rm',
-    'rmKeepLocal',
-    'show',
-    'stash',
-    'stashList',
-    'status',
-    'subModule',
-    'submoduleAdd',
-    'submoduleInit',
-    'submoduleUpdate',
-    'tag',
-    'tags',
-    'updateServerInfo'
-];
-const { gitInstanceFactory } = __webpack_require__(552);
-function gitP(baseDir) {
-    let git;
-    let chain = Promise.resolve();
-    try {
-        git = gitInstanceFactory(baseDir);
-    }
-    catch (e) {
-        chain = Promise.reject(e);
-    }
-    function builderReturn() {
-        return promiseApi;
-    }
-    function chainReturn() {
-        return chain;
-    }
-    const promiseApi = [...functionNamesBuilderApi, ...functionNamesPromiseApi].reduce((api, name) => {
-        const isAsync = functionNamesPromiseApi.includes(name);
-        const valid = isAsync ? asyncWrapper(name, git) : syncWrapper(name, git, api);
-        const alternative = isAsync ? chainReturn : builderReturn;
-        Object.defineProperty(api, name, {
-            enumerable: false,
-            configurable: false,
-            value: git ? valid : alternative,
-        });
-        return api;
-    }, {});
-    return promiseApi;
-    function asyncWrapper(fn, git) {
-        return function (...args) {
-            if (typeof args[args.length] === 'function') {
-                throw new TypeError('Promise interface requires that handlers are not supplied inline, ' +
-                    'trailing function not allowed in call to ' + fn);
-            }
-            return chain.then(function () {
-                return new Promise(function (resolve, reject) {
-                    const callback = (err, result) => {
-                        if (err) {
-                            return reject(toError(err));
-                        }
-                        resolve(result);
-                    };
-                    args.push(callback);
-                    git[fn].apply(git, args);
-                });
-            });
-        };
-    }
-    function syncWrapper(fn, git, api) {
-        return (...args) => {
-            git[fn](...args);
-            return api;
-        };
-    }
-}
-exports.gitP = gitP;
-function toError(error) {
-    if (error instanceof Error) {
-        return error;
-    }
-    if (typeof error === 'string') {
-        return new Error(error);
-    }
-    return new git_response_error_1.GitResponseError(error);
-}
-//# sourceMappingURL=promise.js.map
-
-/***/ }),
-
-/***/ 357:
-/***/ (function(module) {
-
-module.exports = require("assert");
-
-/***/ }),
-
-/***/ 362:
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-module.exports = MergeSummary;
-module.exports.MergeConflict = MergeConflict;
-
-var PullSummary = __webpack_require__(115);
-
-function MergeConflict (reason, file, meta) {
-   this.reason = reason;
-   this.file = file;
-   if (meta) {
-      this.meta = meta;
-   }
-}
-
-MergeConflict.prototype.meta = null;
-
-MergeConflict.prototype.toString = function () {
-   return this.file + ':' + this.reason;
-};
-
-function MergeSummary () {
-   PullSummary.call(this);
-
-   this.conflicts = [];
-   this.merges = [];
-}
-
-MergeSummary.prototype = Object.create(PullSummary.prototype);
-
-MergeSummary.prototype.result = 'success';
-
-MergeSummary.prototype.toString = function () {
-   if (this.conflicts.length) {
-      return 'CONFLICTS: ' + this.conflicts.join(', ');
-   }
-   return 'OK';
-};
-
-Object.defineProperty(MergeSummary.prototype, 'failed', {
-   get: function () {
-      return this.conflicts.length > 0;
-   }
-});
-
-MergeSummary.parsers = [
-   {
-      test: /^Auto-merging\s+(.+)$/,
-      handle: function (result, mergeSummary) {
-         mergeSummary.merges.push(result[1]);
-      }
-   },
-   {
-      // Parser for standard merge conflicts
-      test: /^CONFLICT\s+\((.+)\): Merge conflict in (.+)$/,
-      handle: function (result, mergeSummary) {
-         mergeSummary.conflicts.push(new MergeConflict(result[1], result[2]));
-      }
-   },
-   {
-      // Parser for modify/delete merge conflicts (modified by us/them, deleted by them/us)
-      test: /^CONFLICT\s+\((.+\/delete)\): (.+) deleted in (.+) and/,
-      handle: function (result, mergeSummary) {
-         mergeSummary.conflicts.push(
-            new MergeConflict(result[1], result[2], {deleteRef: result[3]})
-         );
-      }
-   },
-   {
-      // Catch-all parser for unknown/unparsed conflicts
-      test: /^CONFLICT\s+\((.+)\):/,
-      handle: function (result, mergeSummary) {
-         mergeSummary.conflicts.push(new MergeConflict(result[1], null));
-      }
-   },
-   {
-      test: /^Automatic merge failed;\s+(.+)$/,
-      handle: function (result, mergeSummary) {
-         mergeSummary.reason = mergeSummary.result = result[1];
-      }
-   }
-];
-
-MergeSummary.parse = function (output) {
-   let mergeSummary = new MergeSummary();
-
-   output.trim().split('\n').forEach(function (line) {
-      for (var i = 0, iMax = MergeSummary.parsers.length; i < iMax; i++) {
-         let parser = MergeSummary.parsers[i];
-
-         var result = parser.test.exec(line);
-         if (result) {
-            parser.handle(result, mergeSummary);
-            break;
-         }
-      }
-   });
-
-   let pullSummary = PullSummary.parse(output);
-   if (pullSummary.summary.changes) {
-      Object.assign(mergeSummary, pullSummary);
-   }
-
-   return mergeSummary;
-};
-
-
-/***/ }),
-
-/***/ 370:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var _ = __webpack_require__(557);
-function cliTable2Json(lines) {
-    lines[0] = lines[0].toLowerCase();
-    var headerline = lines[0];
-    var result = [];
-    var column_headers = headerline.split(/ [ ]+/);
-    var next_index = 1;
-    var locations = column_headers.reduce(function (result2, title) {
-        result2[title] = {
-            end: next_index < column_headers.length ?
-                headerline.indexOf(column_headers[next_index++])
-                : headerline.indexOf(title) + 1000,
-            start: headerline.indexOf(title),
-        };
-        return result2;
-    }, {});
-    lines.slice(1).forEach(function (line) {
-        if (line.trim().length === 0) {
-            return;
-        }
-        var item = {};
-        result.push(item);
-        _.forEach(locations, function (position, title) {
-            item[title] = line.substring(position.start, position.end).trim();
-        });
-    });
-    return result;
-}
-exports.cliTable2Json = cliTable2Json;
-//# sourceMappingURL=index.js.map
-
-/***/ }),
-
-/***/ 431:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const os = __importStar(__webpack_require__(87));
-/**
- * Commands
- *
- * Command Format:
- *   ::name key=value,key=value::message
- *
- * Examples:
- *   ::warning::This is the message
- *   ::set-env name=MY_VAR::some value
- */
-function issueCommand(command, properties, message) {
-    const cmd = new Command(command, properties, message);
-    process.stdout.write(cmd.toString() + os.EOL);
-}
-exports.issueCommand = issueCommand;
-function issue(name, message = '') {
-    issueCommand(name, {}, message);
-}
-exports.issue = issue;
-const CMD_STRING = '::';
-class Command {
-    constructor(command, properties, message) {
-        if (!command) {
-            command = 'missing.command';
-        }
-        this.command = command;
-        this.properties = properties;
-        this.message = message;
-    }
-    toString() {
-        let cmdStr = CMD_STRING + this.command;
-        if (this.properties && Object.keys(this.properties).length > 0) {
-            cmdStr += ' ';
-            let first = true;
-            for (const key in this.properties) {
-                if (this.properties.hasOwnProperty(key)) {
-                    const val = this.properties[key];
-                    if (val) {
-                        if (first) {
-                            first = false;
-                        }
-                        else {
-                            cmdStr += ',';
-                        }
-                        cmdStr += `${key}=${escapeProperty(val)}`;
-                    }
-                }
-            }
-        }
-        cmdStr += `${CMD_STRING}${escapeData(this.message)}`;
-        return cmdStr;
-    }
-}
-/**
- * Sanitizes an input into a string so it can be passed into issueCommand safely
- * @param input input to sanitize into a string
- */
-function toCommandValue(input) {
-    if (input === null || input === undefined) {
-        return '';
-    }
-    else if (typeof input === 'string' || input instanceof String) {
-        return input;
-    }
-    return JSON.stringify(input);
-}
-exports.toCommandValue = toCommandValue;
-function escapeData(s) {
-    return toCommandValue(s)
-        .replace(/%/g, '%25')
-        .replace(/\r/g, '%0D')
-        .replace(/\n/g, '%0A');
-}
-function escapeProperty(s) {
-    return toCommandValue(s)
-        .replace(/%/g, '%25')
-        .replace(/\r/g, '%0D')
-        .replace(/\n/g, '%0A')
-        .replace(/:/g, '%3A')
-        .replace(/,/g, '%2C');
-}
-//# sourceMappingURL=command.js.map
-
-/***/ }),
-
-/***/ 435:
+/***/ 349:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 /**
@@ -4697,9 +3641,9 @@ function escapeProperty(s) {
  * @author wliao <wliao@Ctrip.com> 
  */
 var fs = __webpack_require__(747);
-var util = __webpack_require__(327);
+var util = __webpack_require__(850);
 var path = __webpack_require__(622);
-var fileMatch = __webpack_require__(900);
+var fileMatch = __webpack_require__(407);
 
 function checkCbAndOpts(options, callback) {
   if (util.isFunction(options)) {
@@ -5030,13 +3974,493 @@ exports.copySync = function(dirpath, destpath, options) {
 
 /***/ }),
 
+/***/ 352:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const git_response_error_1 = __webpack_require__(142);
+const functionNamesBuilderApi = [
+    'customBinary', 'env', 'outputHandler', 'silent',
+];
+const functionNamesPromiseApi = [
+    'add',
+    'addAnnotatedTag',
+    'addConfig',
+    'addRemote',
+    'addTag',
+    'binaryCatFile',
+    'branch',
+    'branchLocal',
+    'catFile',
+    'checkIgnore',
+    'checkIsRepo',
+    'checkout',
+    'checkoutBranch',
+    'checkoutLatestTag',
+    'checkoutLocalBranch',
+    'clean',
+    'clone',
+    'commit',
+    'cwd',
+    'deleteLocalBranch',
+    'deleteLocalBranches',
+    'diff',
+    'diffSummary',
+    'exec',
+    'fetch',
+    'getRemotes',
+    'init',
+    'listConfig',
+    'listRemote',
+    'log',
+    'merge',
+    'mergeFromTo',
+    'mirror',
+    'mv',
+    'pull',
+    'push',
+    'pushTags',
+    'raw',
+    'rebase',
+    'remote',
+    'removeRemote',
+    'reset',
+    'revert',
+    'revparse',
+    'rm',
+    'rmKeepLocal',
+    'show',
+    'stash',
+    'stashList',
+    'status',
+    'subModule',
+    'submoduleAdd',
+    'submoduleInit',
+    'submoduleUpdate',
+    'tag',
+    'tags',
+    'updateServerInfo'
+];
+const { gitInstanceFactory } = __webpack_require__(552);
+function gitP(baseDir) {
+    let git;
+    let chain = Promise.resolve();
+    try {
+        git = gitInstanceFactory(baseDir);
+    }
+    catch (e) {
+        chain = Promise.reject(e);
+    }
+    function builderReturn() {
+        return promiseApi;
+    }
+    function chainReturn() {
+        return chain;
+    }
+    const promiseApi = [...functionNamesBuilderApi, ...functionNamesPromiseApi].reduce((api, name) => {
+        const isAsync = functionNamesPromiseApi.includes(name);
+        const valid = isAsync ? asyncWrapper(name, git) : syncWrapper(name, git, api);
+        const alternative = isAsync ? chainReturn : builderReturn;
+        Object.defineProperty(api, name, {
+            enumerable: false,
+            configurable: false,
+            value: git ? valid : alternative,
+        });
+        return api;
+    }, {});
+    return promiseApi;
+    function asyncWrapper(fn, git) {
+        return function (...args) {
+            if (typeof args[args.length] === 'function') {
+                throw new TypeError('Promise interface requires that handlers are not supplied inline, ' +
+                    'trailing function not allowed in call to ' + fn);
+            }
+            return chain.then(function () {
+                return new Promise(function (resolve, reject) {
+                    const callback = (err, result) => {
+                        if (err) {
+                            return reject(toError(err));
+                        }
+                        resolve(result);
+                    };
+                    args.push(callback);
+                    git[fn].apply(git, args);
+                });
+            });
+        };
+    }
+    function syncWrapper(fn, git, api) {
+        return (...args) => {
+            git[fn](...args);
+            return api;
+        };
+    }
+}
+exports.gitP = gitP;
+function toError(error) {
+    if (error instanceof Error) {
+        return error;
+    }
+    if (typeof error === 'string') {
+        return new Error(error);
+    }
+    return new git_response_error_1.GitResponseError(error);
+}
+//# sourceMappingURL=promise.js.map
+
+/***/ }),
+
+/***/ 357:
+/***/ (function(module) {
+
+module.exports = require("assert");
+
+/***/ }),
+
+/***/ 362:
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+module.exports = MergeSummary;
+module.exports.MergeConflict = MergeConflict;
+
+var PullSummary = __webpack_require__(115);
+
+function MergeConflict (reason, file, meta) {
+   this.reason = reason;
+   this.file = file;
+   if (meta) {
+      this.meta = meta;
+   }
+}
+
+MergeConflict.prototype.meta = null;
+
+MergeConflict.prototype.toString = function () {
+   return this.file + ':' + this.reason;
+};
+
+function MergeSummary () {
+   PullSummary.call(this);
+
+   this.conflicts = [];
+   this.merges = [];
+}
+
+MergeSummary.prototype = Object.create(PullSummary.prototype);
+
+MergeSummary.prototype.result = 'success';
+
+MergeSummary.prototype.toString = function () {
+   if (this.conflicts.length) {
+      return 'CONFLICTS: ' + this.conflicts.join(', ');
+   }
+   return 'OK';
+};
+
+Object.defineProperty(MergeSummary.prototype, 'failed', {
+   get: function () {
+      return this.conflicts.length > 0;
+   }
+});
+
+MergeSummary.parsers = [
+   {
+      test: /^Auto-merging\s+(.+)$/,
+      handle: function (result, mergeSummary) {
+         mergeSummary.merges.push(result[1]);
+      }
+   },
+   {
+      // Parser for standard merge conflicts
+      test: /^CONFLICT\s+\((.+)\): Merge conflict in (.+)$/,
+      handle: function (result, mergeSummary) {
+         mergeSummary.conflicts.push(new MergeConflict(result[1], result[2]));
+      }
+   },
+   {
+      // Parser for modify/delete merge conflicts (modified by us/them, deleted by them/us)
+      test: /^CONFLICT\s+\((.+\/delete)\): (.+) deleted in (.+) and/,
+      handle: function (result, mergeSummary) {
+         mergeSummary.conflicts.push(
+            new MergeConflict(result[1], result[2], {deleteRef: result[3]})
+         );
+      }
+   },
+   {
+      // Catch-all parser for unknown/unparsed conflicts
+      test: /^CONFLICT\s+\((.+)\):/,
+      handle: function (result, mergeSummary) {
+         mergeSummary.conflicts.push(new MergeConflict(result[1], null));
+      }
+   },
+   {
+      test: /^Automatic merge failed;\s+(.+)$/,
+      handle: function (result, mergeSummary) {
+         mergeSummary.reason = mergeSummary.result = result[1];
+      }
+   }
+];
+
+MergeSummary.parse = function (output) {
+   let mergeSummary = new MergeSummary();
+
+   output.trim().split('\n').forEach(function (line) {
+      for (var i = 0, iMax = MergeSummary.parsers.length; i < iMax; i++) {
+         let parser = MergeSummary.parsers[i];
+
+         var result = parser.test.exec(line);
+         if (result) {
+            parser.handle(result, mergeSummary);
+            break;
+         }
+      }
+   });
+
+   let pullSummary = PullSummary.parse(output);
+   if (pullSummary.summary.changes) {
+      Object.assign(mergeSummary, pullSummary);
+   }
+
+   return mergeSummary;
+};
+
+
+/***/ }),
+
+/***/ 370:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var _ = __webpack_require__(557);
+function cliTable2Json(lines) {
+    lines[0] = lines[0].toLowerCase();
+    var headerline = lines[0];
+    var result = [];
+    var column_headers = headerline.split(/ [ ]+/);
+    var next_index = 1;
+    var locations = column_headers.reduce(function (result2, title) {
+        result2[title] = {
+            end: next_index < column_headers.length ?
+                headerline.indexOf(column_headers[next_index++])
+                : headerline.indexOf(title) + 1000,
+            start: headerline.indexOf(title),
+        };
+        return result2;
+    }, {});
+    lines.slice(1).forEach(function (line) {
+        if (line.trim().length === 0) {
+            return;
+        }
+        var item = {};
+        result.push(item);
+        _.forEach(locations, function (position, title) {
+            item[title] = line.substring(position.start, position.end).trim();
+        });
+    });
+    return result;
+}
+exports.cliTable2Json = cliTable2Json;
+//# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ 407:
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+var util = __webpack_require__(850);
+/**
+ * @description
+ * @example
+ * `**\/*` match all files
+ * `*.js`  only match current dir files
+ * '**\/*.js' match all js files
+ * 'path/*.js' match js files in path
+ * '!*.js' exclude js files 
+ */
+function fileMatch(filter, ignore) {
+  if (filter === null) {
+    return function() {
+      return true;
+    };
+  } else if (filter === '' || (util.isArray(filter) && !filter.length)) {
+    return function() {
+      return false;
+    };
+  }
+
+  if (util.isString(filter)) {
+    filter = [filter];
+  }
+
+  var match = [];
+  var negate = [];
+  var isIgnore = ignore ? 'i' : '';
+
+  filter.forEach(function(item) {
+    var isNegate = item.indexOf('!') === 0;
+    item = item
+      .replace(/^!/, '')
+      .replace(/\*(?![\/*])/, '[^/]*?')
+      .replace('**\/', '([^/]+\/)*')
+      .replace(/\{([^\}]+)\}/g, function($1, $2) {
+        var collection = $2.split(',');
+        var length = collection.length;
+        var result = '(?:';
+
+        collection.forEach(function(item, index) {
+          result += '(' + item.trim() + ')';
+
+          if (index + 1 !== length) {
+            result += '|';
+          }
+        });
+
+        result += ')';
+
+        return result;
+      })
+      .replace(/([\/\.])/g, '\\$1');
+
+    item = '(^' + item + '$)';
+
+    if (isNegate) {
+      negate.push(item);
+    } else {
+      match.push(item);
+    }
+  });
+
+  match = match.length ?  new RegExp(match.join('|'), isIgnore) : null;
+  negate = negate.length ? new RegExp(negate.join('|'), isIgnore) : null;
+
+  return function(filepath) {
+    // Normalize \\ paths to / paths.
+    filepath = util.path.unixifyPath(filepath);
+
+    if (negate && negate.test(filepath)) {
+      return false;
+    }
+
+    if (match && match.test(filepath)) {
+      return true;
+    }
+
+    return false;
+  };
+}
+
+module.exports = fileMatch;
+
+/***/ }),
+
+/***/ 431:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const os = __importStar(__webpack_require__(87));
+/**
+ * Commands
+ *
+ * Command Format:
+ *   ::name key=value,key=value::message
+ *
+ * Examples:
+ *   ::warning::This is the message
+ *   ::set-env name=MY_VAR::some value
+ */
+function issueCommand(command, properties, message) {
+    const cmd = new Command(command, properties, message);
+    process.stdout.write(cmd.toString() + os.EOL);
+}
+exports.issueCommand = issueCommand;
+function issue(name, message = '') {
+    issueCommand(name, {}, message);
+}
+exports.issue = issue;
+const CMD_STRING = '::';
+class Command {
+    constructor(command, properties, message) {
+        if (!command) {
+            command = 'missing.command';
+        }
+        this.command = command;
+        this.properties = properties;
+        this.message = message;
+    }
+    toString() {
+        let cmdStr = CMD_STRING + this.command;
+        if (this.properties && Object.keys(this.properties).length > 0) {
+            cmdStr += ' ';
+            let first = true;
+            for (const key in this.properties) {
+                if (this.properties.hasOwnProperty(key)) {
+                    const val = this.properties[key];
+                    if (val) {
+                        if (first) {
+                            first = false;
+                        }
+                        else {
+                            cmdStr += ',';
+                        }
+                        cmdStr += `${key}=${escapeProperty(val)}`;
+                    }
+                }
+            }
+        }
+        cmdStr += `${CMD_STRING}${escapeData(this.message)}`;
+        return cmdStr;
+    }
+}
+/**
+ * Sanitizes an input into a string so it can be passed into issueCommand safely
+ * @param input input to sanitize into a string
+ */
+function toCommandValue(input) {
+    if (input === null || input === undefined) {
+        return '';
+    }
+    else if (typeof input === 'string' || input instanceof String) {
+        return input;
+    }
+    return JSON.stringify(input);
+}
+exports.toCommandValue = toCommandValue;
+function escapeData(s) {
+    return toCommandValue(s)
+        .replace(/%/g, '%25')
+        .replace(/\r/g, '%0D')
+        .replace(/\n/g, '%0A');
+}
+function escapeProperty(s) {
+    return toCommandValue(s)
+        .replace(/%/g, '%25')
+        .replace(/\r/g, '%0D')
+        .replace(/\n/g, '%0A')
+        .replace(/:/g, '%3A')
+        .replace(/,/g, '%2C');
+}
+//# sourceMappingURL=command.js.map
+
+/***/ }),
+
 /***/ 447:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 const exec = __webpack_require__(986);
-const fs  = __webpack_require__(435);
 const metadata = __webpack_require__(490);
-const { default: ShortUniqueId } = __webpack_require__(209);
 const { dockerCommand } = __webpack_require__(307);
 
 async function buildImage(input) {
@@ -5054,7 +4478,7 @@ async function buildMetadata(input) {
   };
 
   data.commit = await metadata.getCommitData();
-  data.build = metadata.getBuildData(input);
+  data.build = metadata.getBuildData(input.event);
   data.labels = metadata.getLabels(input.labels);
 
   const dockerInspect = await dockerCommand(`inspect ${input.repoTag}`, {echo: false});
@@ -5063,25 +4487,10 @@ async function buildMetadata(input) {
   return data;
 }
 
-async function pushMetadata(data) {
-  fs.writeFile("metadata.json", JSON.stringify(data, null, '  '), function (err) {
-    if (err) {
-      throw Error(`failed to write temp JSON metadata file because ${err.message}`);
-    }
-  })
-
-  // Github uses the same build number for re-runs, so we add an extra id to the
-  // generated filenames, so re-runs don't cause files to be overwritten.
-  const uid = new ShortUniqueId({length: 3});
-  const filename = `github-build.${data.build.id}.${uid()}.json`;
-  await exec.exec('gsutil', ['cp', './metadata.json', `gs://bw-prod-artifacts-metadata/${data.service}/${filename}`], {});
-}
-
 module.exports = {
   buildImage,
   pushImage,
   buildMetadata,
-  pushMetadata,
 }
 
 
@@ -5401,6 +4810,14 @@ exports.FileStatusSummary = FileStatusSummary;
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 const git = __webpack_require__(724);
+const fs  = __webpack_require__(349);
+const exec = __webpack_require__(679);
+const { default: ShortUniqueId } = __webpack_require__(498);
+
+const githubRepo = process.env.GITHUB_REPOSITORY;
+const githubRunID = process.env.GITHUB_RUN_ID;
+const githubRunNumber = process.env.GITHUB_RUN_NUMBER;
+const githubSHA = process.env.GITHUB_SHA;
 
 async function getCommitData() {
   const log = await git()
@@ -5417,19 +4834,19 @@ async function getCommitData() {
     author: commit.author,
     message: commit.message,
     sha: commit.commit,
-    url: `https://github.com/${process.env.GITHUB_REPOSITORY}/commit/${commit.commit}`,
+    url: `https://github.com/${githubRepo}/commit/${commit.commit}`,
   }
 }
 
 function getBuildData(githubEvent) {
-  const repositoryUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}`;
-  const checkSuffix = `checks?check_suite_id=${process.env.GITHUB_RUN_ID}`;
-  let buildUrl = `${repositoryUrl}/commit/${process.env.GITHUB_SHA}/${checkSuffix}`;
+  const repositoryUrl = `https://github.com/${githubRepo}`;
+  const checkSuffix = `checks?check_suite_id=${githubRunID}`;
+  let buildUrl = `${repositoryUrl}/commit/${githubSHA}/${checkSuffix}`;
   if (githubEvent.pull_request && githubEvent.pull_request.number) {
     buildUrl = `${repositoryUrl}/pull/${githubEvent.pull_request.number}/${checkSuffix}`
   }
   return {
-    id: `${process.env.GITHUB_RUN_NUMBER}`,
+    id: githubRunNumber,
     url: buildUrl,
   }
 }
@@ -5442,17 +4859,533 @@ function getLabels(l) {
       const kv = labelPair.split('=');
       if (kv.length == 2) {
         labels[kv[0]] = kv[1];
+      } else {
+        throw new Error('Baldy formed labels field. Should be `key=value,key=value`');
       }
     });
   }
   return labels;
 }
 
+async function pushMetadata(data, bucket) {
+  const tmpFile = 'tmp-slipstream-metadata.json';
+  fs.writeFile(tmpFile, JSON.stringify(data, null, '  '), (err) => {
+    if (err) {
+      throw Error(`failed to write temp JSON metadata file: ${err.message}`);
+    }
+  })
+
+  // Github uses the same build number for re-runs, so we add an extra id to the
+  // generated filenames, so re-runs don't cause files to be overwritten.
+  const uid = new ShortUniqueId({length: 3});
+  const filename = `github-build.${data.build.id}.${uid()}.json`;
+  await exec.exec('gsutil', ['cp', `./${tmpFile}`, `${bucket}/${data.service}/${filename}`], {});
+  await fs.unlink(tmpFile, (err) => {
+    if (err) {
+      throw Error(`failed to delete temp JSON metadata file: ${err.message}`);
+    }
+  })
+}
+
+async function pushFilesToBucket(files, bucketAddress) {
+  await exec.exec('gsutil', [
+    '-m',
+    '-h', 'Cache-Control:public, max-age=31536000',
+    'cp', '-r', '.',
+    bucketAddress
+   ], {
+     cwd: files,
+   });
+}
+
 module.exports = {
   getCommitData,
   getBuildData,
   getLabels,
+  pushMetadata,
+  pushFilesToBucket,
 }
+
+
+/***/ }),
+
+/***/ 498:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", {value: true});// Copyright 2018-2020 the Deno authors. All rights reserved. MIT license.
+
+// This is a specialised implementation of a System module loader.
+
+// @ts-nocheck
+/* eslint-disable */
+let System, __instantiateAsync, __instantiate;
+
+(() => {
+  const r = new Map();
+
+  System = {
+    register(id, d, f) {
+      r.set(id, { d, f, exp: {} });
+    },
+  };
+
+  async function dI(mid, src) {
+    let id = mid.replace(/\.\w+$/i, "");
+    if (id.includes("./")) {
+      const [o, ...ia] = id.split("/").reverse(),
+        [, ...sa] = src.split("/").reverse(),
+        oa = [o];
+      let s = 0,
+        i;
+      while ((i = ia.shift())) {
+        if (i === "..") s++;
+        else if (i === ".") break;
+        else oa.push(i);
+      }
+      if (s < sa.length) oa.push(...sa.slice(s));
+      id = oa.reverse().join("/");
+    }
+    return r.has(id) ? gExpA(id) : Promise.resolve().then(() => require(mid));
+  }
+
+  function gC(id, main) {
+    return {
+      id,
+      import: (m) => dI(m, id),
+      meta: { url: id, main },
+    };
+  }
+
+  function gE(exp) {
+    return (id, v) => {
+      v = typeof id === "string" ? { [id]: v } : id;
+      for (const [id, value] of Object.entries(v)) {
+        Object.defineProperty(exp, id, {
+          value,
+          writable: true,
+          enumerable: true,
+        });
+      }
+    };
+  }
+
+  function rF(main) {
+    for (const [id, m] of r.entries()) {
+      const { f, exp } = m;
+      const { execute: e, setters: s } = f(gE(exp), gC(id, id === main));
+      delete m.f;
+      m.e = e;
+      m.s = s;
+    }
+  }
+
+  async function gExpA(id) {
+    if (!r.has(id)) return;
+    const m = r.get(id);
+    if (m.s) {
+      const { d, e, s } = m;
+      delete m.s;
+      delete m.e;
+      for (let i = 0; i < s.length; i++) s[i](await gExpA(d[i]));
+      const r = e();
+      if (r) await r;
+    }
+    return m.exp;
+  }
+
+  function gExp(id) {
+    if (!r.has(id)) return;
+    const m = r.get(id);
+    if (m.s) {
+      const { d, e, s } = m;
+      delete m.s;
+      delete m.e;
+      for (let i = 0; i < s.length; i++) s[i](gExp(d[i]));
+      e();
+    }
+    return m.exp;
+  }
+
+  __instantiateAsync = async (m) => {
+    System = __instantiateAsync = __instantiate = undefined;
+    rF(m);
+    return gExpA(m);
+  };
+
+  __instantiate = (m) => {
+    System = __instantiateAsync = __instantiate = undefined;
+    rF(m);
+    return gExp(m);
+  };
+})();
+
+System.register("version", [], function (exports_1, context_1) {
+  "use strict";
+  var __moduleName = context_1 && context_1.id;
+  return {
+    setters: [],
+    execute: function () {
+      exports_1("default", "3.0.2");
+    },
+  };
+});
+System.register("mod", ["version"], function (exports_2, context_2) {
+  "use strict";
+  var version_ts_1,
+    DEFAULT_UUID_LENGTH,
+    DIGIT_FIRST_ASCII,
+    DIGIT_LAST_ASCII,
+    ALPHA_LOWER_FIRST_ASCII,
+    ALPHA_LOWER_LAST_ASCII,
+    ALPHA_UPPER_FIRST_ASCII,
+    ALPHA_UPPER_LAST_ASCII,
+    DICT_RANGES,
+    DEFAULT_OPTIONS,
+    ShortUniqueId;
+  var __moduleName = context_2 && context_2.id;
+  return {
+    setters: [
+      function (version_ts_1_1) {
+        version_ts_1 = version_ts_1_1;
+      },
+    ],
+    execute: function () {
+      /**
+             * 6 was chosen as the default UUID length since for most cases
+             * it will be more than aptly suitable to provide millions of UUIDs
+             * with a very low probability of producing a duplicate UUID.
+             *
+             * For example, with a dictionary including digits from 0 to 9,
+             * as well as the alphabet from a to z both in UPPER and lower case,
+             * the probability of generating a duplicate in 1,000,000 rounds
+             * is ~0.00000002, or about 1 in 50,000,000.
+             */
+      DEFAULT_UUID_LENGTH = 6;
+      DIGIT_FIRST_ASCII = 48;
+      DIGIT_LAST_ASCII = 58;
+      ALPHA_LOWER_FIRST_ASCII = 97;
+      ALPHA_LOWER_LAST_ASCII = 123;
+      ALPHA_UPPER_FIRST_ASCII = 65;
+      ALPHA_UPPER_LAST_ASCII = 91;
+      DICT_RANGES = {
+        digits: [DIGIT_FIRST_ASCII, DIGIT_LAST_ASCII],
+        lowerCase: [ALPHA_LOWER_FIRST_ASCII, ALPHA_LOWER_LAST_ASCII],
+        upperCase: [ALPHA_UPPER_FIRST_ASCII, ALPHA_UPPER_LAST_ASCII],
+      };
+      DEFAULT_OPTIONS = {
+        dictionary: [],
+        shuffle: true,
+        debug: false,
+        length: DEFAULT_UUID_LENGTH,
+      };
+      /**
+             * Generate random or sequential UUID of any length.
+             *
+             * ### Use as module
+             *
+             * ```js
+             * // Deno (web module) Import
+             * import ShortUniqueId from 'https://cdn.jsdelivr.net/npm/short-unique-id@latest/short_uuid/mod.ts';
+             *
+             * // ES6 / TypeScript Import
+             * import ShortUniqueId from 'short-unique-id';
+             *
+             * //or Node.js require
+             * const {default: ShortUniqueId} = require('short-unique-id');
+             *
+             * //Instantiate
+             * const uid = new ShortUniqueId();
+             *
+             * // Random UUID
+             * console.log(uid());
+             *
+             * // Sequential UUID
+             * console.log(uid.seq());
+             * ```
+             *
+             * ### Use in browser
+             *
+             * ```html
+             * <!-- Import -->
+             * <script src="https://cdn.jsdelivr.net/npm/short-unique-id@latest/dist/short-unique-id.min.js"></script>
+             *
+             * <!-- Usage -->
+             * <script>
+             *   // Instantiate
+             *   var uid = new ShortUniqueId();
+             *
+             *   // Random UUID
+             *   document.write(uid());
+             *
+             *   // Sequential UUID
+             *   document.write(uid.seq());
+             * </script>
+             * ```
+             *
+             * ### Options
+             *
+             * Options can be passed when instantiating `uid`:
+             *
+             * ```js
+             * const options = { ... };
+             *
+             * const uid = new ShortUniqueId(options);
+             * ```
+             *
+             * For more information take a look at the [Options type definition](/globals.html#options).
+             */
+      ShortUniqueId = class ShortUniqueId extends Function {
+        /* tslint:enable consistent-return */
+        constructor(argOptions = {}) {
+          super("...args", "return this.randomUUID(...args)");
+          this.dictIndex = 0;
+          this.dictRange = [];
+          this.lowerBound = 0;
+          this.upperBound = 0;
+          this.dictLength = 0;
+          const options = {
+            ...DEFAULT_OPTIONS,
+            ...argOptions,
+          };
+          this.counter = 0;
+          this.debug = false;
+          this.dict = [];
+          this.version = version_ts_1.default;
+          const { dictionary: userDict, shuffle, length } = options;
+          this.uuidLength = length;
+          if (userDict && userDict.length > 1) {
+            this.setDictionary(userDict);
+          } else {
+            let i;
+            this.dictIndex = i = 0;
+            Object.keys(DICT_RANGES).forEach((rangeType) => {
+              const rangeTypeKey = rangeType;
+              this.dictRange = DICT_RANGES[rangeTypeKey];
+              this.lowerBound = this.dictRange[0];
+              this.upperBound = this.dictRange[1];
+              for (
+                this.dictIndex = i = this.lowerBound;
+                this.lowerBound <= this.upperBound
+                  ? i < this.upperBound
+                  : i > this.upperBound;
+                this.dictIndex = this.lowerBound <= this.upperBound
+                  ? i += 1
+                  : i -= 1
+              ) {
+                this.dict.push(String.fromCharCode(this.dictIndex));
+              }
+            });
+          }
+          if (shuffle) {
+            // Shuffle Dictionary for removing selection bias.
+            const PROBABILITY = 0.5;
+            this.setDictionary(
+              this.dict.sort(() => Math.random() - PROBABILITY),
+            );
+          } else {
+            this.setDictionary(this.dict);
+          }
+          this.debug = options.debug;
+          this.log(this.dict);
+          this.log(
+            (`Generator instantiated with Dictionary Size ${this.dictLength}`),
+          );
+          const instance = this.bind(this);
+          Object.getOwnPropertyNames(this).forEach((prop) => {
+            if (!(/arguments|caller|callee|length|name|prototype/).test(prop)) {
+              const propKey = prop;
+              instance[prop] = this[propKey];
+            }
+          });
+          return instance;
+        }
+        /* tslint:disable consistent-return */
+        log(...args) {
+          const finalArgs = [...args];
+          finalArgs[0] = `[short-unique-id] ${args[0]}`;
+          /* tslint:disable no-console */
+          if (this.debug === true) {
+            if (typeof console !== "undefined" && console !== null) {
+              return console.log(...finalArgs);
+            }
+          }
+          /* tslint:enable no-console */
+        }
+        /** Change the dictionary after initialization. */
+        setDictionary(dictionary) {
+          this.dict = dictionary;
+          // Cache Dictionary Length for future usage.
+          this.dictLength = this.dict.length; // Resets internal counter.
+          this.counter = 0;
+        }
+        seq() {
+          return this.sequentialUUID();
+        }
+        /**
+                 * Generates UUID based on internal counter that's incremented after each ID generation.
+                 * @alias `const uid = new ShortUniqueId(); uid.seq();`
+                 */
+        sequentialUUID() {
+          let counterDiv;
+          let counterRem;
+          let id = "";
+          counterDiv = this.counter;
+          /* tslint:disable no-constant-condition */
+          while (true) {
+            counterRem = counterDiv % this.dictLength;
+            counterDiv = Math.trunc(counterDiv / this.dictLength);
+            id += this.dict[counterRem];
+            if (counterDiv === 0) {
+              break;
+            }
+          }
+          /* tslint:enable no-constant-condition */
+          this.counter += 1;
+          return id;
+        }
+        /**
+                 * Generates UUID by creating each part randomly.
+                 * @alias `const uid = new ShortUniqueId(); uid(uuidLength: number);`
+                 */
+        randomUUID(uuidLength = this.uuidLength || DEFAULT_UUID_LENGTH) {
+          let id;
+          let randomPartIdx;
+          let j;
+          let idIndex;
+          if (
+            (uuidLength === null || typeof uuidLength === "undefined") ||
+            uuidLength < 1
+          ) {
+            throw new Error("Invalid UUID Length Provided");
+          }
+          // Generate random ID parts from Dictionary.
+          id = "";
+          for (
+            idIndex = j = 0;
+            0 <= uuidLength ? j < uuidLength : j > uuidLength;
+            idIndex = 0 <= uuidLength ? j += 1 : j -= 1
+          ) {
+            randomPartIdx =
+              parseInt((Math.random() * this.dictLength).toFixed(0), 10) %
+              this.dictLength;
+            id += this.dict[randomPartIdx];
+          }
+          // Return random generated ID.
+          return id;
+        }
+        /**
+                 * Calculates total number of possible UUIDs.
+                 *
+                 * Given that:
+                 *
+                 * - `H` is the total number of possible UUIDs
+                 * - `n` is the number of unique characters in the dictionary
+                 * - `l` is the UUID length
+                 *
+                 * Then `H` is defined as `n` to the power of `l`:
+                 *
+                 * ![](https://render.githubusercontent.com/render/math?math=%5CHuge%20H=n%5El)
+                 *
+                 * This function returns `H`.
+                 */
+        availableUUIDs(uuidLength = this.uuidLength) {
+          return parseFloat(
+            Math.pow([...new Set(this.dict)].length, uuidLength).toFixed(0),
+          );
+        }
+        /**
+                 * Calculates approximate number of hashes before first collision.
+                 *
+                 * Given that:
+                 *
+                 * - `H` is the total number of possible UUIDs, or in terms of this library,
+                 * the result of running `availableUUIDs()`
+                 * - the expected number of values we have to choose before finding the
+                 * first collision can be expressed as the quantity `Q(H)`
+                 *
+                 * Then `Q(H)` can be approximated as the square root of the of the product
+                 * of half of pi times `H`:
+                 *
+                 * ![](https://render.githubusercontent.com/render/math?math=%5CHuge%20Q(H)%5Capprox%5Csqrt%7B%5Cfrac%7B%5Cpi%7D%7B2%7DH%7D)
+                 *
+                 * This function returns `Q(H)`.
+                 */
+        approxMaxBeforeCollision(
+          rounds = this.availableUUIDs(this.uuidLength),
+        ) {
+          return parseFloat(Math.sqrt((Math.PI / 2) * rounds).toFixed(20));
+        }
+        /**
+                 * Calculates probability of generating duplicate UUIDs (a collision) in a
+                 * given number of UUID generation rounds.
+                 *
+                 * Given that:
+                 *
+                 * - `r` is the maximum number of times that `randomUUID()` will be called,
+                 * or better said the number of _rounds_
+                 * - `H` is the total number of possible UUIDs, or in terms of this library,
+                 * the result of running `availableUUIDs()`
+                 *
+                 * Then the probability of collision `p(r; H)` can be approximated as the result
+                 * of dividing the square root of the of the product of half of pi times `H` by `H`:
+                 *
+                 * ![](https://render.githubusercontent.com/render/math?math=%5CHuge%20p(r%3B%20H)%5Capprox%5Cfrac%7B%5Csqrt%7B%5Cfrac%7B%5Cpi%7D%7B2%7Dr%7D%7D%7BH%7D)
+                 *
+                 * This function returns `p(r; H)`.
+                 *
+                 * (Useful if you are wondering _"If I use this lib and expect to perform at most
+                 * `r` rounds of UUID generations, what is the probability that I will hit a duplicate UUID?"_.)
+                 */
+        collisionProbability(
+          rounds = this.availableUUIDs(this.uuidLength),
+          uuidLength = this.uuidLength,
+        ) {
+          return parseFloat(
+            (this.approxMaxBeforeCollision(rounds) /
+              this.availableUUIDs(uuidLength)).toFixed(20),
+          );
+        }
+        /**
+                 * Calculate a "uniqueness" score (from 0 to 1) of UUIDs based on size of
+                 * dictionary and chosen UUID length.
+                 *
+                 * Given that:
+                 *
+                 * - `H` is the total number of possible UUIDs, or in terms of this library,
+                 * the result of running `availableUUIDs()`
+                 * - `Q(H)` is the approximate number of hashes before first collision,
+                 * or in terms of this library, the result of running `approxMaxBeforeCollision()`
+                 *
+                 * Then `uniqueness` can be expressed as the additive inverse of the probability of
+                 * generating a "word" I had previously generated (a duplicate) at any given iteration
+                 * up to the the total number of possible UUIDs expressed as the quotiend of `Q(H)` and `H`:
+                 *
+                 * ![](https://render.githubusercontent.com/render/math?math=%5CHuge%201-%5Cfrac%7BQ(H)%7D%7BH%7D)
+                 *
+                 * (Useful if you need a value to rate the "quality" of the combination of given dictionary
+                 * and UUID length. The closer to 1, higher the uniqueness and thus better the quality.)
+                 */
+        uniqueness(rounds = this.availableUUIDs(this.uuidLength)) {
+          const score = parseFloat(
+            (1 - (this.approxMaxBeforeCollision(rounds) / rounds)).toFixed(20),
+          );
+          return (score > 1) ? (1) : ((score < 0) ? 0 : score);
+        }
+        /**
+                 * Return the version of this module.
+                 */
+        getVersion() {
+          return this.version;
+        }
+      };
+      exports_2("default", ShortUniqueId);
+    },
+  };
+});
+
+const __exp = __instantiate("mod");
+exports. default = __exp["default"];
 
 
 /***/ }),
@@ -23306,6 +23239,303 @@ module.exports = {
 
 /***/ }),
 
+/***/ 606:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const childProcess = __webpack_require__(129);
+const path = __webpack_require__(622);
+const util_1 = __webpack_require__(669);
+const ioUtil = __webpack_require__(650);
+const exec = util_1.promisify(childProcess.exec);
+/**
+ * Copies a file or folder.
+ * Based off of shelljs - https://github.com/shelljs/shelljs/blob/9237f66c52e5daa40458f94f9565e18e8132f5a6/src/cp.js
+ *
+ * @param     source    source path
+ * @param     dest      destination path
+ * @param     options   optional. See CopyOptions.
+ */
+function cp(source, dest, options = {}) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { force, recursive } = readCopyOptions(options);
+        const destStat = (yield ioUtil.exists(dest)) ? yield ioUtil.stat(dest) : null;
+        // Dest is an existing file, but not forcing
+        if (destStat && destStat.isFile() && !force) {
+            return;
+        }
+        // If dest is an existing directory, should copy inside.
+        const newDest = destStat && destStat.isDirectory()
+            ? path.join(dest, path.basename(source))
+            : dest;
+        if (!(yield ioUtil.exists(source))) {
+            throw new Error(`no such file or directory: ${source}`);
+        }
+        const sourceStat = yield ioUtil.stat(source);
+        if (sourceStat.isDirectory()) {
+            if (!recursive) {
+                throw new Error(`Failed to copy. ${source} is a directory, but tried to copy without recursive flag.`);
+            }
+            else {
+                yield cpDirRecursive(source, newDest, 0, force);
+            }
+        }
+        else {
+            if (path.relative(source, newDest) === '') {
+                // a file cannot be copied to itself
+                throw new Error(`'${newDest}' and '${source}' are the same file`);
+            }
+            yield copyFile(source, newDest, force);
+        }
+    });
+}
+exports.cp = cp;
+/**
+ * Moves a path.
+ *
+ * @param     source    source path
+ * @param     dest      destination path
+ * @param     options   optional. See MoveOptions.
+ */
+function mv(source, dest, options = {}) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (yield ioUtil.exists(dest)) {
+            let destExists = true;
+            if (yield ioUtil.isDirectory(dest)) {
+                // If dest is directory copy src into dest
+                dest = path.join(dest, path.basename(source));
+                destExists = yield ioUtil.exists(dest);
+            }
+            if (destExists) {
+                if (options.force == null || options.force) {
+                    yield rmRF(dest);
+                }
+                else {
+                    throw new Error('Destination already exists');
+                }
+            }
+        }
+        yield mkdirP(path.dirname(dest));
+        yield ioUtil.rename(source, dest);
+    });
+}
+exports.mv = mv;
+/**
+ * Remove a path recursively with force
+ *
+ * @param inputPath path to remove
+ */
+function rmRF(inputPath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (ioUtil.IS_WINDOWS) {
+            // Node doesn't provide a delete operation, only an unlink function. This means that if the file is being used by another
+            // program (e.g. antivirus), it won't be deleted. To address this, we shell out the work to rd/del.
+            try {
+                if (yield ioUtil.isDirectory(inputPath, true)) {
+                    yield exec(`rd /s /q "${inputPath}"`);
+                }
+                else {
+                    yield exec(`del /f /a "${inputPath}"`);
+                }
+            }
+            catch (err) {
+                // if you try to delete a file that doesn't exist, desired result is achieved
+                // other errors are valid
+                if (err.code !== 'ENOENT')
+                    throw err;
+            }
+            // Shelling out fails to remove a symlink folder with missing source, this unlink catches that
+            try {
+                yield ioUtil.unlink(inputPath);
+            }
+            catch (err) {
+                // if you try to delete a file that doesn't exist, desired result is achieved
+                // other errors are valid
+                if (err.code !== 'ENOENT')
+                    throw err;
+            }
+        }
+        else {
+            let isDir = false;
+            try {
+                isDir = yield ioUtil.isDirectory(inputPath);
+            }
+            catch (err) {
+                // if you try to delete a file that doesn't exist, desired result is achieved
+                // other errors are valid
+                if (err.code !== 'ENOENT')
+                    throw err;
+                return;
+            }
+            if (isDir) {
+                yield exec(`rm -rf "${inputPath}"`);
+            }
+            else {
+                yield ioUtil.unlink(inputPath);
+            }
+        }
+    });
+}
+exports.rmRF = rmRF;
+/**
+ * Make a directory.  Creates the full path with folders in between
+ * Will throw if it fails
+ *
+ * @param   fsPath        path to create
+ * @returns Promise<void>
+ */
+function mkdirP(fsPath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield ioUtil.mkdirP(fsPath);
+    });
+}
+exports.mkdirP = mkdirP;
+/**
+ * Returns path of a tool had the tool actually been invoked.  Resolves via paths.
+ * If you check and the tool does not exist, it will throw.
+ *
+ * @param     tool              name of the tool
+ * @param     check             whether to check if tool exists
+ * @returns   Promise<string>   path to tool
+ */
+function which(tool, check) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!tool) {
+            throw new Error("parameter 'tool' is required");
+        }
+        // recursive when check=true
+        if (check) {
+            const result = yield which(tool, false);
+            if (!result) {
+                if (ioUtil.IS_WINDOWS) {
+                    throw new Error(`Unable to locate executable file: ${tool}. Please verify either the file path exists or the file can be found within a directory specified by the PATH environment variable. Also verify the file has a valid extension for an executable file.`);
+                }
+                else {
+                    throw new Error(`Unable to locate executable file: ${tool}. Please verify either the file path exists or the file can be found within a directory specified by the PATH environment variable. Also check the file mode to verify the file is executable.`);
+                }
+            }
+        }
+        try {
+            // build the list of extensions to try
+            const extensions = [];
+            if (ioUtil.IS_WINDOWS && process.env.PATHEXT) {
+                for (const extension of process.env.PATHEXT.split(path.delimiter)) {
+                    if (extension) {
+                        extensions.push(extension);
+                    }
+                }
+            }
+            // if it's rooted, return it if exists. otherwise return empty.
+            if (ioUtil.isRooted(tool)) {
+                const filePath = yield ioUtil.tryGetExecutablePath(tool, extensions);
+                if (filePath) {
+                    return filePath;
+                }
+                return '';
+            }
+            // if any path separators, return empty
+            if (tool.includes('/') || (ioUtil.IS_WINDOWS && tool.includes('\\'))) {
+                return '';
+            }
+            // build the list of directories
+            //
+            // Note, technically "where" checks the current directory on Windows. From a toolkit perspective,
+            // it feels like we should not do this. Checking the current directory seems like more of a use
+            // case of a shell, and the which() function exposed by the toolkit should strive for consistency
+            // across platforms.
+            const directories = [];
+            if (process.env.PATH) {
+                for (const p of process.env.PATH.split(path.delimiter)) {
+                    if (p) {
+                        directories.push(p);
+                    }
+                }
+            }
+            // return the first match
+            for (const directory of directories) {
+                const filePath = yield ioUtil.tryGetExecutablePath(directory + path.sep + tool, extensions);
+                if (filePath) {
+                    return filePath;
+                }
+            }
+            return '';
+        }
+        catch (err) {
+            throw new Error(`which failed with message ${err.message}`);
+        }
+    });
+}
+exports.which = which;
+function readCopyOptions(options) {
+    const force = options.force == null ? true : options.force;
+    const recursive = Boolean(options.recursive);
+    return { force, recursive };
+}
+function cpDirRecursive(sourceDir, destDir, currentDepth, force) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // Ensure there is not a run away recursive copy
+        if (currentDepth >= 255)
+            return;
+        currentDepth++;
+        yield mkdirP(destDir);
+        const files = yield ioUtil.readdir(sourceDir);
+        for (const fileName of files) {
+            const srcFile = `${sourceDir}/${fileName}`;
+            const destFile = `${destDir}/${fileName}`;
+            const srcFileStat = yield ioUtil.lstat(srcFile);
+            if (srcFileStat.isDirectory()) {
+                // Recurse
+                yield cpDirRecursive(srcFile, destFile, currentDepth, force);
+            }
+            else {
+                yield copyFile(srcFile, destFile, force);
+            }
+        }
+        // Change the mode for the newly created directory
+        yield ioUtil.chmod(destDir, (yield ioUtil.stat(sourceDir)).mode);
+    });
+}
+// Buffered file copy
+function copyFile(srcFile, destFile, force) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if ((yield ioUtil.lstat(srcFile)).isSymbolicLink()) {
+            // unlink/re-link it
+            try {
+                yield ioUtil.lstat(destFile);
+                yield ioUtil.unlink(destFile);
+            }
+            catch (e) {
+                // Try to override file permission
+                if (e.code === 'EPERM') {
+                    yield ioUtil.chmod(destFile, '0666');
+                    yield ioUtil.unlink(destFile);
+                }
+                // other errors = it doesn't exist, no work to do
+            }
+            // Copy over symlink
+            const symlinkFull = yield ioUtil.readlink(srcFile);
+            yield ioUtil.symlink(symlinkFull, destFile, ioUtil.IS_WINDOWS ? 'junction' : null);
+        }
+        else if (!(yield ioUtil.exists(destFile)) || force) {
+            yield ioUtil.copyFile(srcFile, destFile);
+        }
+    });
+}
+//# sourceMappingURL=io.js.map
+
+/***/ }),
+
 /***/ 614:
 /***/ (function(module) {
 
@@ -23317,6 +23547,208 @@ module.exports = require("events");
 /***/ (function(module) {
 
 module.exports = require("path");
+
+/***/ }),
+
+/***/ 650:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var _a;
+Object.defineProperty(exports, "__esModule", { value: true });
+const assert_1 = __webpack_require__(357);
+const fs = __webpack_require__(747);
+const path = __webpack_require__(622);
+_a = fs.promises, exports.chmod = _a.chmod, exports.copyFile = _a.copyFile, exports.lstat = _a.lstat, exports.mkdir = _a.mkdir, exports.readdir = _a.readdir, exports.readlink = _a.readlink, exports.rename = _a.rename, exports.rmdir = _a.rmdir, exports.stat = _a.stat, exports.symlink = _a.symlink, exports.unlink = _a.unlink;
+exports.IS_WINDOWS = process.platform === 'win32';
+function exists(fsPath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield exports.stat(fsPath);
+        }
+        catch (err) {
+            if (err.code === 'ENOENT') {
+                return false;
+            }
+            throw err;
+        }
+        return true;
+    });
+}
+exports.exists = exists;
+function isDirectory(fsPath, useStat = false) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const stats = useStat ? yield exports.stat(fsPath) : yield exports.lstat(fsPath);
+        return stats.isDirectory();
+    });
+}
+exports.isDirectory = isDirectory;
+/**
+ * On OSX/Linux, true if path starts with '/'. On Windows, true for paths like:
+ * \, \hello, \\hello\share, C:, and C:\hello (and corresponding alternate separator cases).
+ */
+function isRooted(p) {
+    p = normalizeSeparators(p);
+    if (!p) {
+        throw new Error('isRooted() parameter "p" cannot be empty');
+    }
+    if (exports.IS_WINDOWS) {
+        return (p.startsWith('\\') || /^[A-Z]:/i.test(p) // e.g. \ or \hello or \\hello
+        ); // e.g. C: or C:\hello
+    }
+    return p.startsWith('/');
+}
+exports.isRooted = isRooted;
+/**
+ * Recursively create a directory at `fsPath`.
+ *
+ * This implementation is optimistic, meaning it attempts to create the full
+ * path first, and backs up the path stack from there.
+ *
+ * @param fsPath The path to create
+ * @param maxDepth The maximum recursion depth
+ * @param depth The current recursion depth
+ */
+function mkdirP(fsPath, maxDepth = 1000, depth = 1) {
+    return __awaiter(this, void 0, void 0, function* () {
+        assert_1.ok(fsPath, 'a path argument must be provided');
+        fsPath = path.resolve(fsPath);
+        if (depth >= maxDepth)
+            return exports.mkdir(fsPath);
+        try {
+            yield exports.mkdir(fsPath);
+            return;
+        }
+        catch (err) {
+            switch (err.code) {
+                case 'ENOENT': {
+                    yield mkdirP(path.dirname(fsPath), maxDepth, depth + 1);
+                    yield exports.mkdir(fsPath);
+                    return;
+                }
+                default: {
+                    let stats;
+                    try {
+                        stats = yield exports.stat(fsPath);
+                    }
+                    catch (err2) {
+                        throw err;
+                    }
+                    if (!stats.isDirectory())
+                        throw err;
+                }
+            }
+        }
+    });
+}
+exports.mkdirP = mkdirP;
+/**
+ * Best effort attempt to determine whether a file exists and is executable.
+ * @param filePath    file path to check
+ * @param extensions  additional file extensions to try
+ * @return if file exists and is executable, returns the file path. otherwise empty string.
+ */
+function tryGetExecutablePath(filePath, extensions) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let stats = undefined;
+        try {
+            // test file exists
+            stats = yield exports.stat(filePath);
+        }
+        catch (err) {
+            if (err.code !== 'ENOENT') {
+                // eslint-disable-next-line no-console
+                console.log(`Unexpected error attempting to determine if executable file exists '${filePath}': ${err}`);
+            }
+        }
+        if (stats && stats.isFile()) {
+            if (exports.IS_WINDOWS) {
+                // on Windows, test for valid extension
+                const upperExt = path.extname(filePath).toUpperCase();
+                if (extensions.some(validExt => validExt.toUpperCase() === upperExt)) {
+                    return filePath;
+                }
+            }
+            else {
+                if (isUnixExecutable(stats)) {
+                    return filePath;
+                }
+            }
+        }
+        // try each extension
+        const originalFilePath = filePath;
+        for (const extension of extensions) {
+            filePath = originalFilePath + extension;
+            stats = undefined;
+            try {
+                stats = yield exports.stat(filePath);
+            }
+            catch (err) {
+                if (err.code !== 'ENOENT') {
+                    // eslint-disable-next-line no-console
+                    console.log(`Unexpected error attempting to determine if executable file exists '${filePath}': ${err}`);
+                }
+            }
+            if (stats && stats.isFile()) {
+                if (exports.IS_WINDOWS) {
+                    // preserve the case of the actual file (since an extension was appended)
+                    try {
+                        const directory = path.dirname(filePath);
+                        const upperName = path.basename(filePath).toUpperCase();
+                        for (const actualName of yield exports.readdir(directory)) {
+                            if (upperName === actualName.toUpperCase()) {
+                                filePath = path.join(directory, actualName);
+                                break;
+                            }
+                        }
+                    }
+                    catch (err) {
+                        // eslint-disable-next-line no-console
+                        console.log(`Unexpected error attempting to determine the actual case of the file '${filePath}': ${err}`);
+                    }
+                    return filePath;
+                }
+                else {
+                    if (isUnixExecutable(stats)) {
+                        return filePath;
+                    }
+                }
+            }
+        }
+        return '';
+    });
+}
+exports.tryGetExecutablePath = tryGetExecutablePath;
+function normalizeSeparators(p) {
+    p = p || '';
+    if (exports.IS_WINDOWS) {
+        // convert slashes on Windows
+        p = p.replace(/\//g, '\\');
+        // remove redundant slashes
+        return p.replace(/\\\\+/g, '\\');
+    }
+    // remove redundant slashes
+    return p.replace(/\/\/+/g, '/');
+}
+// on Mac/Linux, test the execute bit
+//     R   W  X  R  W X R W X
+//   256 128 64 32 16 8 4 2 1
+function isUnixExecutable(stats) {
+    return ((stats.mode & 1) > 0 ||
+        ((stats.mode & 8) > 0 && stats.gid === process.getgid()) ||
+        ((stats.mode & 64) > 0 && stats.uid === process.getuid()));
+}
+//# sourceMappingURL=io-util.js.map
 
 /***/ }),
 
@@ -23526,6 +23958,57 @@ function isUnixExecutable(stats) {
         ((stats.mode & 64) > 0 && stats.uid === process.getuid()));
 }
 //# sourceMappingURL=io-util.js.map
+
+/***/ }),
+
+/***/ 679:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const tr = __importStar(__webpack_require__(818));
+/**
+ * Exec a command.
+ * Output will be streamed to the live console.
+ * Returns promise with return code
+ *
+ * @param     commandLine        command to execute (can include additional args). Must be correctly escaped.
+ * @param     args               optional arguments for tool. Escaping is handled by the lib.
+ * @param     options            optional exec options.  See ExecOptions
+ * @returns   Promise<number>    exit code
+ */
+function exec(commandLine, args, options) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const commandArgs = tr.argStringToArray(commandLine);
+        if (commandArgs.length === 0) {
+            throw new Error(`Parameter 'commandLine' cannot be null or empty.`);
+        }
+        // Path to tool to execute should be first arg
+        const toolPath = commandArgs[0];
+        args = commandArgs.slice(1).concat(args || []);
+        const runner = new tr.ToolRunner(toolPath, args, options);
+        return runner.exec();
+    });
+}
+exports.exec = exec;
+//# sourceMappingURL=exec.js.map
 
 /***/ }),
 
@@ -23852,6 +24335,797 @@ exports.listConfigTask = listConfigTask;
 
 /***/ }),
 
+/***/ 818:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const os = __importStar(__webpack_require__(87));
+const events = __importStar(__webpack_require__(614));
+const child = __importStar(__webpack_require__(129));
+const path = __importStar(__webpack_require__(622));
+const io = __importStar(__webpack_require__(606));
+const ioUtil = __importStar(__webpack_require__(650));
+/* eslint-disable @typescript-eslint/unbound-method */
+const IS_WINDOWS = process.platform === 'win32';
+/*
+ * Class for running command line tools. Handles quoting and arg parsing in a platform agnostic way.
+ */
+class ToolRunner extends events.EventEmitter {
+    constructor(toolPath, args, options) {
+        super();
+        if (!toolPath) {
+            throw new Error("Parameter 'toolPath' cannot be null or empty.");
+        }
+        this.toolPath = toolPath;
+        this.args = args || [];
+        this.options = options || {};
+    }
+    _debug(message) {
+        if (this.options.listeners && this.options.listeners.debug) {
+            this.options.listeners.debug(message);
+        }
+    }
+    _getCommandString(options, noPrefix) {
+        const toolPath = this._getSpawnFileName();
+        const args = this._getSpawnArgs(options);
+        let cmd = noPrefix ? '' : '[command]'; // omit prefix when piped to a second tool
+        if (IS_WINDOWS) {
+            // Windows + cmd file
+            if (this._isCmdFile()) {
+                cmd += toolPath;
+                for (const a of args) {
+                    cmd += ` ${a}`;
+                }
+            }
+            // Windows + verbatim
+            else if (options.windowsVerbatimArguments) {
+                cmd += `"${toolPath}"`;
+                for (const a of args) {
+                    cmd += ` ${a}`;
+                }
+            }
+            // Windows (regular)
+            else {
+                cmd += this._windowsQuoteCmdArg(toolPath);
+                for (const a of args) {
+                    cmd += ` ${this._windowsQuoteCmdArg(a)}`;
+                }
+            }
+        }
+        else {
+            // OSX/Linux - this can likely be improved with some form of quoting.
+            // creating processes on Unix is fundamentally different than Windows.
+            // on Unix, execvp() takes an arg array.
+            cmd += toolPath;
+            for (const a of args) {
+                cmd += ` ${a}`;
+            }
+        }
+        return cmd;
+    }
+    _processLineBuffer(data, strBuffer, onLine) {
+        try {
+            let s = strBuffer + data.toString();
+            let n = s.indexOf(os.EOL);
+            while (n > -1) {
+                const line = s.substring(0, n);
+                onLine(line);
+                // the rest of the string ...
+                s = s.substring(n + os.EOL.length);
+                n = s.indexOf(os.EOL);
+            }
+            strBuffer = s;
+        }
+        catch (err) {
+            // streaming lines to console is best effort.  Don't fail a build.
+            this._debug(`error processing line. Failed with error ${err}`);
+        }
+    }
+    _getSpawnFileName() {
+        if (IS_WINDOWS) {
+            if (this._isCmdFile()) {
+                return process.env['COMSPEC'] || 'cmd.exe';
+            }
+        }
+        return this.toolPath;
+    }
+    _getSpawnArgs(options) {
+        if (IS_WINDOWS) {
+            if (this._isCmdFile()) {
+                let argline = `/D /S /C "${this._windowsQuoteCmdArg(this.toolPath)}`;
+                for (const a of this.args) {
+                    argline += ' ';
+                    argline += options.windowsVerbatimArguments
+                        ? a
+                        : this._windowsQuoteCmdArg(a);
+                }
+                argline += '"';
+                return [argline];
+            }
+        }
+        return this.args;
+    }
+    _endsWith(str, end) {
+        return str.endsWith(end);
+    }
+    _isCmdFile() {
+        const upperToolPath = this.toolPath.toUpperCase();
+        return (this._endsWith(upperToolPath, '.CMD') ||
+            this._endsWith(upperToolPath, '.BAT'));
+    }
+    _windowsQuoteCmdArg(arg) {
+        // for .exe, apply the normal quoting rules that libuv applies
+        if (!this._isCmdFile()) {
+            return this._uvQuoteCmdArg(arg);
+        }
+        // otherwise apply quoting rules specific to the cmd.exe command line parser.
+        // the libuv rules are generic and are not designed specifically for cmd.exe
+        // command line parser.
+        //
+        // for a detailed description of the cmd.exe command line parser, refer to
+        // http://stackoverflow.com/questions/4094699/how-does-the-windows-command-interpreter-cmd-exe-parse-scripts/7970912#7970912
+        // need quotes for empty arg
+        if (!arg) {
+            return '""';
+        }
+        // determine whether the arg needs to be quoted
+        const cmdSpecialChars = [
+            ' ',
+            '\t',
+            '&',
+            '(',
+            ')',
+            '[',
+            ']',
+            '{',
+            '}',
+            '^',
+            '=',
+            ';',
+            '!',
+            "'",
+            '+',
+            ',',
+            '`',
+            '~',
+            '|',
+            '<',
+            '>',
+            '"'
+        ];
+        let needsQuotes = false;
+        for (const char of arg) {
+            if (cmdSpecialChars.some(x => x === char)) {
+                needsQuotes = true;
+                break;
+            }
+        }
+        // short-circuit if quotes not needed
+        if (!needsQuotes) {
+            return arg;
+        }
+        // the following quoting rules are very similar to the rules that by libuv applies.
+        //
+        // 1) wrap the string in quotes
+        //
+        // 2) double-up quotes - i.e. " => ""
+        //
+        //    this is different from the libuv quoting rules. libuv replaces " with \", which unfortunately
+        //    doesn't work well with a cmd.exe command line.
+        //
+        //    note, replacing " with "" also works well if the arg is passed to a downstream .NET console app.
+        //    for example, the command line:
+        //          foo.exe "myarg:""my val"""
+        //    is parsed by a .NET console app into an arg array:
+        //          [ "myarg:\"my val\"" ]
+        //    which is the same end result when applying libuv quoting rules. although the actual
+        //    command line from libuv quoting rules would look like:
+        //          foo.exe "myarg:\"my val\""
+        //
+        // 3) double-up slashes that precede a quote,
+        //    e.g.  hello \world    => "hello \world"
+        //          hello\"world    => "hello\\""world"
+        //          hello\\"world   => "hello\\\\""world"
+        //          hello world\    => "hello world\\"
+        //
+        //    technically this is not required for a cmd.exe command line, or the batch argument parser.
+        //    the reasons for including this as a .cmd quoting rule are:
+        //
+        //    a) this is optimized for the scenario where the argument is passed from the .cmd file to an
+        //       external program. many programs (e.g. .NET console apps) rely on the slash-doubling rule.
+        //
+        //    b) it's what we've been doing previously (by deferring to node default behavior) and we
+        //       haven't heard any complaints about that aspect.
+        //
+        // note, a weakness of the quoting rules chosen here, is that % is not escaped. in fact, % cannot be
+        // escaped when used on the command line directly - even though within a .cmd file % can be escaped
+        // by using %%.
+        //
+        // the saving grace is, on the command line, %var% is left as-is if var is not defined. this contrasts
+        // the line parsing rules within a .cmd file, where if var is not defined it is replaced with nothing.
+        //
+        // one option that was explored was replacing % with ^% - i.e. %var% => ^%var^%. this hack would
+        // often work, since it is unlikely that var^ would exist, and the ^ character is removed when the
+        // variable is used. the problem, however, is that ^ is not removed when %* is used to pass the args
+        // to an external program.
+        //
+        // an unexplored potential solution for the % escaping problem, is to create a wrapper .cmd file.
+        // % can be escaped within a .cmd file.
+        let reverse = '"';
+        let quoteHit = true;
+        for (let i = arg.length; i > 0; i--) {
+            // walk the string in reverse
+            reverse += arg[i - 1];
+            if (quoteHit && arg[i - 1] === '\\') {
+                reverse += '\\'; // double the slash
+            }
+            else if (arg[i - 1] === '"') {
+                quoteHit = true;
+                reverse += '"'; // double the quote
+            }
+            else {
+                quoteHit = false;
+            }
+        }
+        reverse += '"';
+        return reverse
+            .split('')
+            .reverse()
+            .join('');
+    }
+    _uvQuoteCmdArg(arg) {
+        // Tool runner wraps child_process.spawn() and needs to apply the same quoting as
+        // Node in certain cases where the undocumented spawn option windowsVerbatimArguments
+        // is used.
+        //
+        // Since this function is a port of quote_cmd_arg from Node 4.x (technically, lib UV,
+        // see https://github.com/nodejs/node/blob/v4.x/deps/uv/src/win/process.c for details),
+        // pasting copyright notice from Node within this function:
+        //
+        //      Copyright Joyent, Inc. and other Node contributors. All rights reserved.
+        //
+        //      Permission is hereby granted, free of charge, to any person obtaining a copy
+        //      of this software and associated documentation files (the "Software"), to
+        //      deal in the Software without restriction, including without limitation the
+        //      rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+        //      sell copies of the Software, and to permit persons to whom the Software is
+        //      furnished to do so, subject to the following conditions:
+        //
+        //      The above copyright notice and this permission notice shall be included in
+        //      all copies or substantial portions of the Software.
+        //
+        //      THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        //      IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        //      FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        //      AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        //      LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+        //      FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+        //      IN THE SOFTWARE.
+        if (!arg) {
+            // Need double quotation for empty argument
+            return '""';
+        }
+        if (!arg.includes(' ') && !arg.includes('\t') && !arg.includes('"')) {
+            // No quotation needed
+            return arg;
+        }
+        if (!arg.includes('"') && !arg.includes('\\')) {
+            // No embedded double quotes or backslashes, so I can just wrap
+            // quote marks around the whole thing.
+            return `"${arg}"`;
+        }
+        // Expected input/output:
+        //   input : hello"world
+        //   output: "hello\"world"
+        //   input : hello""world
+        //   output: "hello\"\"world"
+        //   input : hello\world
+        //   output: hello\world
+        //   input : hello\\world
+        //   output: hello\\world
+        //   input : hello\"world
+        //   output: "hello\\\"world"
+        //   input : hello\\"world
+        //   output: "hello\\\\\"world"
+        //   input : hello world\
+        //   output: "hello world\\" - note the comment in libuv actually reads "hello world\"
+        //                             but it appears the comment is wrong, it should be "hello world\\"
+        let reverse = '"';
+        let quoteHit = true;
+        for (let i = arg.length; i > 0; i--) {
+            // walk the string in reverse
+            reverse += arg[i - 1];
+            if (quoteHit && arg[i - 1] === '\\') {
+                reverse += '\\';
+            }
+            else if (arg[i - 1] === '"') {
+                quoteHit = true;
+                reverse += '\\';
+            }
+            else {
+                quoteHit = false;
+            }
+        }
+        reverse += '"';
+        return reverse
+            .split('')
+            .reverse()
+            .join('');
+    }
+    _cloneExecOptions(options) {
+        options = options || {};
+        const result = {
+            cwd: options.cwd || process.cwd(),
+            env: options.env || process.env,
+            silent: options.silent || false,
+            windowsVerbatimArguments: options.windowsVerbatimArguments || false,
+            failOnStdErr: options.failOnStdErr || false,
+            ignoreReturnCode: options.ignoreReturnCode || false,
+            delay: options.delay || 10000
+        };
+        result.outStream = options.outStream || process.stdout;
+        result.errStream = options.errStream || process.stderr;
+        return result;
+    }
+    _getSpawnOptions(options, toolPath) {
+        options = options || {};
+        const result = {};
+        result.cwd = options.cwd;
+        result.env = options.env;
+        result['windowsVerbatimArguments'] =
+            options.windowsVerbatimArguments || this._isCmdFile();
+        if (options.windowsVerbatimArguments) {
+            result.argv0 = `"${toolPath}"`;
+        }
+        return result;
+    }
+    /**
+     * Exec a tool.
+     * Output will be streamed to the live console.
+     * Returns promise with return code
+     *
+     * @param     tool     path to tool to exec
+     * @param     options  optional exec options.  See ExecOptions
+     * @returns   number
+     */
+    exec() {
+        return __awaiter(this, void 0, void 0, function* () {
+            // root the tool path if it is unrooted and contains relative pathing
+            if (!ioUtil.isRooted(this.toolPath) &&
+                (this.toolPath.includes('/') ||
+                    (IS_WINDOWS && this.toolPath.includes('\\')))) {
+                // prefer options.cwd if it is specified, however options.cwd may also need to be rooted
+                this.toolPath = path.resolve(process.cwd(), this.options.cwd || process.cwd(), this.toolPath);
+            }
+            // if the tool is only a file name, then resolve it from the PATH
+            // otherwise verify it exists (add extension on Windows if necessary)
+            this.toolPath = yield io.which(this.toolPath, true);
+            return new Promise((resolve, reject) => {
+                this._debug(`exec tool: ${this.toolPath}`);
+                this._debug('arguments:');
+                for (const arg of this.args) {
+                    this._debug(`   ${arg}`);
+                }
+                const optionsNonNull = this._cloneExecOptions(this.options);
+                if (!optionsNonNull.silent && optionsNonNull.outStream) {
+                    optionsNonNull.outStream.write(this._getCommandString(optionsNonNull) + os.EOL);
+                }
+                const state = new ExecState(optionsNonNull, this.toolPath);
+                state.on('debug', (message) => {
+                    this._debug(message);
+                });
+                const fileName = this._getSpawnFileName();
+                const cp = child.spawn(fileName, this._getSpawnArgs(optionsNonNull), this._getSpawnOptions(this.options, fileName));
+                const stdbuffer = '';
+                if (cp.stdout) {
+                    cp.stdout.on('data', (data) => {
+                        if (this.options.listeners && this.options.listeners.stdout) {
+                            this.options.listeners.stdout(data);
+                        }
+                        if (!optionsNonNull.silent && optionsNonNull.outStream) {
+                            optionsNonNull.outStream.write(data);
+                        }
+                        this._processLineBuffer(data, stdbuffer, (line) => {
+                            if (this.options.listeners && this.options.listeners.stdline) {
+                                this.options.listeners.stdline(line);
+                            }
+                        });
+                    });
+                }
+                const errbuffer = '';
+                if (cp.stderr) {
+                    cp.stderr.on('data', (data) => {
+                        state.processStderr = true;
+                        if (this.options.listeners && this.options.listeners.stderr) {
+                            this.options.listeners.stderr(data);
+                        }
+                        if (!optionsNonNull.silent &&
+                            optionsNonNull.errStream &&
+                            optionsNonNull.outStream) {
+                            const s = optionsNonNull.failOnStdErr
+                                ? optionsNonNull.errStream
+                                : optionsNonNull.outStream;
+                            s.write(data);
+                        }
+                        this._processLineBuffer(data, errbuffer, (line) => {
+                            if (this.options.listeners && this.options.listeners.errline) {
+                                this.options.listeners.errline(line);
+                            }
+                        });
+                    });
+                }
+                cp.on('error', (err) => {
+                    state.processError = err.message;
+                    state.processExited = true;
+                    state.processClosed = true;
+                    state.CheckComplete();
+                });
+                cp.on('exit', (code) => {
+                    state.processExitCode = code;
+                    state.processExited = true;
+                    this._debug(`Exit code ${code} received from tool '${this.toolPath}'`);
+                    state.CheckComplete();
+                });
+                cp.on('close', (code) => {
+                    state.processExitCode = code;
+                    state.processExited = true;
+                    state.processClosed = true;
+                    this._debug(`STDIO streams have closed for tool '${this.toolPath}'`);
+                    state.CheckComplete();
+                });
+                state.on('done', (error, exitCode) => {
+                    if (stdbuffer.length > 0) {
+                        this.emit('stdline', stdbuffer);
+                    }
+                    if (errbuffer.length > 0) {
+                        this.emit('errline', errbuffer);
+                    }
+                    cp.removeAllListeners();
+                    if (error) {
+                        reject(error);
+                    }
+                    else {
+                        resolve(exitCode);
+                    }
+                });
+                if (this.options.input) {
+                    if (!cp.stdin) {
+                        throw new Error('child process missing stdin');
+                    }
+                    cp.stdin.end(this.options.input);
+                }
+            });
+        });
+    }
+}
+exports.ToolRunner = ToolRunner;
+/**
+ * Convert an arg string to an array of args. Handles escaping
+ *
+ * @param    argString   string of arguments
+ * @returns  string[]    array of arguments
+ */
+function argStringToArray(argString) {
+    const args = [];
+    let inQuotes = false;
+    let escaped = false;
+    let arg = '';
+    function append(c) {
+        // we only escape double quotes.
+        if (escaped && c !== '"') {
+            arg += '\\';
+        }
+        arg += c;
+        escaped = false;
+    }
+    for (let i = 0; i < argString.length; i++) {
+        const c = argString.charAt(i);
+        if (c === '"') {
+            if (!escaped) {
+                inQuotes = !inQuotes;
+            }
+            else {
+                append(c);
+            }
+            continue;
+        }
+        if (c === '\\' && escaped) {
+            append(c);
+            continue;
+        }
+        if (c === '\\' && inQuotes) {
+            escaped = true;
+            continue;
+        }
+        if (c === ' ' && !inQuotes) {
+            if (arg.length > 0) {
+                args.push(arg);
+                arg = '';
+            }
+            continue;
+        }
+        append(c);
+    }
+    if (arg.length > 0) {
+        args.push(arg.trim());
+    }
+    return args;
+}
+exports.argStringToArray = argStringToArray;
+class ExecState extends events.EventEmitter {
+    constructor(options, toolPath) {
+        super();
+        this.processClosed = false; // tracks whether the process has exited and stdio is closed
+        this.processError = '';
+        this.processExitCode = 0;
+        this.processExited = false; // tracks whether the process has exited
+        this.processStderr = false; // tracks whether stderr was written to
+        this.delay = 10000; // 10 seconds
+        this.done = false;
+        this.timeout = null;
+        if (!toolPath) {
+            throw new Error('toolPath must not be empty');
+        }
+        this.options = options;
+        this.toolPath = toolPath;
+        if (options.delay) {
+            this.delay = options.delay;
+        }
+    }
+    CheckComplete() {
+        if (this.done) {
+            return;
+        }
+        if (this.processClosed) {
+            this._setResult();
+        }
+        else if (this.processExited) {
+            this.timeout = setTimeout(ExecState.HandleTimeout, this.delay, this);
+        }
+    }
+    _debug(message) {
+        this.emit('debug', message);
+    }
+    _setResult() {
+        // determine whether there is an error
+        let error;
+        if (this.processExited) {
+            if (this.processError) {
+                error = new Error(`There was an error when attempting to execute the process '${this.toolPath}'. This may indicate the process failed to start. Error: ${this.processError}`);
+            }
+            else if (this.processExitCode !== 0 && !this.options.ignoreReturnCode) {
+                error = new Error(`The process '${this.toolPath}' failed with exit code ${this.processExitCode}`);
+            }
+            else if (this.processStderr && this.options.failOnStdErr) {
+                error = new Error(`The process '${this.toolPath}' failed because one or more lines were written to the STDERR stream`);
+            }
+        }
+        // clear the timeout
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = null;
+        }
+        this.done = true;
+        this.emit('done', error, this.processExitCode);
+    }
+    static HandleTimeout(state) {
+        if (state.done) {
+            return;
+        }
+        if (!state.processClosed && state.processExited) {
+            const message = `The STDIO streams did not close within ${state.delay /
+                1000} seconds of the exit event from process '${state.toolPath}'. This may indicate a child process inherited the STDIO streams and has not yet exited.`;
+            state._debug(message);
+        }
+        state._setResult();
+    }
+}
+//# sourceMappingURL=toolrunner.js.map
+
+/***/ }),
+
+/***/ 850:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+/**
+ * @fileoverview Extend node util module
+ * @author douzi <liaowei08@gmail.com> 
+ */
+var util = __webpack_require__(669);
+var toString = Object.prototype.toString;
+var isWindows = process.platform === 'win32';
+
+function isObject(value) {
+  return toString.call(value) === '[object Object]';
+}
+
+// And type check method: isFunction, isString, isNumber, isDate, isRegExp, isObject
+['Function', 'String', 'Number', 'Date', 'RegExp'].forEach(function(item) {
+  exports['is' + item]  = function(value) {
+    return toString.call(value) === '[object ' + item + ']';
+  };
+});
+
+/**
+ * @description
+ * Deep extend
+ * @example
+ * extend({ key: { k1: 'v1'} }, { key: { k2: 'v2' }, none: { k: 'v' } });
+ * extend({ arr: [] }, { arr: [ {}, {} ] });
+ */
+function extend(target, source) {
+  var value;
+
+  for (var key in source) {
+    value = source[key];
+
+    if (Array.isArray(value)) {
+      if (!Array.isArray(target[key])) {
+        target[key] = [];
+      }
+
+      extend(target[key], value);
+    } else if (isObject(value)) {
+      if (!isObject(target[key])) {
+        target[key]  = {};
+      }
+
+      extend(target[key], value);
+    } else {
+      target[key] = value;
+    }
+  }
+
+  return target;
+}
+
+extend(exports, util);
+
+// fixed util.isObject 
+exports.isObject = isObject;
+
+exports.extend = function() {
+  var args = Array.prototype.slice.call(arguments, 0);
+  var target = args.shift();
+
+  args.forEach(function(item) {
+    extend(target, item);
+  });
+
+  return target;
+};
+
+exports.isArray = Array.isArray;
+
+exports.isUndefined = function(value) {
+  return typeof value == 'undefined';
+};
+
+exports.noop = function() {};
+
+exports.unique = function(array) {
+  var result = [];
+
+  array.forEach(function(item) {
+    if (result.indexOf(item) == -1) {
+      result.push(item);
+    }
+  });
+
+  return result;
+};
+
+exports.escape = function(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+};
+
+exports.unescape = function(value) {
+  return String(value)
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+};
+
+exports.hrtime = function(time) {
+  if (time) {
+    var spend = process.hrtime(time);
+    
+    spend = (spend[0] + spend[1] / 1e9) * 1000 + 'ms';
+
+    return spend;
+  } else {
+    return process.hrtime();
+  }
+};
+
+/**
+ * @description
+ * Return a copy of the object with list keys
+ * @example
+ * util.pick({ key: 'value' }, 'key', 'key1');
+ * util.pick(obj, function(value, key, object) { });
+ */
+exports.pick = function(obj, iteratee) {
+  var result = {};
+
+  if (exports.isFunction(iteratee)) {
+    for (var key in obj) {
+      var value = obj[key];
+      if (iteratee(value, key, obj)) {
+        result[key] = value;
+      }
+    }
+  } else {
+    var keys = Array.prototype.slice.call(arguments, 1);
+
+    keys.forEach(function(key) {
+      if (key in obj) {
+        result[key] = obj[key];
+      }
+    });
+  }
+
+  return result;
+};
+
+exports.path = {};
+
+if (isWindows) {
+  // Regex to split a windows path into three parts: [*, device, slash,
+  // tail] windows-only
+  var splitDeviceRe =
+      /^([a-zA-Z]:|[\\\/]{2}[^\\\/]+[\\\/]+[^\\\/]+)?([\\\/])?([\s\S]*?)$/;
+
+  exports.path.isAbsolute = function(filepath) {
+    var result = splitDeviceRe.exec(filepath),
+        device = result[1] || '',
+        isUnc = !!device && device.charAt(1) !== ':';
+    // UNC paths are always absolute
+    return !!result[2] || isUnc;
+  };
+
+  // Normalize \\ paths to / paths.
+  exports.path.unixifyPath = function(filepath) {
+    return filepath.replace(/\\/g, '/');
+  };
+
+} else {
+  exports.path.isAbsolute = function(filepath) {
+    return filepath.charAt(0) === '/';
+  };
+
+  exports.path.unixifyPath = function(filepath) {
+    return filepath;
+  };
+}
+
+/***/ }),
+
 /***/ 860:
 /***/ (function(__unusedmodule, exports) {
 
@@ -24126,95 +25400,6 @@ function default_1(promise, callback) {
 }
 exports.default = default_1;
 
-
-/***/ }),
-
-/***/ 900:
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-var util = __webpack_require__(327);
-/**
- * @description
- * @example
- * `**\/*` match all files
- * `*.js`  only match current dir files
- * '**\/*.js' match all js files
- * 'path/*.js' match js files in path
- * '!*.js' exclude js files 
- */
-function fileMatch(filter, ignore) {
-  if (filter === null) {
-    return function() {
-      return true;
-    };
-  } else if (filter === '' || (util.isArray(filter) && !filter.length)) {
-    return function() {
-      return false;
-    };
-  }
-
-  if (util.isString(filter)) {
-    filter = [filter];
-  }
-
-  var match = [];
-  var negate = [];
-  var isIgnore = ignore ? 'i' : '';
-
-  filter.forEach(function(item) {
-    var isNegate = item.indexOf('!') === 0;
-    item = item
-      .replace(/^!/, '')
-      .replace(/\*(?![\/*])/, '[^/]*?')
-      .replace('**\/', '([^/]+\/)*')
-      .replace(/\{([^\}]+)\}/g, function($1, $2) {
-        var collection = $2.split(',');
-        var length = collection.length;
-        var result = '(?:';
-
-        collection.forEach(function(item, index) {
-          result += '(' + item.trim() + ')';
-
-          if (index + 1 !== length) {
-            result += '|';
-          }
-        });
-
-        result += ')';
-
-        return result;
-      })
-      .replace(/([\/\.])/g, '\\$1');
-
-    item = '(^' + item + '$)';
-
-    if (isNegate) {
-      negate.push(item);
-    } else {
-      match.push(item);
-    }
-  });
-
-  match = match.length ?  new RegExp(match.join('|'), isIgnore) : null;
-  negate = negate.length ? new RegExp(negate.join('|'), isIgnore) : null;
-
-  return function(filepath) {
-    // Normalize \\ paths to / paths.
-    filepath = util.path.unixifyPath(filepath);
-
-    if (negate && negate.test(filepath)) {
-      return false;
-    }
-
-    if (match && match.test(filepath)) {
-      return true;
-    }
-
-    return false;
-  };
-}
-
-module.exports = fileMatch;
 
 /***/ }),
 
