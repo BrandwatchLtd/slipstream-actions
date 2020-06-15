@@ -1,4 +1,4 @@
-name: Test Install CLI Action
+name: Install CLI
 on:
   push:
     branches:

@@ -6,7 +6,7 @@ A collection of GitHub Actions for working with Slipstream. A full end-to-end ex
 
 ### Install CLI
 
-![](https://github.com/BrandwatchLtd/slipstream-actions/workflows/Test%20Install%20CLI%20Action/badge.svg)
+![](https://github.com/BrandwatchLtd/slipstream-actions/workflows/Install%20CLI/badge.svg)
 
 The `install-cli` action downloads and installs the Slipstream CLI. Useful for deployment requests, or querying for information about services and artifacts. NB: Requires the gcloud CLI to be installed and configured for authentication.
 
@@ -22,7 +22,7 @@ See [Action definition](install-cli/action.yml) for additional details.
 
 ### Push Image
 
-![](https://github.com/BrandwatchLtd/slipstream-actions/workflows/Test%20Push%20Image%20Action/badge.svg)
+![](https://github.com/BrandwatchLtd/slipstream-actions/workflows/Push%20Image/badge.svg)
 
 The `push-image` action builds a Docker image and pushes it to an appropriate Google Cloud Registry for use by Kubernetes. Additionally it generates and pushes artifact metadata to Slipstream.
 
@@ -39,7 +39,7 @@ See [Action definition](push-image/action.yml) for additional details.
 
 ### Deploy
 
-![](https://github.com/BrandwatchLtd/slipstream-actions/workflows/Test%20Deploy%20Action/badge.svg)
+![](https://github.com/BrandwatchLtd/slipstream-actions/workflows/Deploy/badge.svg)
 
 The `deploy` action can be used to create a deployment request for a given artifact. This is typically used immediately after building an image to request a deployment to stage.
 

@@ -1,4 +1,4 @@
-name: Test Push Image Action
+name: Push Image
 on:
   push:
     branches:
