@@ -1,0 +1,48 @@
+name: Push Files
+on:
+  push:
+    branches:
+      main
+    paths:
+    - 'push-files/**'
+    - '.github/workflows/push-files-*'
+    - 'lib'
+  pull_request:
+    paths:
+    - 'push-files/**'
+    - '.github/workflows/push-files-*'
+    - 'lib'
+
+jobs:
+  unit:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@master
+      with:
+        node-version: 12.x
+    - run: npm install # In the root for shared dev deps
+    - run: npm install
+      working-directory: ./lib
+    - run: npm install
+      working-directory: ./push-files
+    - run: npm test
+      working-directory: ./push-files
+  integration:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@0.1.2
+        with:
+          service_account_key: ${{ secrets.BW_PROD_ARTIFACTS_KEY }}
+          export_default_credentials: true
+      - uses: ./push-files
+        with:
+          service: action-integration-test
+          filesDir: ./.github
+          stageVersionCheckURL: https://whatever.com
+          productionVersionCheckURL: https://whatever.com
+          artifactBucket: gs://slipstream-github-action-test
+          metadataBucket: gs://slipstream-github-action-test
