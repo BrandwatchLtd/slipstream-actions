@@ -4,20 +4,6 @@ A collection of GitHub Actions for working with Slipstream. A full end-to-end ex
 
 ## Actions
 
-### Install CLI
-
-![](https://github.com/BrandwatchLtd/slipstream-actions/workflows/Install%20CLI/badge.svg)
-
-The `install-cli` action downloads and installs the Slipstream CLI. Useful for deployment requests, or querying for information about services and artifacts. NB: Requires the gcloud CLI to be installed and configured for authentication.
-
-```yaml
-- uses: BrandwatchLtd/slipstream-actions/install-cli@main
-- uses: GoogleCloudPlatform/github-actions/setup-gcloud@0.1.2
-  with:
-    service_account_key: ${{ secrets.BW_PROD_ARTIFACTS_KEY }}
-    export_default_credentials: true
-```
-
 See [Action definition](install-cli/action.yml) for additional details.
 
 ### Push Image
@@ -36,6 +22,40 @@ The `push-image` action builds a Docker image and pushes it to an appropriate Go
 ```
 
 See [Action definition](push-image/action.yml) for additional details.
+
+### Push Files (experimental)
+
+![](https://github.com/BrandwatchLtd/slipstream-actions/workflows/Push%Files/badge.svg)
+
+The `push-files` action packages up a directory of files and pushes it to an appropriate Google Cloud Storage bucket for use in static website hosting. Additionally it generates and pushes artifact metadata to Slipstream.
+
+```yaml
+- name: Push static files
+  uses: BrandwatchLtd/slipstream-actions/push-image@main
+  id: push-image
+  with:
+    service: myservice
+    filesDir: ./myfiles
+    stageVersionCheckURL: https://myservice.stage.brandwatch.com/metadata/version
+    prodVersionCheckURL: https://myservice.brandwatch.com/metadata/version
+    labels: project=myproject
+```
+
+See [Action definition](push-files/action.yml) for additional details.
+
+### Install CLI
+
+![](https://github.com/BrandwatchLtd/slipstream-actions/workflows/Install%20CLI/badge.svg)
+
+The `install-cli` action downloads and installs the Slipstream CLI. Useful for deployment requests, or querying for information about services and artifacts. NB: Requires the gcloud CLI to be installed and configured for authentication.
+
+```yaml
+- uses: BrandwatchLtd/slipstream-actions/install-cli@main
+- uses: GoogleCloudPlatform/github-actions/setup-gcloud@0.1.2
+  with:
+    service_account_key: ${{ secrets.BW_PROD_ARTIFACTS_KEY }}
+    export_default_credentials: true
+```
 
 ### Deploy
 
