@@ -1257,7 +1257,7 @@ exports.GitExecutor = GitExecutor;
 /***/ (function(__unusedmodule, __unusedexports, __webpack_require__) {
 
 const core = __webpack_require__(470);
-const exec = __webpack_require__(986);
+const githubEvent = require(process.env.GITHUB_EVENT_PATH);
 const { pushMetadata, pushFilesToBucket } = __webpack_require__(490);
 const push = __webpack_require__(447);
 
@@ -1266,32 +1266,31 @@ async function run() {
     const service = core.getInput('service');
     const filesDir = core.getInput('filesDir');
     const bucket = core.getInput('artifactBucket');
+    const metadataBucket = core.getInput('metadataBucket');
     const hash = await push.getHashOfFiles(filesDir);
     const bucketAddress = `${bucket}/${service}/${hash}/`;
 
     core.startGroup(`Pushing files to GCR: ${bucketAddress}`);
-    await pushFilesToBucket(filesDir, bucketAddress)
+    await pushFilesToBucket(filesDir, bucketAddress);
     core.endGroup();
 
-
-    core.startGroup("Pushing Slipstream metadata");
+    core.startGroup('Pushing Slipstream metadata');
     const data = await push.buildMetadata({
-      event: require(process.env.GITHUB_EVENT_PATH),
+      event: githubEvent,
       service: core.getInput('service'),
       labels: core.getInput('labels'),
       filesDir: core.getInput('filesDir'),
       filesStageUrl: core.getInput('stageVersionCheckURL'),
       filesProdUrl: core.getInput('productionVersionCheckURL'),
-    })
+    });
     await pushMetadata(metadataBucket, data);
     core.endGroup();
 
     core.setOutput('artifactID', hash);
     core.info('success');
     core.info(`Run 'slipstream list files -s ${service}' to view service images`);
-
-  } catch ( error ) {
-      core.setFailed(error.message);
+  } catch (err) {
+    core.setFailed(err.message);
   }
 }
 
@@ -4051,7 +4050,7 @@ const exec = __webpack_require__(986);
 const {
   getCommitData,
   getBuildData,
-  getLabels
+  getLabels,
 } = __webpack_require__(490);
 
 async function buildMetadata(input) {
@@ -4063,13 +4062,13 @@ async function buildMetadata(input) {
       stageUrl: input.filesStageUrl,
       prodUrl: input.filesProdUrl,
     },
-  }
+  };
 
   data.commit = await getCommitData();
   data.build = getBuildData(input.event);
   data.labels = getLabels(input.labels);
 
-  return data
+  return data;
 }
 
 // getHashOfFiles is a badly implemented way of hashing the file contents. The tar
@@ -4083,14 +4082,14 @@ async function getHashOfFiles(filesDir) {
   options.listeners = {
     stdout: (data) => {
       tard += data.toString();
-    }
+    },
   };
   await exec.exec(
     'tar', ['-c', '.'],
-    options
+    options,
   );
 
-  var hash = crypto.createHash('sha256');
+  const hash = crypto.createHash('sha256');
   hash.write(tard);
   hash.end();
 
@@ -4099,8 +4098,8 @@ async function getHashOfFiles(filesDir) {
 
 module.exports = {
   buildMetadata,
-  getHashOfFiles
-}
+  getHashOfFiles,
+};
 
 
 /***/ }),
@@ -4419,7 +4418,7 @@ exports.FileStatusSummary = FileStatusSummary;
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 const git = __webpack_require__(724);
-const fs  = __webpack_require__(349);
+const fs = __webpack_require__(349);
 const exec = __webpack_require__(679);
 const { default: ShortUniqueId } = __webpack_require__(498);
 
@@ -4433,10 +4432,8 @@ async function getCommitData() {
     .raw([
       'log',
       '-1',
-      `--pretty=format:{%n  "commit": "%H",%n  "author": "%an",%n  "author_email": "%ae",%n  "date": "%ad",%n  "message": "%s"%n}`
-    ], (err, res) => {
-      return res
-    });
+      '--pretty=format:{%n  "commit": "%H",%n  "author": "%an",%n  "author_email": "%ae",%n  "date": "%ad",%n  "message": "%s"%n}',
+    ], (err, res) => res);
   const commit = JSON.parse(log);
 
   return {
@@ -4444,7 +4441,7 @@ async function getCommitData() {
     message: commit.message,
     sha: commit.commit,
     url: `https://github.com/${githubRepo}/commit/${commit.commit}`,
-  }
+  };
 }
 
 function getBuildData(githubEvent) {
@@ -4452,22 +4449,23 @@ function getBuildData(githubEvent) {
   const checkSuffix = `checks?check_suite_id=${githubRunID}`;
   let buildUrl = `${repositoryUrl}/commit/${githubSHA}/${checkSuffix}`;
   if (githubEvent.pull_request && githubEvent.pull_request.number) {
-    buildUrl = `${repositoryUrl}/pull/${githubEvent.pull_request.number}/${checkSuffix}`
+    buildUrl = `${repositoryUrl}/pull/${githubEvent.pull_request.number}/${checkSuffix}`;
   }
   return {
     id: githubRunNumber,
     url: buildUrl,
-  }
+  };
 }
 
 function getLabels(l) {
-  let labels = {};
+  const labels = {};
   if (l) {
-    let labelPairs = l.split(',');
-    labelPairs.forEach(labelPair => {
+    const labelPairs = l.split(',');
+    labelPairs.forEach((labelPair) => {
       const kv = labelPair.split('=');
-      if (kv.length == 2) {
-        labels[kv[0]] = kv[1];
+      if (kv.length === 2) {
+        const [key, val] = kv;
+        labels[key] = val;
       } else {
         throw new Error('Baldy formed labels field. Should be `key=value,key=value`');
       }
@@ -4488,18 +4486,18 @@ async function pushMetadata(bucket, data) {
     if (err) {
       throw Error(`failed to write temp JSON metadata file: ${err.message}`);
     }
-  })
+  });
 
   // Github uses the same build number for re-runs, so we add an extra id to the
   // generated filenames, so re-runs don't cause files to be overwritten.
-  const uid = new ShortUniqueId({length: 3});
+  const uid = new ShortUniqueId({ length: 3 });
   const filename = `github-build.${data.build.id}.${uid()}.json`;
   await exec.exec('gsutil', ['cp', `./${tmpFile}`, `${bucket}/${data.service}/${filename}`], {});
   await fs.unlink(tmpFile, (err) => {
     if (err) {
       throw Error(`failed to delete temp JSON metadata file: ${err.message}`);
     }
-  })
+  });
 }
 
 async function pushFilesToBucket(files, bucketAddress) {
@@ -4507,10 +4505,10 @@ async function pushFilesToBucket(files, bucketAddress) {
     '-m',
     '-h', 'Cache-Control:public, max-age=31536000',
     'cp', '-r', '.',
-    bucketAddress
-   ], {
-     cwd: files,
-   });
+    bucketAddress,
+  ], {
+    cwd: files,
+  });
 }
 
 module.exports = {
@@ -4519,7 +4517,7 @@ module.exports = {
   getLabels,
   pushMetadata,
   pushFilesToBucket,
-}
+};
 
 
 /***/ }),

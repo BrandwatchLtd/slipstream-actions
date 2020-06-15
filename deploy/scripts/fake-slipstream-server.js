@@ -3,17 +3,17 @@ const http = require('http');
 const getArtifactsResponse = {
   artifacts: [
     {
-      id: "1234",
-      type: "image",
-      creationTimestamp: "2020-06-12T14:14:43.637443957Z",
+      id: '1234',
+      type: 'image',
+      creationTimestamp: '2020-06-12T14:14:43.637443957Z',
       image: {
-        tags:["build.1234"]
+        tags: ['build.1234'],
       },
       labels: {
-        project: "proj1"
-      }
-    }
-  ]
+        project: 'proj1',
+      },
+    },
+  ],
 };
 
 const getServicesResponse = {
@@ -21,20 +21,20 @@ const getServicesResponse = {
     {
       deployment: {
         cluster: {
-          id: "prod-whatever"
-        }
-      }
-    }
-  ]
+          id: 'prod-whatever',
+        },
+      },
+    },
+  ],
 };
 
 const putDeploymentRequestResponse = {
   event: {
-    id: "1234"
-  }
-}
+    id: '1234',
+  },
+};
 
-const server = http.createServer(function (req, res) {
+const server = http.createServer((req, res) => {
   if (req.url.startsWith('/artifacts')) {
     res.writeHead(200);
     res.end(JSON.stringify(getArtifactsResponse));
@@ -42,7 +42,7 @@ const server = http.createServer(function (req, res) {
     res.writeHead(200);
     res.end(JSON.stringify(getServicesResponse));
   } else {
-    res.writeHead(201)
+    res.writeHead(201);
     res.end(JSON.stringify(putDeploymentRequestResponse));
   }
 });

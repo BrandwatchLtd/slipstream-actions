@@ -9,9 +9,9 @@ async function deploy(environment, service, id) {
     '--quiet',
     '--wait',
   ];
-  await exec.exec('slipstream', args, {})
+  await exec.exec('slipstream', args, {});
 }
 
 module.exports = {
   deploy,
-}
+};

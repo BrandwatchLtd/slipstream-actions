@@ -1,6 +1,5 @@
-const exec = require('@actions/exec');
-const metadata = require('../lib');
 const { dockerCommand } = require('docker-cli-js');
+const metadata = require('../lib');
 
 async function buildImage(input) {
   await dockerCommand(`build -t ${input.repoTag} -f ${input.dockerFile} ${input.contextPath}`);
@@ -20,7 +19,7 @@ async function buildMetadata(input) {
   data.build = metadata.getBuildData(input.event);
   data.labels = metadata.getLabels(input.labels);
 
-  const dockerInspect = await dockerCommand(`inspect ${input.repoTag}`, {echo: false});
+  const dockerInspect = await dockerCommand(`inspect ${input.repoTag}`, { echo: false });
   data.dockerInspect = dockerInspect.object;
 
   return data;
@@ -30,4 +29,4 @@ module.exports = {
   buildImage,
   pushImage,
   buildMetadata,
-}
+};

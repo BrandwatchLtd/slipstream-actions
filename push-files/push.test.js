@@ -1,14 +1,13 @@
 process.env.GITHUB_RUN_NUMBER = '2345';
 
-const exec = require('@actions/exec');
-jest.mock('@actions/exec', () => ({
-  exec: jest.fn()
-}));
-
 const { buildMetadata } = require('./push');
 
-test('builds correct metadata', async() => {
-  data = await buildMetadata({
+jest.mock('@actions/exec', () => ({
+  exec: jest.fn(),
+}));
+
+test('builds correct metadata', async () => {
+  const data = await buildMetadata({
     event: {
       pull_request: {
         number: 1,

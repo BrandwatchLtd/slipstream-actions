@@ -5,11 +5,11 @@ const { buildMetadata } = require('./push');
 
 jest.mock('docker-cli-js');
 docker.dockerCommand.mockResolvedValue({
-  object: [{"dummy": "inspect"}]
+  object: [{ dummy: 'inspect' }],
 });
 
-test('builds correct metadata', async() => {
-  data = await buildMetadata({
+test('builds correct metadata', async () => {
+  const data = await buildMetadata({
     event: {
       pull_request: {
         number: 1,

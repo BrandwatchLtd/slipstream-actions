@@ -22,6 +22,7 @@ jobs:
     - uses: actions/setup-node@master
       with:
         node-version: 12.x
+    - run: npm install # In the root for shared dev deps
     - run: npm install
       working-directory: ./lib
     - run: npm install
