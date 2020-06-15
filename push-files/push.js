@@ -1,10 +1,15 @@
 const crypto = require('crypto');
+const fs = require('fs');
+const util = require('util');
+const path = require('path');
 const exec = require('@actions/exec');
 const {
   getCommitData,
   getBuildData,
   getLabels,
 } = require('../lib');
+
+const writeFile = util.promisify(fs.writeFile);
 
 async function buildMetadata(input) {
   const data = {
@@ -49,7 +54,21 @@ async function getHashOfFiles(filesDir) {
   return hash.digest('hex');
 }
 
+async function writeSlipstreamCheckFile(id, filesDir) {
+  const file = path.resolve(filesDir, 'slipstreamz');
+  const data = {
+    id,
+  };
+
+  try {
+    await writeFile(file, JSON.stringify(data));
+  } catch (err) {
+    throw Error(`failed to write slipstreamz file: ${err.message}`);
+  }
+}
+
 module.exports = {
   buildMetadata,
   getHashOfFiles,
+  writeSlipstreamCheckFile,
 };
