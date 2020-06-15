@@ -22,7 +22,7 @@ inputs:
   metadataBucket:
     description: The GCS bucket to store artifact metadata to be picked up by Slipstream.
     required: false
-    default: bw-prod-artifacts-metadata
+    default: gs://bw-prod-artifacts-metadata
 outputs:
   imageDigest:
     description: The image digest of the Docker image. Can be used to request a deployment.
