@@ -9,7 +9,7 @@ A collection of GitHub Actions for working with Slipstream. A full end-to-end ex
 The `install-cli` action downloads and installs the Slipstream CLI. Useful for deployment requests, or querying for information about services and artifacts. NB: Requires the gcloud CLI to be installed and configured for authentication.
 
 ```yaml
-- uses: BrandwatchLtd/slipstream-actions/install-cli@master
+- uses: BrandwatchLtd/slipstream-actions/install-cli@main
 - uses: GoogleCloudPlatform/github-actions/setup-gcloud@0.1.2
   with:
     service_account_key: ${{ secrets.BW_PROD_ARTIFACTS_KEY }}
@@ -24,7 +24,7 @@ The `push-image` action builds a Docker image and pushes it to an appropriate Go
 
 ```yaml
 - name: Build and push Docker image
-  uses: BrandwatchLtd/slipstream-actions/push-image@master
+  uses: BrandwatchLtd/slipstream-actions/push-image@main
   id: push-image
   with:
     service: myservice
@@ -39,7 +39,7 @@ The `deploy` action can be used to create a deployment request for a given artif
 
 ```yaml
 - name: Deploy new image to stage
-  uses: BrandwatchLtd/slipstream-actions/deploy@master
+  uses: BrandwatchLtd/slipstream-actions/deploy@main
   with:
     environment: stage
     service: myservice
@@ -49,6 +49,8 @@ The `deploy` action can be used to create a deployment request for a given artif
 See [Action definition](deploy/action.yml) for additional details.
 
 ## Development
+
+__NB: The default branch for this repo is `main`.__
 
 Each action is in its own `/<action>` directory. Shared functionality is in `/lib`.
 
