@@ -25,7 +25,7 @@ See [Action definition](push-image/action.yml) for additional details.
 
 ### Push Files (experimental)
 
-![](https://github.com/BrandwatchLtd/slipstream-actions/workflows/Push%Files/badge.svg)
+![](https://github.com/BrandwatchLtd/slipstream-actions/workflows/Push%20Files/badge.svg)
 
 The `push-files` action packages up a directory of files and pushes it to an appropriate Google Cloud Storage bucket for use in static website hosting. Additionally it generates and pushes artifact metadata to Slipstream.
 
