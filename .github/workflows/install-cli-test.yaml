@@ -2,7 +2,7 @@ name: Test Install CLI Action
 on:
   push:
     branches:
-      master
+      main
     paths:
     - 'install-cli/**'
     - '.github/workflows/install-cli-*'
