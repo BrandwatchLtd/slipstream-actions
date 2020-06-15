@@ -1283,7 +1283,7 @@ async function run() {
       filesStageUrl: core.getInput('stageVersionCheckURL'),
       filesProdUrl: core.getInput('productionVersionCheckURL'),
     })
-    await pushMetadata(data);
+    await pushMetadata(metadataBucket, data);
     core.endGroup();
 
     core.setOutput('artifactID', hash);
@@ -4476,7 +4476,13 @@ function getLabels(l) {
   return labels;
 }
 
-async function pushMetadata(data, bucket) {
+async function pushMetadata(bucket, data) {
+  if (!bucket) {
+    throw new Error('metadataBucket input for artifact metadata not set');
+  }
+  if (!bucket.startsWith('gs://')) {
+    throw new Error('metadataBucket input must start with gs://');
+  }
   const tmpFile = 'tmp-slipstream-metadata.json';
   fs.writeFile(tmpFile, JSON.stringify(data, null, '  '), (err) => {
     if (err) {

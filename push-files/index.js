@@ -25,7 +25,7 @@ async function run() {
       filesStageUrl: core.getInput('stageVersionCheckURL'),
       filesProdUrl: core.getInput('productionVersionCheckURL'),
     })
-    await pushMetadata(data);
+    await pushMetadata(metadataBucket, data);
     core.endGroup();
 
     core.setOutput('artifactID', hash);

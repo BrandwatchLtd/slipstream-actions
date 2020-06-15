@@ -6,7 +6,8 @@ const util = require('./util');
 
 async function run() {
   const service = core.getInput('service');
-  const registry = core.getInput('dockerRegistry')
+  const registry = core.getInput('dockerRegistry');
+  const metadataBucket = core.getInput('metadataBucket');
   const tag = process.env.GITHUB_RUN_ID;
   const repoTag = `${registry}/${service}:${tag}`;
 
@@ -36,7 +37,7 @@ async function run() {
       repoTag,
       labels: core.getInput('labels'),
     })
-    await pushMetadata(data);
+    await pushMetadata(metadataBucket, data);
     core.endGroup();
 
     core.setOutput('imageDigest', util.getImageDigest(data.dockerInspect));
