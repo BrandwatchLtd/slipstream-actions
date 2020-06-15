@@ -1266,7 +1266,8 @@ const util = __webpack_require__(702);
 
 async function run() {
   const service = core.getInput('service');
-  const registry = core.getInput('dockerRegistry')
+  const registry = core.getInput('dockerRegistry');
+  const metadataBucket = core.getInput('metadataBucket');
   const tag = process.env.GITHUB_RUN_ID;
   const repoTag = `${registry}/${service}:${tag}`;
 
@@ -1296,7 +1297,7 @@ async function run() {
       repoTag,
       labels: core.getInput('labels'),
     })
-    await pushMetadata(data);
+    await pushMetadata(metadataBucket, data);
     core.endGroup();
 
     core.setOutput('imageDigest', util.getImageDigest(data.dockerInspect));
@@ -4867,7 +4868,13 @@ function getLabels(l) {
   return labels;
 }
 
-async function pushMetadata(data, bucket) {
+async function pushMetadata(bucket, data) {
+  if (!bucket) {
+    throw new Error('metadataBucket input for artifact metadata not set');
+  }
+  if (!bucket.startsWith('gs://')) {
+    throw new Error('metadataBucket input must start with gs://');
+  }
   const tmpFile = 'tmp-slipstream-metadata.json';
   fs.writeFile(tmpFile, JSON.stringify(data, null, '  '), (err) => {
     if (err) {
