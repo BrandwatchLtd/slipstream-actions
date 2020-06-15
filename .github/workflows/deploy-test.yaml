@@ -6,10 +6,12 @@ on:
     paths:
     - 'deploy/**'
     - '.github/workflows/deploy-*'
+    - 'lib'
   pull_request:
     paths:
     - 'deploy/**'
     - '.github/workflows/deploy-*'
+    - 'lib'
 
 jobs:
   unit:

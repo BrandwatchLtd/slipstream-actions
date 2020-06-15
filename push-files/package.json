@@ -1,14 +1,14 @@
 {
-  "name": "slipstream-action-install-cli",
+  "name": "slipstream-action-push-files",
   "version": "1.0.0",
   "scripts": {
     "dev": "ncc build index.js -o dist -w",
     "package": "ncc build index.js -o dist",
-    "test": "jest --passWithNoTests"
+    "test": "jest"
   },
   "dependencies": {
     "@actions/core": "^1.2.4",
-    "@actions/tool-cache": "^1.5.5"
+    "@actions/exec": "^1.0.4"
   },
   "devDependencies": {
     "@zeit/ncc": "^0.20.5",

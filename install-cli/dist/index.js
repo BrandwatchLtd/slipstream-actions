@@ -1082,8 +1082,8 @@ const tc = __webpack_require__(533);
 
 async function run() {
   try {
-    core.info('Installing the Slipstream CLI');
-    const downloadURL = 'https://bin.equinox.io/c/cXopLpzLbWK/slipstream-beta-linux-amd64.tgz';
+    core.startGroup('Installing the Slipstream CLI');
+    const downloadURL = core.getInput('url');
     const fileType = downloadURL.substr(-4);
     const slipstreamPath = await tc.downloadTool(downloadURL);
     const destPath = `${slipstreamPath}${fileType}`;
@@ -1091,6 +1091,7 @@ async function run() {
     const cachedPath = await tc.cacheDir(slipstreamExtractedFolder, 'slipstream', 'latest');
     core.addPath(cachedPath);
     core.info('Success');
+    core.endGroup();
   }
   catch (error) {
     core.setFailed(error.message);

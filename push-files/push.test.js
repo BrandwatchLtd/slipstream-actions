@@ -1,12 +1,11 @@
 process.env.GITHUB_RUN_NUMBER = '2345';
 
-const docker = require('docker-cli-js');
-const { buildMetadata } = require('./push');
+const exec = require('@actions/exec');
+jest.mock('@actions/exec', () => ({
+  exec: jest.fn()
+}));
 
-jest.mock('docker-cli-js');
-docker.dockerCommand.mockResolvedValue({
-  object: [{"dummy": "inspect"}]
-});
+const { buildMetadata } = require('./push');
 
 test('builds correct metadata', async() => {
   data = await buildMetadata({
@@ -15,21 +14,24 @@ test('builds correct metadata', async() => {
         number: 1,
       },
     },
-    repoTag: 'eu.gcr.io/bw-prod-artifacts/test-service:test',
+    filesDir: '../.github',
+    filesStageUrl: 'https://stage.com',
+    filesProdUrl: 'https://prod.com',
     service: 'test-service',
     labels: 'k1=v1,k2=v2',
   });
 
-  expect(data.type).toBe('image');
+  expect(data.type).toBe('files');
   expect(data.service).toBe('test-service');
   expect(data.labels.k1).toBe('v1');
   expect(data.labels.k2).toBe('v2');
-  expect(data.service).toBe('test-service');
-  expect(typeof data.dockerInspect[0]).toBe('object');
+  expect(data.files.sha).toMatch(/^sha256:.{64}$/);
+  expect(data.files.stageUrl).toBe('https://stage.com');
+  expect(data.files.prodUrl).toBe('https://prod.com');
   expect(data.commit.author).not.toBeUndefined();
   expect(data.commit.message).not.toBeUndefined();
   expect(data.commit.sha).not.toBeUndefined();
   expect(data.commit.url).not.toBeUndefined();
-  expect(data.build.id).not.toBeUndefined();
+  expect(data.build.id).toBe('2345');
   expect(data.build.url).not.toBeUndefined();
 });

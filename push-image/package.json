@@ -2,16 +2,14 @@
   "name": "slipstream-action-push-image",
   "version": "1.0.0",
   "scripts": {
+    "dev": "ncc build index.js -o dist -w",
     "package": "ncc build index.js -o dist",
     "test": "jest"
   },
   "dependencies": {
     "@actions/core": "^1.2.4",
     "@actions/exec": "^1.0.4",
-    "docker-cli-js": "^2.7.1",
-    "file-system": "^2.2.2",
-    "short-unique-id": "^3.0.3",
-    "simple-git": "^2.6.0"
+    "docker-cli-js": "^2.7.1"
   },
   "devDependencies": {
     "@zeit/ncc": "^0.20.5",

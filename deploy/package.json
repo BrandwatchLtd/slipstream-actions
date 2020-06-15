@@ -2,6 +2,7 @@
   "name": "slipstream-action-deploy",
   "version": "1.0.0",
   "scripts": {
+    "dev": "ncc build index.js -o dist -w",
     "package": "ncc build index.js -o dist",
     "test": "jest"
   },

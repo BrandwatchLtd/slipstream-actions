@@ -1,0 +1,11 @@
+{
+  "name": "slipstream-actions",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "jest",
+    "dev": "./scripts/watchall.sh"
+  },
+  "devDependencies": {
+    "jest": "^26.0.1"
+  }
+}

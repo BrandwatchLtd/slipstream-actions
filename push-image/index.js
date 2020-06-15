@@ -1,12 +1,14 @@
 const core = require('@actions/core');
 const exec = require('@actions/exec');
+const { pushMetadata } = require('../lib');
 const push = require('./push');
 const util = require('./util');
 
 async function run() {
   const service = core.getInput('service');
+  const registry = core.getInput('dockerRegistry')
   const tag = process.env.GITHUB_RUN_ID;
-  const repoTag = `eu.gcr.io/bw-prod-artifacts/${service}:${tag}`;
+  const repoTag = `${registry}/${service}:${tag}`;
 
   try {
     core.startGroup("Configuring Docker authentication");
@@ -34,7 +36,7 @@ async function run() {
       repoTag,
       labels: core.getInput('labels'),
     })
-    await push.pushMetadata(data);
+    await pushMetadata(data);
     core.endGroup();
 
     core.setOutput('imageDigest', util.getImageDigest(data.dockerInspect));

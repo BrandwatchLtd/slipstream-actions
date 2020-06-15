@@ -47,3 +47,21 @@ The `deploy` action can be used to create a deployment request for a given artif
 ```
 
 See [Action definition](deploy/action.yml) for additional details.
+
+## Development
+
+Each action is in its own `/<action>` directory. Shared functionality is in `/lib`.
+
+When working on these actions, in the root directory you should run:
+
+```
+npm run dev
+```
+
+This starts a file watcher for each action and rebuilds the `<action>/dist/index.js` file for each action. Changes to these should be checked in to git as they are the entry point for each action.
+
+To run all the actions unit tests run:
+
+```
+npm test
+```

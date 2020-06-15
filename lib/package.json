@@ -7,7 +7,10 @@
   },
   "main": "index.js",
   "dependencies": {
-    "simple-git": "^2.6.0"
+    "simple-git": "^2.6.0",
+    "file-system": "^2.2.2",
+    "short-unique-id": "^3.0.3",
+    "@actions/exec": "^1.0.4"
   },
   "devDependencies": {
     "@zeit/ncc": "^0.20.5",
