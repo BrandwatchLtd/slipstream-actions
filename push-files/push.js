@@ -3,7 +3,7 @@ const exec = require('@actions/exec');
 const {
   getCommitData,
   getBuildData,
-  getLabels
+  getLabels,
 } = require('../lib');
 
 async function buildMetadata(input) {
@@ -15,13 +15,13 @@ async function buildMetadata(input) {
       stageUrl: input.filesStageUrl,
       prodUrl: input.filesProdUrl,
     },
-  }
+  };
 
   data.commit = await getCommitData();
   data.build = getBuildData(input.event);
   data.labels = getLabels(input.labels);
 
-  return data
+  return data;
 }
 
 // getHashOfFiles is a badly implemented way of hashing the file contents. The tar
@@ -35,14 +35,14 @@ async function getHashOfFiles(filesDir) {
   options.listeners = {
     stdout: (data) => {
       tard += data.toString();
-    }
+    },
   };
   await exec.exec(
     'tar', ['-c', '.'],
-    options
+    options,
   );
 
-  var hash = crypto.createHash('sha256');
+  const hash = crypto.createHash('sha256');
   hash.write(tard);
   hash.end();
 
@@ -51,5 +51,5 @@ async function getHashOfFiles(filesDir) {
 
 module.exports = {
   buildMetadata,
-  getHashOfFiles
-}
+  getHashOfFiles,
+};

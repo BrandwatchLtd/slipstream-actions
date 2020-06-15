@@ -13,9 +13,8 @@ async function run() {
     core.addPath(cachedPath);
     core.info('Success');
     core.endGroup();
-  }
-  catch (error) {
-    core.setFailed(error.message);
+  } catch (err) {
+    core.setFailed(err.message);
   }
 }
 

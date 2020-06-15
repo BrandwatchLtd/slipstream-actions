@@ -2,8 +2,9 @@
   "name": "slipstream-actions-lib",
   "version": "1.0.0",
   "scripts": {
-    "package": "ncc build index.js -o dist",
-    "test": "jest"
+    "test": "npm run lint && npm run unit",
+    "unit": "../node_modules/.bin/jest",
+    "lint": "../node_modules/.bin/eslint . --config ../.eslintrc.json --ignore-path ../.eslintignore"
   },
   "main": "index.js",
   "dependencies": {
@@ -11,9 +12,5 @@
     "file-system": "^2.2.2",
     "short-unique-id": "^3.0.3",
     "@actions/exec": "^1.0.4"
-  },
-  "devDependencies": {
-    "@zeit/ncc": "^0.20.5",
-    "jest": "^26.0.1"
   }
 }

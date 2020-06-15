@@ -1,0 +1,19 @@
+{
+    "env": {
+        "commonjs": true,
+        "es2020": true,
+        "node": true,
+        "jest": true
+    },
+    "extends": [
+        "airbnb-base"
+    ],
+    "parserOptions": {
+        "ecmaVersion": 11
+    },
+    "rules": {
+        "import/newline-after-import": "off",
+        "import/no-dynamic-require": "off",
+        "no-use-before-define": "off"
+    }
+}
