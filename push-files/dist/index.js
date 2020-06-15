@@ -4106,7 +4106,7 @@ async function buildMetadata(input) {
     type: 'files',
     service: input.service,
     files: {
-      sha: `sha256:${await getHashOfFiles(input.filesDir)}`,
+      sha: await getHashOfFiles(input.filesDir),
       stageUrl: input.filesStageUrl,
       prodUrl: input.filesProdUrl,
     },
@@ -4141,7 +4141,7 @@ async function getHashOfFiles(filesDir) {
   hash.write(tard);
   hash.end();
 
-  return hash.digest('hex');
+  return `sha256:${hash.digest('hex')}`;
 }
 
 async function writeSlipstreamCheckFile(id, filesDir) {
