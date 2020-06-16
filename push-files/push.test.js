@@ -13,6 +13,7 @@ test('builds correct metadata', async () => {
         number: 1,
       },
     },
+    hash: 'sha256:a1b2',
     filesDir: '../.github',
     filesStageUrl: 'https://stage.com',
     filesProdUrl: 'https://prod.com',
@@ -24,7 +25,7 @@ test('builds correct metadata', async () => {
   expect(data.service).toBe('test-service');
   expect(data.labels.k1).toBe('v1');
   expect(data.labels.k2).toBe('v2');
-  expect(data.files.sha).toMatch(/^sha256:.{64}$/);
+  expect(data.files.sha).toBe('sha256:a1b2');
   expect(data.files.stageUrl).toBe('https://stage.com');
   expect(data.files.prodUrl).toBe('https://prod.com');
   expect(data.commit.author).not.toBeUndefined();
