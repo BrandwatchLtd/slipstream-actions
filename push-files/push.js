@@ -16,7 +16,7 @@ async function buildMetadata(input) {
     type: 'files',
     service: input.service,
     files: {
-      sha: await getHashOfFiles(input.filesDir),
+      sha: input.hash,
       stageUrl: input.filesStageUrl,
       prodUrl: input.filesProdUrl,
     },

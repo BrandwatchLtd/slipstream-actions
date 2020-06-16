@@ -4106,7 +4106,7 @@ async function buildMetadata(input) {
     type: 'files',
     service: input.service,
     files: {
-      sha: await getHashOfFiles(input.filesDir),
+      sha: input.hash,
       stageUrl: input.filesStageUrl,
       prodUrl: input.filesProdUrl,
     },
@@ -6231,6 +6231,7 @@ async function run() {
       event: githubEvent,
       service: core.getInput('service'),
       labels: core.getInput('labels'),
+      hash,
       filesDir: core.getInput('filesDir'),
       filesStageUrl: core.getInput('stageVersionCheckURL'),
       filesProdUrl: core.getInput('productionVersionCheckURL'),

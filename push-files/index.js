@@ -25,6 +25,7 @@ async function run() {
       event: githubEvent,
       service: core.getInput('service'),
       labels: core.getInput('labels'),
+      hash,
       filesDir: core.getInput('filesDir'),
       filesStageUrl: core.getInput('stageVersionCheckURL'),
       filesProdUrl: core.getInput('productionVersionCheckURL'),
