@@ -2,7 +2,26 @@ const { dockerCommand } = require('docker-cli-js');
 const metadata = require('../lib');
 
 async function buildImage(input) {
-  await dockerCommand(`build -t ${input.repoTag} -f ${input.dockerFile} ${input.contextPath}`);
+  const args = [
+    'build',
+    '--tag', input.repoTag,
+    '--file', input.dockerfile,
+  ];
+
+  if (input.pull) {
+    args.push('--pull');
+  }
+
+  if (input.buildArgs) {
+    const buildArgs = input.buildArgs.split(',');
+    for (let i = 0; i < buildArgs.length; i += 1) {
+      args.push('--build-arg', buildArgs[i]);
+    }
+  }
+
+  args.push(input.path);
+
+  await dockerCommand(args.join(' '));
 }
 
 async function pushImage(input) {

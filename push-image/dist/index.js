@@ -4388,7 +4388,26 @@ const { dockerCommand } = __webpack_require__(175);
 const metadata = __webpack_require__(354);
 
 async function buildImage(input) {
-  await dockerCommand(`build -t ${input.repoTag} -f ${input.dockerFile} ${input.contextPath}`);
+  const args = [
+    'build',
+    '--tag', input.repoTag,
+    '--file', input.dockerfile,
+  ];
+
+  if (input.pull) {
+    args.push('--pull');
+  }
+
+  if (input.buildArgs) {
+    const buildArgs = input.buildArgs.split(',');
+    for (let i = 0; buildArgs.length; i += 1) {
+      args.push('--build-arg', buildArgs[i]);
+    }
+  }
+
+  args.push(input.path);
+
+  await dockerCommand(args.join(' '));
 }
 
 async function pushImage(input) {
@@ -7064,8 +7083,9 @@ async function run() {
 
     core.startGroup(`Building Docker image: ${repoTag}`);
     await push.buildImage({
-      dockerFile: core.getInput('dockerFile'),
-      contextPath: core.getInput('contextPath'),
+      dockerfile: core.getInput('dockerfile'),
+      path: core.getInput('path'),
+      push: core.getInput('push'),
       repoTag,
     });
     core.endGroup();

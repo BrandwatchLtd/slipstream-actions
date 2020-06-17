@@ -19,8 +19,10 @@ async function run() {
 
     core.startGroup(`Building Docker image: ${repoTag}`);
     await push.buildImage({
-      dockerFile: core.getInput('dockerFile'),
-      contextPath: core.getInput('contextPath'),
+      dockerfile: core.getInput('dockerfile'),
+      path: core.getInput('path'),
+      push: core.getInput('push'),
+      buildArgs: core.getInput('buildArgs'),
       repoTag,
     });
     core.endGroup();

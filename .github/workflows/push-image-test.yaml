@@ -40,8 +40,10 @@ jobs:
           export_default_credentials: true
       - uses: ./push-image
         with:
-          dockerFile: test-fixtures/Dockerfile
-          contextPath: test-fixtures
+          dockerfile: test-fixtures/Dockerfile
+          path: test-fixtures
           service: action-integration-test
+          pull: true,
+          buildArgs: k1=v1,k2=v2
           dockerRegistry: eu.gcr.io/bw-stage-slipstream0
           metadataBucket: gs://slipstream-github-action-test
