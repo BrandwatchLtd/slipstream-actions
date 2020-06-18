@@ -9,27 +9,34 @@ async function run() {
   const service = core.getInput('service');
   const registry = core.getInput('dockerRegistry');
   const metadataBucket = core.getInput('metadataBucket');
-  const tag = process.env.GITHUB_RUN_ID;
-  const repoTag = `${registry}/${service}:${tag}`;
+  const repo = `${registry}/${service}`;
 
   try {
     core.startGroup('Configuring Docker authentication');
     await exec.exec('gcloud', ['auth', 'configure-docker', 'eu.gcr.io', '--quiet'], {});
     core.endGroup();
 
-    core.startGroup(`Building Docker image: ${repoTag}`);
+    core.startGroup(`Building Docker image: ${repo}`);
     await push.buildImage({
       dockerfile: core.getInput('dockerfile'),
       path: core.getInput('path'),
       push: core.getInput('push'),
       buildArgs: core.getInput('buildArgs'),
-      repoTag,
+      repo,
     });
+
+    const tags = push.getTags();
+    const results = [];
+    for (let i = 0; i < tags.length; i += 1) {
+      results.push(push.tagImage(repo, tags[i]));
+      core.info(`Successfully tagged ${repo}:${tags[i]}`);
+    }
+    await Promise.all(results);
     core.endGroup();
 
-    core.startGroup(`Pushing Docker image: ${repoTag}`);
+    core.startGroup(`Pushing Docker image: ${repo}`);
     await push.pushImage({
-      repoTag,
+      repo,
     });
     core.endGroup();
 
@@ -37,14 +44,13 @@ async function run() {
     const data = await push.buildMetadata({
       event: githubEvent,
       service: core.getInput('service'),
-      repoTag,
+      repo,
       labels: core.getInput('labels'),
     });
     await pushMetadata(metadataBucket, data);
     core.endGroup();
 
     core.setOutput('imageDigest', util.getImageDigest(data.dockerInspect));
-    core.info('success');
     core.info(`Run 'slipstream list images -s ${service}' to view service images`);
   } catch (err) {
     core.setFailed(err.message);
