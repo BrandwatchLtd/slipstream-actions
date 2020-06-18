@@ -1,21 +1,97 @@
 process.env.GITHUB_RUN_NUMBER = '2345';
 
 const docker = require('docker-cli-js');
-const { buildMetadata } = require('./push');
+const {
+  buildImage,
+  tagImage,
+  getTags,
+  buildMetadata,
+} = require('./push');
 
-jest.mock('docker-cli-js');
-docker.dockerCommand.mockResolvedValue({
-  object: [{ dummy: 'inspect' }],
+jest.mock('docker-cli-js', () => ({
+  dockerCommand: jest.fn(),
+}));
+
+beforeEach(() => {
+  docker.dockerCommand.mockReset();
+});
+
+describe('passes corrects args to docker build', () => {
+  test('with no optional args', async () => {
+    await buildImage({
+      repo: 'thing1',
+      dockerfile: 'dockf1',
+      path: 'path1',
+    });
+    expect(docker.dockerCommand)
+      .toHaveBeenCalledWith('build --tag thing1 --file dockf1 path1');
+  });
+  test('with pull arg', async () => {
+    await buildImage({
+      repo: 'thing1',
+      dockerfile: 'dockf1',
+      path: 'path1',
+      pull: true,
+    });
+    expect(docker.dockerCommand)
+      .toHaveBeenCalledWith('build --tag thing1 --file dockf1 --pull path1');
+  });
+  test('with buildArgs arg', async () => {
+    await buildImage({
+      repo: 'thing1',
+      dockerfile: 'dockf1',
+      path: 'path1',
+      buildArgs: 'k1=v1,k2=v2',
+    });
+    expect(docker.dockerCommand)
+      .toHaveBeenCalledWith('build --tag thing1 --file dockf1 --build-arg k1=v1 --build-arg k2=v2 path1');
+  });
+});
+
+test('calls tagImage correctly', async () => {
+  await tagImage('imagerepo', 'newtag');
+  expect(docker.dockerCommand)
+    .toHaveBeenCalledWith('tag imagerepo imagerepo:newtag');
+});
+
+describe('getTags', () => {
+  test('returns build tag', async () => {
+    process.env.GITHUB_RUN_NUMBER = '1234';
+    expect(getTags()).toContain('build.1234');
+  });
+  test('returns sha tag', async () => {
+    process.env.GITHUB_SHA = 'eea72dc2f8045993b548a04488172ba88b14ce36';
+    expect(getTags()).toContain('sha.eea72dc');
+  });
+  test('returns refs/pull tag', async () => {
+    process.env.GITHUB_REF = 'refs/pull/14/merge';
+    expect(getTags()).toContain('pr.14');
+  });
+  test('returns refs/heads tag', async () => {
+    process.env.GITHUB_REF = 'refs/heads/master';
+    expect(getTags()).toContain('branch.master');
+  });
+  test('returns refs/tags tag', async () => {
+    process.env.GITHUB_REF = 'refs/tags/v1.0.0.';
+    expect(getTags()).toContain('tag.v1.0.0.');
+  });
+  test('returns unknown refs', async () => {
+    process.env.GITHUB_REF = 'refs/unknown/thing';
+    expect(getTags()).toContain('unknown.thing');
+  });
 });
 
 test('builds correct metadata', async () => {
+  docker.dockerCommand.mockResolvedValue({
+    object: [{ dummy: 'inspect' }],
+  });
   const data = await buildMetadata({
     event: {
       pull_request: {
         number: 1,
       },
     },
-    repoTag: 'eu.gcr.io/bw-prod-artifacts/test-service:test',
+    repo: 'eu.gcr.io/bw-prod-artifacts/test-service',
     service: 'test-service',
     labels: 'k1=v1,k2=v2',
   });

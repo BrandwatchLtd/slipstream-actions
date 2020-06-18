@@ -4388,11 +4388,34 @@ const { dockerCommand } = __webpack_require__(175);
 const metadata = __webpack_require__(354);
 
 async function buildImage(input) {
-  await dockerCommand(`build -t ${input.repoTag} -f ${input.dockerFile} ${input.contextPath}`);
+  const args = [
+    'build',
+    '--tag', input.repo,
+    '--file', input.dockerfile,
+  ];
+
+  if (input.pull) {
+    args.push('--pull');
+  }
+
+  if (input.buildArgs) {
+    const buildArgs = input.buildArgs.split(',');
+    for (let i = 0; i < buildArgs.length; i += 1) {
+      args.push('--build-arg', buildArgs[i]);
+    }
+  }
+
+  args.push(input.path);
+
+  await dockerCommand(args.join(' '));
+}
+
+async function tagImage(repo, tag) {
+  await dockerCommand(`tag ${repo} ${repo}:${tag}`);
 }
 
 async function pushImage(input) {
-  await dockerCommand(`push ${input.repoTag}`);
+  await dockerCommand(`push ${input.repo}`);
 }
 
 async function buildMetadata(input) {
@@ -4405,16 +4428,46 @@ async function buildMetadata(input) {
   data.build = metadata.getBuildData(input.event);
   data.labels = metadata.getLabels(input.labels);
 
-  const dockerInspect = await dockerCommand(`inspect ${input.repoTag}`, { echo: false });
+  const dockerInspect = await dockerCommand(`inspect ${input.repo}`, { echo: false });
   data.dockerInspect = dockerInspect.object;
 
   return data;
 }
 
+function getTags() {
+  const tags = [];
+  if (process.env.GITHUB_RUN_NUMBER) {
+    tags.push(`build.${process.env.GITHUB_RUN_NUMBER}`);
+  }
+  if (typeof process.env.GITHUB_SHA === 'string') {
+    tags.push(`sha.${process.env.GITHUB_SHA.substring(0, 7)}`);
+  }
+  if (typeof process.env.GITHUB_REF === 'string') {
+    const [, type, r] = process.env.GITHUB_REF.split('/');
+    const ref = r.replace('/', '-');
+    switch (type) {
+      case 'pull':
+        tags.push(`pr.${ref}`);
+        break;
+      case 'tags':
+        tags.push(`tag.${ref}`);
+        break;
+      case 'heads':
+        tags.push(`branch.${ref}`);
+        break;
+      default:
+        tags.push(`${type}.${ref}`);
+    }
+  }
+  return tags;
+}
+
 module.exports = {
   buildImage,
+  tagImage,
   pushImage,
   buildMetadata,
+  getTags,
 };
 
 
@@ -7054,25 +7107,34 @@ async function run() {
   const service = core.getInput('service');
   const registry = core.getInput('dockerRegistry');
   const metadataBucket = core.getInput('metadataBucket');
-  const tag = process.env.GITHUB_RUN_ID;
-  const repoTag = `${registry}/${service}:${tag}`;
+  const repo = `${registry}/${service}`;
 
   try {
     core.startGroup('Configuring Docker authentication');
     await exec.exec('gcloud', ['auth', 'configure-docker', 'eu.gcr.io', '--quiet'], {});
     core.endGroup();
 
-    core.startGroup(`Building Docker image: ${repoTag}`);
+    core.startGroup(`Building Docker image: ${repo}`);
     await push.buildImage({
-      dockerFile: core.getInput('dockerFile'),
-      contextPath: core.getInput('contextPath'),
-      repoTag,
+      dockerfile: core.getInput('dockerfile'),
+      path: core.getInput('path'),
+      push: core.getInput('push'),
+      buildArgs: core.getInput('buildArgs'),
+      repo,
     });
+
+    const tags = push.getTags();
+    const results = [];
+    for (let i = 0; i < tags.length; i += 1) {
+      results.push(push.tagImage(repo, tags[i]));
+      core.info(`Successfully tagged ${repo}:${tags[i]}`);
+    }
+    await Promise.all(results);
     core.endGroup();
 
-    core.startGroup(`Pushing Docker image: ${repoTag}`);
+    core.startGroup(`Pushing Docker image: ${repo}`);
     await push.pushImage({
-      repoTag,
+      repo,
     });
     core.endGroup();
 
@@ -7080,14 +7142,13 @@ async function run() {
     const data = await push.buildMetadata({
       event: githubEvent,
       service: core.getInput('service'),
-      repoTag,
+      repo,
       labels: core.getInput('labels'),
     });
     await pushMetadata(metadataBucket, data);
     core.endGroup();
 
     core.setOutput('imageDigest', util.getImageDigest(data.dockerInspect));
-    core.info('success');
     core.info(`Run 'slipstream list images -s ${service}' to view service images`);
   } catch (err) {
     core.setFailed(err.message);
