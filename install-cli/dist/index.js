@@ -2796,6 +2796,7 @@ module.exports = require("url");
 
 const core = __webpack_require__(793);
 const tc = __webpack_require__(959);
+const exec = __webpack_require__(73);
 
 async function run() {
   try {
@@ -2807,6 +2808,7 @@ async function run() {
     const slipstreamExtractedFolder = await tc.extractTar(slipstreamPath, destPath);
     const cachedPath = await tc.cacheDir(slipstreamExtractedFolder, 'slipstream', 'latest');
     core.addPath(cachedPath);
+    await exec.exec('slipstream', ['version'], {});
     core.info('Success');
     core.endGroup();
   } catch (err) {
