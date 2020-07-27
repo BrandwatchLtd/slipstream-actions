@@ -1,0 +1,29 @@
+name: Lib
+on:
+  push:
+    branches:
+      main
+    paths:
+    - 'lib/**'
+    - '.github/workflows/lib-*'
+    - 'lib'
+  pull_request:
+    paths:
+    - 'lib/**'
+    - '.github/workflows/lib-*'
+    - 'lib'
+
+jobs:
+  unit:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2.1.1
+      with:
+        node-version: 12.x
+    - run: npm install # In the root for shared dev deps
+    - run: npm install
+      working-directory: ./lib
+    - run: npm test
+      working-directory: ./lib
