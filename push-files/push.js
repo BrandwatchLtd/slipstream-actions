@@ -1,4 +1,3 @@
-const crypto = require('crypto');
 const fs = require('fs');
 const util = require('util');
 const path = require('path');
@@ -42,16 +41,17 @@ async function getHashOfFiles(filesDir) {
       tard += data.toString();
     },
   };
+
+  // Pipes not working in @actions/exec
+  // A workaround is to run the bash programm
+  // and pass the commands as an argument.
+  // https://github.com/actions/toolkit/issues/359#issuecomment-603065463
   await exec.exec(
-    'tar', ['-c', '.'],
+    '/bin/bash -c', ['find . -type f -exec cat {} + | shasum | cut -c1-20'],
     options,
   );
 
-  const hash = crypto.createHash('sha256');
-  hash.write(tard);
-  hash.end();
-
-  return `sha256:${hash.digest('hex')}`;
+  return tard;
 }
 
 async function writeSlipstreamCheckFile(id, filesDir) {

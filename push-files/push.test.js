@@ -1,10 +1,13 @@
 process.env.GITHUB_RUN_NUMBER = '2345';
 
-const { buildMetadata } = require('./push');
-
 jest.mock('@actions/exec', () => ({
-  exec: jest.fn(),
+  exec: jest.fn((cmd, args, options) => {
+    options.listeners.stdout('638b46454a5u95520e07');
+  }),
 }));
+
+const exec = require('@actions/exec');
+const { buildMetadata, getHashOfFiles } = require('./push');
 
 test('builds correct metadata', async () => {
   const data = await buildMetadata({
@@ -13,7 +16,7 @@ test('builds correct metadata', async () => {
         number: 1,
       },
     },
-    hash: 'sha256:a1b2',
+    hash: 'a1b2',
     filesDir: '../.github',
     filesStageUrl: 'https://stage.com',
     filesProdUrl: 'https://prod.com',
@@ -25,7 +28,7 @@ test('builds correct metadata', async () => {
   expect(data.service).toBe('test-service');
   expect(data.labels.k1).toBe('v1');
   expect(data.labels.k2).toBe('v2');
-  expect(data.files.sha).toBe('sha256:a1b2');
+  expect(data.files.sha).toBe('a1b2');
   expect(data.files.stageUrl).toBe('https://stage.com');
   expect(data.files.prodUrl).toBe('https://prod.com');
   expect(data.commit.author).not.toBeUndefined();
@@ -34,4 +37,14 @@ test('builds correct metadata', async () => {
   expect(data.commit.url).not.toBeUndefined();
   expect(data.build.id).toBe('2345');
   expect(data.build.url).not.toBeUndefined();
+});
+
+test('generates a content hash', async () => {
+  const hash = await getHashOfFiles('./dir');
+
+  expect(hash).toBe('638b46454a5u95520e07');
+  expect(exec.exec).toHaveBeenCalledTimes(1);
+  expect(exec.exec.mock.calls[0][0]).toBe('/bin/bash -c');
+  expect(exec.exec.mock.calls[0][1]).toStrictEqual(['find . -type f -exec cat {} + | shasum | cut -c1-20']);
+  expect(exec.exec.mock.calls[0][2].cwd).toBe('./dir');
 });
