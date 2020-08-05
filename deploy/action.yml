@@ -10,7 +10,6 @@ inputs:
   id:
     description: ID of artifact to deploy, e.g. image digest, files sha, module digest.
     required: true
-outputs:
 
 runs:
   using: node12
