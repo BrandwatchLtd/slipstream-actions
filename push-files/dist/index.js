@@ -3714,19 +3714,20 @@ const githubRunNumber = process.env.GITHUB_RUN_NUMBER;
 const githubSHA = process.env.GITHUB_SHA;
 
 async function getCommitData() {
+  const prettyArg = `--pretty=format:${'%H %an %s'.split(' ').join('%n')}`;
   const log = await git()
     .raw([
       'log',
       '-1',
-      '--pretty=format:{%n  "commit": "%H",%n  "author": "%an",%n  "author_email": "%ae",%n  "date": "%ad",%n  "message": "%s"%n}',
-    ], (err, res) => res);
-  const commit = JSON.parse(log);
+      prettyArg,
+    ]);
+  const [sha, author, message] = log.split('\n');
 
   return {
-    author: commit.author,
-    message: commit.message,
-    sha: commit.commit,
-    url: `https://github.com/${githubRepo}/commit/${commit.commit}`,
+    author,
+    message,
+    sha,
+    url: `https://github.com/${process.env.GITHUB_REPOSITORY}/commit/${sha}`,
   };
 }
 
@@ -3779,7 +3780,7 @@ async function pushMetadata(bucket, data) {
   // generated filenames, so re-runs don't cause files to be overwritten.
   const uid = new ShortUniqueId({ length: 3 });
   const filename = `github-build.${data.build.id}.${uid()}.json`;
-  await exec.exec('gsutil', ['cp', `./${tmpFile}`, `${bucket}/${data.service}/${filename}`], {});
+  await exec.exec('gsutil', ['cp', '-z', 'json', `./${tmpFile}`, `${bucket}/${data.service}/${filename}`], {});
   await fs.unlink(tmpFile, (err) => {
     if (err) {
       throw Error(`failed to delete temp JSON metadata file: ${err.message}`);
@@ -3788,10 +3789,13 @@ async function pushMetadata(bucket, data) {
 }
 
 async function pushFilesToBucket(files, bucketAddress) {
+  const args = '-rnz'; // recursive, no-overwrite, zip
+  const zipExtensions = 'css,html,js,json,svg';
+
   await exec.exec('gsutil', [
     '-m',
     '-h', 'Cache-Control:public, max-age=31536000',
-    'cp', '-r', '.',
+    'cp', args, zipExtensions, '.',
     bucketAddress,
   ], {
     cwd: files,
@@ -4021,13 +4025,6 @@ exports.GitError = GitError;
 
 /***/ }),
 
-/***/ 417:
-/***/ (function(module) {
-
-module.exports = require("crypto");
-
-/***/ }),
-
 /***/ 422:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -4088,7 +4085,6 @@ exports.statusTask = statusTask;
 /***/ 459:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
-const crypto = __webpack_require__(417);
 const fs = __webpack_require__(747);
 const util = __webpack_require__(669);
 const path = __webpack_require__(622);
@@ -4132,16 +4128,17 @@ async function getHashOfFiles(filesDir) {
       tard += data.toString();
     },
   };
+
+  // Pipes not working in @actions/exec
+  // A workaround is to run the bash programm
+  // and pass the commands as an argument.
+  // https://github.com/actions/toolkit/issues/359#issuecomment-603065463
   await exec.exec(
-    'tar', ['-c', '.'],
+    '/bin/bash -c', ['find . -type f -exec cat {} + | shasum | cut -c1-20'],
     options,
   );
 
-  const hash = crypto.createHash('sha256');
-  hash.write(tard);
-  hash.end();
-
-  return `sha256:${hash.digest('hex')}`;
+  return tard;
 }
 
 async function writeSlipstreamCheckFile(id, filesDir) {
