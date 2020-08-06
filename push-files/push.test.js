@@ -2,7 +2,9 @@ process.env.GITHUB_RUN_NUMBER = '2345';
 
 jest.mock('@actions/exec', () => ({
   exec: jest.fn((cmd, args, options) => {
-    options.listeners.stdout('638b46454a5u95520e07');
+    // exec returns a new line so we need to include this here as well
+    // to ensure our trim() works as expected
+    options.listeners.stdout('638b46454a5u95520e07\n');
   }),
 }));
 

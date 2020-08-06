@@ -4138,7 +4138,7 @@ async function getHashOfFiles(filesDir) {
     options,
   );
 
-  return tard;
+  return tard.trim();
 }
 
 async function writeSlipstreamCheckFile(id, filesDir) {
