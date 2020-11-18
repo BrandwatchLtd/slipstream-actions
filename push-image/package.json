@@ -8,7 +8,7 @@
     "lint": "../node_modules/.bin/eslint . --config ../.eslintrc.json --ignore-path ../.eslintignore"
   },
   "dependencies": {
-    "@actions/core": "^1.2.4",
+    "@actions/core": "^1.2.6",
     "@actions/exec": "^1.0.4",
     "docker-cli-js": "^2.7.1"
   }
