@@ -3838,10 +3838,18 @@ async function pushFilesToBucket(files, bucketAddress) {
   });
 }
 
+async function directoryExists(url) {
+  return exec.exec('gsutil', [
+    'ls',
+    url,
+  ]).then(() => true).catch(() => false);
+}
+
 module.exports = {
   getCommitData,
   getBuildData,
   getLabels,
+  directoryExists,
   pushMetadata,
   pushFilesToBucket,
 };
@@ -6244,6 +6252,7 @@ const core = __webpack_require__(793);
 const githubEvent = require(process.env.GITHUB_EVENT_PATH);
 const {
   pushMetadata,
+  directoryExists,
   pushFilesToBucket,
 } = __webpack_require__(354);
 const push = __webpack_require__(459);
@@ -6256,6 +6265,13 @@ async function run() {
     const metadataBucket = core.getInput('metadataBucket');
     const hash = await push.getHashOfFiles(filesDir);
     const bucketAddress = `${bucket}/${service}/${hash}/`;
+
+    const existsAlready = await directoryExists(bucketAddress);
+
+    if (existsAlready) {
+      core.info(`Skip: ${bucketAddress} already exists`);
+      return;
+    }
 
     core.startGroup(`Pushing files to GCR: ${bucketAddress}`);
     await push.writeSlipstreamCheckFile(hash, filesDir);

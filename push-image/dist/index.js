@@ -4141,10 +4141,18 @@ async function pushFilesToBucket(files, bucketAddress) {
   });
 }
 
+async function directoryExists(url) {
+  return exec.exec('gsutil', [
+    'ls',
+    url,
+  ]).then(() => true).catch(() => false);
+}
+
 module.exports = {
   getCommitData,
   getBuildData,
   getLabels,
+  directoryExists,
   pushMetadata,
   pushFilesToBucket,
 };

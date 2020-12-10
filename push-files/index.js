@@ -2,6 +2,7 @@ const core = require('@actions/core');
 const githubEvent = require(process.env.GITHUB_EVENT_PATH);
 const {
   pushMetadata,
+  directoryExists,
   pushFilesToBucket,
 } = require('../lib');
 const push = require('./push');
@@ -14,6 +15,13 @@ async function run() {
     const metadataBucket = core.getInput('metadataBucket');
     const hash = await push.getHashOfFiles(filesDir);
     const bucketAddress = `${bucket}/${service}/${hash}/`;
+
+    const existsAlready = await directoryExists(bucketAddress);
+
+    if (existsAlready) {
+      core.info(`Skip: ${bucketAddress} already exists`);
+      return;
+    }
 
     core.startGroup(`Pushing files to GCR: ${bucketAddress}`);
     await push.writeSlipstreamCheckFile(hash, filesDir);
