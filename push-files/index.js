@@ -20,6 +20,8 @@ async function run() {
 
     if (existsAlready) {
       core.info(`Skip: ${bucketAddress} already exists`);
+      core.setOutput('artifactID', hash);
+      core.setOutput('skipped', 'true');
       return;
     }
 
@@ -42,6 +44,7 @@ async function run() {
     core.endGroup();
 
     core.setOutput('artifactID', hash);
+    core.setOutput('skipped', 'false');
     core.info('success');
     core.info(`Run 'slipstream list files -s ${service}' to view service images`);
   } catch (err) {
