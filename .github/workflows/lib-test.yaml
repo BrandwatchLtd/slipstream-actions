@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: actions/setup-node@v2.1.1
+    - uses: actions/setup-node@main
       with:
         node-version: 12.x
     - run: npm install # In the root for shared dev deps
