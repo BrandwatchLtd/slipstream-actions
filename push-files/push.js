@@ -1,14 +1,14 @@
-const fs = require('fs');
-const util = require('util');
+const fs = require('fs').promises;
 const path = require('path');
-const exec = require('@actions/exec');
+const crypto = require('crypto');
+const core = require('@actions/core');
+const walk = require('walk');
+
 const {
   getCommitData,
   getBuildData,
   getLabels,
 } = require('../lib');
-
-const writeFile = util.promisify(fs.writeFile);
 
 async function buildMetadata(input) {
   const data = {
@@ -28,30 +28,37 @@ async function buildMetadata(input) {
   return data;
 }
 
-// getHashOfFiles is a badly implemented way of hashing the file contents. The tar
-// isn't reproducible across different systems, so this is pretty pointless.
 async function getHashOfFiles(filesDir) {
-  let tard = '';
-  const options = {
-    silent: true,
-    cwd: filesDir,
-  };
-  options.listeners = {
-    stdout: (data) => {
-      tard += data.toString();
-    },
-  };
+  return new Promise((resolve, reject) => {
+    const walker = walk.walk(filesDir);
 
-  // Pipes not working in @actions/exec
-  // A workaround is to run the bash programm
-  // and pass the commands as an argument.
-  // https://github.com/actions/toolkit/issues/359#issuecomment-603065463
-  await exec.exec(
-    '/bin/bash -c', ['find . -type f -exec cat {} + | shasum | cut -c1-20'],
-    options,
-  );
+    let output = '';
 
-  return tard.trim();
+    walker.on('file', async (root, fileStats, next) => {
+      const filename = path.join(filesDir, fileStats.name);
+      core.debug(`Read content of ${filename}`);
+
+      const fileContent = await fs.readFile(filename);
+      output += fileContent.toString('hex');
+      next();
+    });
+
+    walker.on('errors', (root, nodeStatsArray) => {
+      reject(nodeStatsArray);
+      core.setFailed('Hash generation failed');
+    });
+
+    walker.on('end', () => {
+      core.endGroup();
+      const hash = crypto.createHash('sha256').update(output).digest('hex');
+      const short = hash.slice(0, 20);
+
+      core.debug(`Hash long ${hash}`);
+      core.debug(`Hash short ${short}`);
+
+      resolve(short);
+    });
+  });
 }
 
 async function writeSlipstreamCheckFile(id, filesDir) {
@@ -61,7 +68,7 @@ async function writeSlipstreamCheckFile(id, filesDir) {
   };
 
   try {
-    await writeFile(file, JSON.stringify(data));
+    await fs.writeFile(file, JSON.stringify(data));
   } catch (err) {
     throw Error(`failed to write slipstreamz file: ${err.message}`);
   }

@@ -1,14 +1,6 @@
 process.env.GITHUB_RUN_NUMBER = '2345';
 
-jest.mock('@actions/exec', () => ({
-  exec: jest.fn((cmd, args, options) => {
-    // exec returns a new line so we need to include this here as well
-    // to ensure our trim() works as expected
-    options.listeners.stdout('638b46454a5u95520e07\n');
-  }),
-}));
-
-const exec = require('@actions/exec');
+const core = require('@actions/core');
 const { buildMetadata, getHashOfFiles } = require('./push');
 
 test('builds correct metadata', async () => {
@@ -42,11 +34,17 @@ test('builds correct metadata', async () => {
 });
 
 test('generates a content hash', async () => {
-  const hash = await getHashOfFiles('./dir');
+  const hash = await getHashOfFiles('./fixtures');
+  expect(hash).toBe('775de5a308edde41f9ad');
+});
 
-  expect(hash).toBe('638b46454a5u95520e07');
-  expect(exec.exec).toHaveBeenCalledTimes(1);
-  expect(exec.exec.mock.calls[0][0]).toBe('/bin/bash -c');
-  expect(exec.exec.mock.calls[0][1]).toStrictEqual(['find . -type f -exec cat {} + | shasum | cut -c1-20']);
-  expect(exec.exec.mock.calls[0][2].cwd).toBe('./dir');
+test('throws an error if content hash genertion fails', async () => {
+  const setFailedSpy = jest.spyOn(core, 'setFailed');
+
+  return getHashOfFiles('./fixtures/does-not-exist').catch((error) => {
+    expect(error[0].error.code).toBe('ENOENT');
+    expect(error[0].error.path).toBe('./fixtures/does-not-exist');
+    expect(setFailedSpy).toHaveBeenCalled();
+    expect(setFailedSpy).toHaveBeenCalledWith('Hash generation failed');
+  });
 });
