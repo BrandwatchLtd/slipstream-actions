@@ -9,6 +9,6 @@
   },
   "dependencies": {
     "@actions/core": "^1.2.6",
-    "@actions/exec": "^1.0.4"
+    "walk": "^2.3.14"
   }
 }
