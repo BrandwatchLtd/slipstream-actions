@@ -74,6 +74,32 @@ The `deploy` action can be used to create a deployment request for a given artif
 
 See [Action definition](deploy/action.yml) for additional details.
 
+### Maven Build
+
+![](https://github.com/BrandwatchLtd/slipstream-actions/workflows/Maven%20Build/badge.svg)
+
+The `maven-build` action build and tag your maven package that will be picked up by your docker build in the `target` folder.
+
+```yaml
+- name: Maven build package
+  uses: BrandwatchLtd/slipstream-actions/maven-build@main
+```
+
+See [Action definition](maven-build/action.yml) for additional details.
+
+### Maven Verify
+
+![](https://github.com/BrandwatchLtd/slipstream-actions/workflows/Maven%20Verify/badge.svg)
+
+The `maven-verify` action will verify your maven package and run additional your tests on it.
+
+```yaml
+- name: Maven verify package
+  uses: BrandwatchLtd/slipstream-actions/maven-verify@main
+```
+
+See [Action definition](maven-verify/action.yml) for additional details.
+
 ## Development
 
 __NB: The default branch for this repo is `main`.__
