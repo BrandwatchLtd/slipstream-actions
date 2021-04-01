@@ -1,0 +1,28 @@
+name: Maven verify
+description: verify your maven jar
+runs:
+  using: "composite"
+  steps:
+    - id: get-build-parameters
+      run: |
+        branch_name=$(echo ${{ github.ref }} | cut -d "/" -f 3)
+        revision=$branch_name-$(git log -n1 --date=format-local:%G%m%d-%H%M --format='%ad' | tr -d " ")
+        sha=$(git log -n1 --format='%h'| tr -d " ")
+        build_number=${{ github.run_number }}
+        build_tag=build.$branch_name-$build_number
+        echo "BRANCH_NAME=$branch_name" >> $GITHUB_ENV
+        echo "REVISION=$revision" >> $GITHUB_ENV
+        echo "SHA=$sha" >> $GITHUB_ENV
+        echo "BUILD_NUMBER=$build_number" >> $GITHUB_ENV
+        echo "BUILD_TAG=$build_tag" >> $GITHUB_ENV
+      shell: bash
+
+    - id: maven-verify
+      run: |
+        mvn -B -Dbuild.tag=$BUILD_TAG verify \
+        -DimageRegistry=eu.gcr.io/bw-prod-analytics0 \
+        -DimageTag=$BRANCH_NAME \
+        -Drevision=$REVISION \
+        -Dsha1=$SHA \
+        -Dchangelist=$BUILD_NUMBER
+      shell: bash
