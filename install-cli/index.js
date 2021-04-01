@@ -1,5 +1,6 @@
 const core = require('@actions/core');
 const tc = require('@actions/tool-cache');
+const exec = require('@actions/exec');
 
 async function run() {
   try {
@@ -11,6 +12,7 @@ async function run() {
     const slipstreamExtractedFolder = await tc.extractTar(slipstreamPath, destPath);
     const cachedPath = await tc.cacheDir(slipstreamExtractedFolder, 'slipstream', 'latest');
     core.addPath(cachedPath);
+    await exec.exec('slipstream', ['version'], {});
     core.info('Success');
     core.endGroup();
   } catch (err) {
