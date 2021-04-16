@@ -6209,7 +6209,7 @@ async function directoryExists(url) {
   ]).then(() => true).catch(() => false);
 }
 
-async function installSlipstreamCLI() {
+async function installSlipstreamCLI(downloadURL) {
   const commandExistsAlready = await commandExists('slipstream');
 
   if (commandExistsAlready) {
@@ -6218,7 +6218,6 @@ async function installSlipstreamCLI() {
 
   // install cli
   core.startGroup('Installing the Slipstream CLI');
-  const downloadURL = core.getInput('slipstream-cli-url');
   const fileType = downloadURL.substr(-4);
   const slipstreamPath = await tc.downloadTool(downloadURL);
   const destPath = `${slipstreamPath}${fileType}`;
@@ -9907,8 +9906,9 @@ async function run() {
     const environment = core.getInput('environment');
     const service = core.getInput('service');
     const id = core.getInput('id');
+    const downloadURL = core.getInput('slipstream-cli-url');
 
-    await installSlipstreamCLI();
+    await installSlipstreamCLI(downloadURL);
 
     core.startGroup('Deploy new image');
     await deploy(environment, service, id);
