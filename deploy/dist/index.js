@@ -4595,6 +4595,20 @@ exports.removeRemoteTask = removeRemoteTask;
 
 /***/ }),
 
+/***/ 183:
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+const exec = __webpack_require__(663);
+
+async function commandExists(command) {
+  return exec.exec(command, [], { silent: true }).then(() => true).catch(() => false);
+}
+
+module.exports = commandExists;
+
+
+/***/ }),
+
 /***/ 201:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
@@ -6090,6 +6104,7 @@ const core = __webpack_require__(686);
 const tc = __webpack_require__(131);
 const exec = __webpack_require__(663);
 const { default: ShortUniqueId } = __webpack_require__(690);
+const commandExists = __webpack_require__(183);
 
 const writeFile = util.promisify(fs.writeFile);
 
@@ -6192,10 +6207,6 @@ async function directoryExists(url) {
     'ls',
     url,
   ]).then(() => true).catch(() => false);
-}
-
-async function commandExists(command) {
-  return exec.exec(command, [], { silent: true }).then(() => true).catch(() => false);
 }
 
 async function installSlipstreamCLI() {
