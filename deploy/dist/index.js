@@ -6218,7 +6218,6 @@ async function installSlipstreamCLI() {
 
   // install cli
   core.startGroup('Installing the Slipstream CLI');
-  // for the future check that the binary exist
   const downloadURL = core.getInput('slipstream-cli-url');
   const fileType = downloadURL.substr(-4);
   const slipstreamPath = await tc.downloadTool(downloadURL);
