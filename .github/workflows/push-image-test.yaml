@@ -46,4 +46,4 @@ jobs:
           pull: true,
           buildArgs: k1=v1,k2=v2
           dockerRegistry: eu.gcr.io/bw-ee-labs
-          metadataBucket: gs://slipstream-github-action-test
+          metadataBucket: gs://bw-ee-labs-slipstream-github-action-test
