@@ -45,5 +45,5 @@ jobs:
           service: action-integration-test
           pull: true,
           buildArgs: k1=v1,k2=v2
-          dockerRegistry: eu.gcr.io/bw-stage-slipstream0
+          dockerRegistry: eu.gcr.io/bw-ee-labs
           metadataBucket: gs://slipstream-github-action-test
