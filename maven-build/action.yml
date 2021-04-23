@@ -1,5 +1,10 @@
 name: Maven build
 description: build a maven jar
+inputs:
+  container-registry:
+    required: false
+    description: 'Container registy url'
+    default: 'eu.gcr.io/bw-prod-artifacts'
 runs:
   using: "composite"
   steps:
@@ -20,7 +25,7 @@ runs:
     - id: maven-build
       run: |
         mvn -B -Dbuild.tag=$BUILD_TAG clean package \
-        -DimageRegistry=eu.gcr.io/bw-prod-analytics0 \
+        -DimageRegistry=${{ inputs.container-registry }} \
         -DimageTag=$BRANCH_NAME \
         -Drevision=$REVISION \
         -Dsha1=$SHA \

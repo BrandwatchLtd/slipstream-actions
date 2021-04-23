@@ -40,7 +40,7 @@ jobs:
         node-version: 12.x
     - uses: google-github-actions/setup-gcloud@master
       with:
-        service_account_key: ${{ secrets.BW_PROD_ARTIFACTS_KEY }}
+        service_account_key: ${{ secrets.BW_EE_LABS_REGISTRY_KEY }}
         export_default_credentials: true
     - uses: ./install-cli
 
