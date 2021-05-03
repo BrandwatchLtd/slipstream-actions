@@ -6228,6 +6228,48 @@ async function installSlipstreamCLI(downloadURL) {
   core.endGroup();
 }
 
+async function installAWSCLI() {
+  const commandExistsAlready = await commandExists('aws');
+
+  if (commandExistsAlready) {
+    return;
+  }
+
+  core.startGroup('Installing the AWS CLI');
+  const exitCode = await exec.exec('/bin/bash -c "sudo apt-get -y install python3-setuptools && sudo pip3 install awscli"');
+  if (exitCode !== 0) {
+    core.setFailed('Failed to install AWS CLI');
+  } else {
+    core.info('Success');
+  }
+
+  core.endGroup();
+}
+
+const setupAWSRepository = async (repository, registry) => {
+  core.info('Setup AWS docker login');
+  await exec.exec(`/bin/bash -c "aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${registry}" `);
+
+  // Check if repository exist
+  const ret = await exec.exec(`aws ecr describe-repositories --repository-names ${repository}`, [], { ignoreReturnCode: true });
+  core.info(`return code:  ${ret}`);
+  if (ret !== 0) {
+    core.startGroup(`Create AWS ${repository} repository in ${registry}`);
+    // Create repository
+    core.info(`Create ${repository} repository`);
+    await exec.exec(`/bin/bash -c "aws ecr create-repository --repository-name ${repository} --image-tag-mutability MUTABLE --image-scanning-configuration scanOnPush=true" `);
+
+    // Export default policy
+    core.info('Export default policy');
+    await exec.exec('/bin/bash -c "aws ecr get-repository-policy --repository-name default | jq -r .policyText > access_policy.json"');
+
+    // Apply the access policy to the new repository
+    core.info(`Apply the access policy to ${repository} repository`);
+    await exec.exec(`/bin/bash -c "aws ecr set-repository-policy --repository-name ${repository} --policy-text file://access_policy.json"`);
+    core.endGroup();
+  }
+};
+
 module.exports = {
   getCommitData,
   getBuildData,
@@ -6237,6 +6279,8 @@ module.exports = {
   pushFilesToBucket,
   commandExists,
   installSlipstreamCLI,
+  installAWSCLI,
+  setupAWSRepository,
 };
 
 

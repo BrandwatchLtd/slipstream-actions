@@ -1,9 +1,10 @@
 const core = require('@actions/core');
 const exec = require('@actions/exec');
-const { pushMetadata } = require('../lib');
+const { pushMetadata, installAWSCLI, setupAWSRepository } = require('../lib');
 const push = require('./push');
 const util = require('./util');
 const githubEvent = require(process.env.GITHUB_EVENT_PATH);
+const awsRegistries = ['491404736464.dkr.ecr.eu-west-1.amazonaws.com'];
 
 async function run() {
   const service = core.getInput('service');
@@ -13,7 +14,16 @@ async function run() {
 
   try {
     core.startGroup('Configuring Docker authentication');
-    await exec.exec('gcloud', ['auth', 'configure-docker', 'eu.gcr.io', '--quiet'], {});
+    if (registry.includes('amazonaws.com')) {
+      if (!awsRegistries.includes(registry)) {
+        core.setFailed('aws registry not supported');
+      }
+
+      await installAWSCLI();
+      await setupAWSRepository(service, registry);
+    } else {
+      await exec.exec('gcloud', ['auth', 'configure-docker', 'eu.gcr.io', '--quiet'], {});
+    }
     core.endGroup();
 
     core.startGroup(`Building Docker image: ${repo}`);
