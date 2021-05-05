@@ -6440,6 +6440,7 @@ function getLabels(l) {
 }
 
 async function pushMetadata(bucket, data) {
+  core.info(`data: ${data}`); // Debug
   if (!bucket) {
     throw new Error('metadataBucket input for artifact metadata not set');
   }
@@ -6851,6 +6852,7 @@ exports.statusTask = statusTask;
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 const { dockerCommand } = __webpack_require__(175);
+const core = __webpack_require__(793);
 const metadata = __webpack_require__(354);
 
 async function buildImage(input) {
@@ -6893,6 +6895,8 @@ async function buildMetadata(input) {
   data.commit = await metadata.getCommitData();
   data.build = metadata.getBuildData(input.event);
   data.labels = metadata.getLabels(input.labels);
+  data.release = input.release;
+  core.info(`release: ${data.release}`); // Debug
 
   const dockerInspect = await dockerCommand(`inspect ${input.repo}`, { echo: false });
   data.dockerInspect = dockerInspect.object;
@@ -10953,6 +10957,9 @@ async function run() {
       service: core.getInput('service'),
       repo,
       labels: core.getInput('labels'),
+      // convert string to boolean, should be replaced by getBooleanInput
+      // when https://github.com/actions/toolkit/pull/725 is released
+      release: (core.getInput('release') === 'true'),
     });
     await pushMetadata(metadataBucket, data);
     core.endGroup();

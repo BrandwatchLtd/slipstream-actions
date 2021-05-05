@@ -56,6 +56,9 @@ async function run() {
       service: core.getInput('service'),
       repo,
       labels: core.getInput('labels'),
+      // convert string to boolean, should be replaced by getBooleanInput
+      // when https://github.com/actions/toolkit/pull/725 is released
+      release: (core.getInput('release') === 'true'),
     });
     await pushMetadata(metadataBucket, data);
     core.endGroup();
