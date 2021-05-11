@@ -10902,7 +10902,7 @@ const { pushMetadata, installAWSCLI, setupAWSRepository } = __webpack_require__(
 const push = __webpack_require__(459);
 const util = __webpack_require__(262);
 const githubEvent = require(process.env.GITHUB_EVENT_PATH);
-const awsRegistries = ['491404736464.dkr.ecr.eu-west-1.amazonaws.com'];
+const awsRegistries = ['491404736464.dkr.ecr.eu-west-1.amazonaws.com', '965748740018.dkr.ecr.eu-west-1.amazonaws.com'];
 
 async function run() {
   const service = core.getInput('service');
@@ -10914,7 +10914,7 @@ async function run() {
     core.startGroup('Configuring Docker authentication');
     if (registry.includes('amazonaws.com')) {
       if (!awsRegistries.includes(registry)) {
-        core.setFailed('aws registry not supported');
+        core.setFailed(`${registry} registry not supported`);
       }
 
       await installAWSCLI();
