@@ -43,7 +43,6 @@ async function buildMetadata(input) {
   data.build = metadata.getBuildData(input.event);
   data.labels = metadata.getLabels(input.labels);
   data.release = input.release;
-  core.info(`release: ${data.release}`); // Debug
 
   const dockerInspect = await dockerCommand(`inspect ${input.repo}`, { echo: false });
   data.dockerInspect = dockerInspect.object;

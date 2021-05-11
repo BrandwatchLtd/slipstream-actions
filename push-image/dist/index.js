@@ -6440,7 +6440,6 @@ function getLabels(l) {
 }
 
 async function pushMetadata(bucket, data) {
-  core.info(`data: ${data}`); // Debug
   if (!bucket) {
     throw new Error('metadataBucket input for artifact metadata not set');
   }
@@ -6896,7 +6895,6 @@ async function buildMetadata(input) {
   data.build = metadata.getBuildData(input.event);
   data.labels = metadata.getLabels(input.labels);
   data.release = input.release;
-  core.info(`release: ${data.release}`); // Debug
 
   const dockerInspect = await dockerCommand(`inspect ${input.repo}`, { echo: false });
   data.dockerInspect = dockerInspect.object;
