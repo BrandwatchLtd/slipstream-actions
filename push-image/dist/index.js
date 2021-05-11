@@ -6851,7 +6851,6 @@ exports.statusTask = statusTask;
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 const { dockerCommand } = __webpack_require__(175);
-const core = __webpack_require__(793);
 const metadata = __webpack_require__(354);
 
 async function buildImage(input) {

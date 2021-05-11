@@ -1,5 +1,4 @@
 const { dockerCommand } = require('docker-cli-js');
-const core = require('@actions/core');
 const metadata = require('../lib');
 
 async function buildImage(input) {
