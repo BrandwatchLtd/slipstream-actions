@@ -4600,8 +4600,8 @@ exports.removeRemoteTask = removeRemoteTask;
 
 const exec = __webpack_require__(663);
 
-async function commandExists(command) {
-  return exec.exec(command, [], { silent: true }).then(() => true).catch(() => false);
+async function commandExists(command, args) {
+  return exec.exec(command, args, { silent: true }).then(() => true).catch(() => false);
 }
 
 module.exports = commandExists;
@@ -6229,7 +6229,7 @@ async function installSlipstreamCLI(downloadURL) {
 }
 
 async function installAWSCLI() {
-  const commandExistsAlready = await commandExists('aws');
+  const commandExistsAlready = await commandExists('aws', ['--version']);
 
   if (commandExistsAlready) {
     return;
