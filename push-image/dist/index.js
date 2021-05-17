@@ -6507,8 +6507,20 @@ async function installSlipstreamCLI(downloadURL) {
 }
 
 async function installAWSCLI() {
+  const commandExistsAlready = await commandExists('aws');
+
+  if (commandExistsAlready) {
+    return;
+  }
+
   core.startGroup('Installing the AWS CLI');
-  core.info('Success');
+  const exitCode = await exec.exec('/bin/bash -c "sudo apt-get -y install python3-setuptools && sudo pip3 install awscli"');
+  if (exitCode !== 0) {
+    core.setFailed('Failed to install AWS CLI');
+  } else {
+    core.info('Success');
+  }
+
   core.endGroup();
 }
 
