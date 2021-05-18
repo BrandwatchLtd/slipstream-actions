@@ -1,6 +1,6 @@
 const core = require('@actions/core');
 const exec = require('@actions/exec');
-const { pushMetadata, installAWSCLI, setupAWSRepository } = require('../lib');
+const { pushMetadata, setupAWSRepository } = require('../lib');
 const push = require('./push');
 const util = require('./util');
 const githubEvent = require(process.env.GITHUB_EVENT_PATH);
@@ -19,7 +19,6 @@ async function run() {
         core.setFailed(`${registry} registry not supported`);
       }
 
-      await installAWSCLI();
       await setupAWSRepository(service, registry);
     } else {
       await exec.exec('gcloud', ['auth', 'configure-docker', 'eu.gcr.io', '--quiet'], {});

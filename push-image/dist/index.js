@@ -6506,24 +6506,6 @@ async function installSlipstreamCLI(downloadURL) {
   core.endGroup();
 }
 
-async function installAWSCLI() {
-  const commandExistsAlready = await commandExists('aws', ['--version']);
-
-  if (commandExistsAlready) {
-    return;
-  }
-
-  core.startGroup('Installing the AWS CLI');
-  const exitCode = await exec.exec('/bin/bash -c "sudo apt-get -y install python3-setuptools && sudo pip3 install awscli"');
-  if (exitCode !== 0) {
-    core.setFailed('Failed to install AWS CLI');
-  } else {
-    core.info('Success');
-  }
-
-  core.endGroup();
-}
-
 const setupAWSRepository = async (repository, registry) => {
   core.info('Setup AWS docker login');
   await exec.exec(`/bin/bash -c "aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${registry}" `);
@@ -6557,7 +6539,6 @@ module.exports = {
   pushFilesToBucket,
   commandExists,
   installSlipstreamCLI,
-  installAWSCLI,
   setupAWSRepository,
 };
 
@@ -10898,7 +10879,7 @@ exports.GitExecutor = GitExecutor;
 
 const core = __webpack_require__(793);
 const exec = __webpack_require__(73);
-const { pushMetadata, installAWSCLI, setupAWSRepository } = __webpack_require__(354);
+const { pushMetadata, setupAWSRepository } = __webpack_require__(354);
 const push = __webpack_require__(459);
 const util = __webpack_require__(262);
 const githubEvent = require(process.env.GITHUB_EVENT_PATH);
@@ -10917,7 +10898,6 @@ async function run() {
         core.setFailed(`${registry} registry not supported`);
       }
 
-      await installAWSCLI();
       await setupAWSRepository(service, registry);
     } else {
       await exec.exec('gcloud', ['auth', 'configure-docker', 'eu.gcr.io', '--quiet'], {});
