@@ -35,6 +35,8 @@ To push images to ECR you need to provide an ECR `dockerRegistry` and setup a fe
     dockerRegistry: <your_ecr_docker_registry>
     release: true #for image to be deployable via slipstream
   env:
+    #The AWS secrets are already set as organisation level secrets, you don't need
+    #to set them on a repository level, unless you want to use a different account
     AWS_ACCESS_KEY_ID: ${{ secrets.ARTIFACTS_PROD_AWS_ACCESS_KEY }}
     AWS_SECRET_ACCESS_KEY: ${{ secrets.ARTIFACTS_PROD_AWS_SECRET_KEY }}
     AWS_DEFAULT_REGION: eu-west-1
