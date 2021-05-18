@@ -23,7 +23,7 @@ The `push-image` action builds a Docker image and pushes it to an appropriate Go
 
 #### How to push images to ECR
 
-to push images to ECR you need to provide an ECR `dockerRegistry` and setup few environment variable. For your image to be deployable via slipstream it is mandatory to set the `release` field to `true` otherwise your image will be considered as a development image.
+To push images to ECR you need to provide an ECR `dockerRegistry` and setup a few environment variables. For your image to be deployable via slipstream it is mandatory to set the `release` field to `true` otherwise your image will be considered as a development image.
 
 ```yaml
 - name: Build and push Docker image
