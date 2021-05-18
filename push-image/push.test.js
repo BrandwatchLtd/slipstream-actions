@@ -94,6 +94,7 @@ test('builds correct metadata', async () => {
     repo: 'eu.gcr.io/bw-prod-artifacts/test-service',
     service: 'test-service',
     labels: 'k1=v1,k2=v2',
+    release: true,
   });
 
   expect(data.type).toBe('image');
@@ -101,6 +102,7 @@ test('builds correct metadata', async () => {
   expect(data.labels.k1).toBe('v1');
   expect(data.labels.k2).toBe('v2');
   expect(data.service).toBe('test-service');
+  expect(data.release).toBe(true);
   expect(typeof data.dockerInspect[0]).toBe('object');
   expect(data.commit.author).not.toBeUndefined();
   expect(data.commit.message).not.toBeUndefined();

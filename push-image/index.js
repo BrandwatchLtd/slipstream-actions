@@ -1,9 +1,10 @@
 const core = require('@actions/core');
 const exec = require('@actions/exec');
-const { pushMetadata } = require('../lib');
+const { pushMetadata, setupAWSRepository } = require('../lib');
 const push = require('./push');
 const util = require('./util');
 const githubEvent = require(process.env.GITHUB_EVENT_PATH);
+const awsRegistries = ['491404736464.dkr.ecr.eu-west-1.amazonaws.com', '965748740018.dkr.ecr.eu-west-1.amazonaws.com'];
 
 async function run() {
   const service = core.getInput('service');
@@ -13,7 +14,15 @@ async function run() {
 
   try {
     core.startGroup('Configuring Docker authentication');
-    await exec.exec('gcloud', ['auth', 'configure-docker', 'eu.gcr.io', '--quiet'], {});
+    if (registry.includes('amazonaws.com')) {
+      if (!awsRegistries.includes(registry)) {
+        core.setFailed(`${registry} registry not supported`);
+      }
+
+      await setupAWSRepository(service, registry);
+    } else {
+      await exec.exec('gcloud', ['auth', 'configure-docker', 'eu.gcr.io', '--quiet'], {});
+    }
     core.endGroup();
 
     core.startGroup(`Building Docker image: ${repo}`);
@@ -46,6 +55,9 @@ async function run() {
       service: core.getInput('service'),
       repo,
       labels: core.getInput('labels'),
+      // convert string to boolean, should be replaced by getBooleanInput
+      // when https://github.com/actions/toolkit/pull/725 is released
+      release: (core.getInput('release') === 'true'),
     });
     await pushMetadata(metadataBucket, data);
     core.endGroup();

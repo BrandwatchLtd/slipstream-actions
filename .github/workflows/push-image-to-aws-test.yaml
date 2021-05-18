@@ -1,0 +1,55 @@
+name: Push Image To AWS
+on:
+  push:
+    branches:
+      main
+    paths:
+    - 'push-image/**'
+    - '.github/workflows/push-image-*'
+    - 'lib'
+  pull_request:
+    paths:
+    - 'push-image/**'
+    - '.github/workflows/push-image-*'
+    - 'lib'
+
+jobs:
+  unit:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@master
+      with:
+        node-version: 12.x
+    - run: npm install # In the root for shared dev deps
+    - run: npm install
+      working-directory: ./lib
+    - run: npm install
+      working-directory: ./push-image
+    - run: npm test
+      working-directory: ./push-image
+  integration:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: google-github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.BW_EE_LABS_REGISTRY_KEY }}
+          export_default_credentials: true
+      - uses: ./push-image
+        with:
+          dockerfile: test-fixtures/Dockerfile
+          path: test-fixtures
+          service: action-integration-test
+          pull: true,
+          buildArgs: k1=v1,k2=v2
+          metadataBucket: gs://bw-ee-labs-slipstream-github-action-test
+          labels: project=appinfra
+          dockerRegistry: 965748740018.dkr.ecr.eu-west-1.amazonaws.com
+          release: true
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.ARTIFACTS_PROD_AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.ARTIFACTS_PROD_AWS_SECRET_KEY }}
+          AWS_DEFAULT_REGION: eu-west-1

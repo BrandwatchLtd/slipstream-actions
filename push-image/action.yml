@@ -30,6 +30,9 @@ inputs:
     description: The GCS bucket to store artifact metadata to be picked up by Slipstream.
     required: false
     default: gs://bw-prod-artifacts-metadata
+  release:
+    description: Set your image as release image so it can be used for deployment
+    required: true
 outputs:
   imageDigest:
     description: The image digest of the Docker image. Can be used to request a deployment.

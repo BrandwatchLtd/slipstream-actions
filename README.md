@@ -21,6 +21,27 @@ The `push-image` action builds a Docker image and pushes it to an appropriate Go
     labels: project=myproject
 ```
 
+#### How to push images to ECR
+
+To push images to ECR you need to provide an ECR `dockerRegistry` and setup a few environment variables. For your image to be deployable via slipstream it is mandatory to set the `release` field to `true` otherwise your image will be considered as a development image.
+
+```yaml
+- name: Build and push Docker image
+  uses: BrandwatchLtd/slipstream-actions/push-image@main
+  id: push-to-slipstream
+  with:
+    service: slipstream-pipeline-visualiser
+    labels: project=appinfra
+    dockerRegistry: <your_ecr_docker_registry>
+    release: true #for image to be deployable via slipstream
+  env:
+    #The AWS secrets are already set as organisation level secrets, you don't need
+    #to set them on a repository level, unless you want to use a different account
+    AWS_ACCESS_KEY_ID: ${{ secrets.ARTIFACTS_PROD_AWS_ACCESS_KEY }}
+    AWS_SECRET_ACCESS_KEY: ${{ secrets.ARTIFACTS_PROD_AWS_SECRET_KEY }}
+    AWS_DEFAULT_REGION: eu-west-1
+```
+
 See [Action definition](push-image/action.yml) for additional details.
 
 ### Push Files (experimental)
