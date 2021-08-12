@@ -8,6 +8,7 @@ async function deploy(environment, service, id) {
     '--id', `${id}`,
     '--quiet',
     '--wait',
+    '--ci=slipstream-actions',
   ];
 
   await exec.exec('slipstream', args, {});
