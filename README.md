@@ -44,7 +44,7 @@ To push images to ECR you need to provide an ECR `dockerRegistry` and setup a fe
 
 See [Action definition](push-image/action.yml) for additional details.
 
-### Push Files (experimental)
+### Push Files
 
 ![](https://github.com/BrandwatchLtd/slipstream-actions/workflows/Push%20Files/badge.svg)
 
