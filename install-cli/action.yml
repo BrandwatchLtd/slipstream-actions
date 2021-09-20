@@ -4,7 +4,7 @@ inputs:
   url:
     description: URL of the slipstream binary to download
     required: false
-    default: https://bin.equinox.io/c/cXopLpzLbWK/slipstream-beta-linux-amd64.tgz
+    default: https://bin.equinox.io/a/dyyQ5d3Juic/slipstream-v1.1.0-build.27-linux-amd64.tar.gz
 runs:
   using: node12
   main: dist/index.js
