@@ -10,7 +10,7 @@ async function deploy(environment, service, id) {
     '--wait',
   ];
 
-  await exec.exec('slipstream', args, {});
+  await exec.exec('slipstream', args, { silent: false });
 }
 
 module.exports = {

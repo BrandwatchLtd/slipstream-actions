@@ -5825,7 +5825,7 @@ const util = __webpack_require__(669);
 const core = __webpack_require__(686);
 const tc = __webpack_require__(131);
 const exec = __webpack_require__(663);
-const { default: ShortUniqueId } = __webpack_require__(690);
+const {default: ShortUniqueId} = __webpack_require__(690);
 const commandExists = __webpack_require__(183);
 
 const writeFile = util.promisify(fs.writeFile);
@@ -5900,7 +5900,7 @@ async function pushMetadata(bucket, data) {
 
   // Github uses the same build number for re-runs, so we add an extra id to the
   // generated filenames, so re-runs don't cause files to be overwritten.
-  const uid = new ShortUniqueId({ length: 3 });
+  const uid = new ShortUniqueId({length: 3});
   const filename = `github-build.${data.build.id}.${uid()}.json`;
   await exec.exec('gsutil', ['cp', '-z', 'json', `./${tmpFile}`, `${bucket}/${data.service}/${filename}`], {});
   await fs.unlink(tmpFile, (err) => {
@@ -5932,9 +5932,10 @@ async function directoryExists(url) {
 }
 
 async function installSlipstreamCLI(downloadURL) {
-  const commandExistsAlready = await commandExists('slipstream');
+  const commandExistsAlready = await commandExists('slipstream', ['--quiet']);
 
   if (commandExistsAlready) {
+    core.info('Slipstream CLI is already installed');
     return;
   }
 
@@ -5955,7 +5956,7 @@ const setupAWSRepository = async (repository, registry) => {
   await exec.exec(`/bin/bash -c "aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${registry}" `);
 
   // Check if repository exist
-  const ret = await exec.exec(`aws ecr describe-repositories --repository-names ${repository}`, [], { ignoreReturnCode: true });
+  const ret = await exec.exec(`aws ecr describe-repositories --repository-names ${repository}`, [], {ignoreReturnCode: true});
   core.info(`return code:  ${ret}`);
   if (ret !== 0) {
     core.startGroup(`Create AWS ${repository} repository in ${registry}`);

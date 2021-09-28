@@ -13,7 +13,7 @@ inputs:
   slipstream-cli-url:
     description: URL of the slipstream binary to download
     required: false
-    default: https://bin.equinox.io/c/cXopLpzLbWK/slipstream-beta-linux-amd64.tgz
+    default: https://github.com/BrandwatchLtd/slipstream-cli-release/releases/download/v0.5.0%2Bslipstream/slipstream-cli-release_0.5.0+slipstream_linux_amd64.tar.gz
 
 runs:
   using: node12
