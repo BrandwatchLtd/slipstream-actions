@@ -2038,6 +2038,20 @@ exports.removeRemoteTask = removeRemoteTask;
 
 /***/ }),
 
+/***/ 183:
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+const exec = __webpack_require__(663);
+
+async function commandExists(command, args) {
+  return exec.exec(command, args, { silent: true }).then(() => true).catch(() => false);
+}
+
+module.exports = commandExists;
+
+
+/***/ }),
+
 /***/ 198:
 /***/ (function(module) {
 
@@ -3585,8 +3599,11 @@ function toNumber(input) {
 const git = __webpack_require__(677);
 const fs = __webpack_require__(747);
 const util = __webpack_require__(669);
+const core = __webpack_require__(639);
+const tc = __webpack_require__(388);
 const exec = __webpack_require__(663);
 const { default: ShortUniqueId } = __webpack_require__(690);
+const commandExists = __webpack_require__(183);
 
 const writeFile = util.promisify(fs.writeFile);
 
@@ -3691,6 +3708,50 @@ async function directoryExists(url) {
   ]).then(() => true).catch(() => false);
 }
 
+async function installSlipstreamCLI(downloadURL) {
+  const commandExistsAlready = await commandExists('slipstream', ['--quiet']);
+
+  if (commandExistsAlready) {
+    core.info('Slipstream CLI is already installed');
+    return;
+  }
+
+  // install cli
+  core.startGroup('Installing the Slipstream CLI');
+  const fileType = downloadURL.substr(-4);
+  const slipstreamPath = await tc.downloadTool(downloadURL);
+  const destPath = `${slipstreamPath}${fileType}`;
+  const slipstreamExtractedFolder = await tc.extractTar(slipstreamPath, destPath);
+  const cachedPath = await tc.cacheDir(slipstreamExtractedFolder, 'slipstream', 'latest');
+  core.addPath(cachedPath);
+  core.info('Success');
+  core.endGroup();
+}
+
+const setupAWSRepository = async (repository, registry) => {
+  core.info('Setup AWS docker login');
+  await exec.exec(`/bin/bash -c "aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${registry}" `);
+
+  // Check if repository exist
+  const ret = await exec.exec(`aws ecr describe-repositories --repository-names ${repository}`, [], { ignoreReturnCode: true });
+  core.info(`return code:  ${ret}`);
+  if (ret !== 0) {
+    core.startGroup(`Create AWS ${repository} repository in ${registry}`);
+    // Create repository
+    core.info(`Create ${repository} repository`);
+    await exec.exec(`/bin/bash -c "aws ecr create-repository --repository-name ${repository} --image-tag-mutability MUTABLE --image-scanning-configuration scanOnPush=true" `);
+
+    // Export default policy
+    core.info('Export default policy');
+    await exec.exec('/bin/bash -c "aws ecr get-repository-policy --repository-name default | jq -r .policyText > access_policy.json"');
+
+    // Apply the access policy to the new repository
+    core.info(`Apply the access policy to ${repository} repository`);
+    await exec.exec(`/bin/bash -c "aws ecr set-repository-policy --repository-name ${repository} --policy-text file://access_policy.json"`);
+    core.endGroup();
+  }
+};
+
 module.exports = {
   getCommitData,
   getBuildData,
@@ -3698,6 +3759,9 @@ module.exports = {
   directoryExists,
   pushMetadata,
   pushFilesToBucket,
+  commandExists,
+  installSlipstreamCLI,
+  setupAWSRepository,
 };
 
 
@@ -3868,6 +3932,14 @@ FetchSummary.parse = function (data) {
 };
 
 module.exports = FetchSummary;
+
+
+/***/ }),
+
+/***/ 388:
+/***/ (function(module) {
+
+module.exports = eval("require")("@actions/tool-cache");
 
 
 /***/ }),
@@ -4943,6 +5015,14 @@ __export(__webpack_require__(135));
 /***/ (function(module) {
 
 module.exports = require("path");
+
+/***/ }),
+
+/***/ 639:
+/***/ (function(module) {
+
+module.exports = eval("require")("@actions/core");
+
 
 /***/ }),
 
