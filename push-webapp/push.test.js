@@ -1,29 +1,24 @@
 process.env.GITHUB_RUN_NUMBER = '2345';
 
-const { buildMetadata } = require('./push');
+const { buildSlipstreamMetadata } = require('./push');
 
 test('builds correct metadata', async () => {
-  const data = await buildMetadata({
+  const data = await buildSlipstreamMetadata({
     event: {
       pull_request: {
         number: 1,
       },
     },
     hash: 'a1b2',
-    filesDir: '../.github',
-    filesStageUrl: 'https://stage.com',
-    filesProdUrl: 'https://prod.com',
     service: 'test-service',
     labels: 'k1=v1,k2=v2',
   });
 
-  expect(data.type).toBe('files');
+  expect(data.type).toBe('webapp');
   expect(data.service).toBe('test-service');
   expect(data.labels.k1).toBe('v1');
   expect(data.labels.k2).toBe('v2');
-  expect(data.files.sha).toBe('a1b2');
-  expect(data.files.stageUrl).toBe('https://stage.com');
-  expect(data.files.prodUrl).toBe('https://prod.com');
+  expect(data.webapp.sha).toBe('a1b2');
   expect(data.commit.author).not.toBeUndefined();
   expect(data.commit.message).not.toBeUndefined();
   expect(data.commit.sha).not.toBeUndefined();

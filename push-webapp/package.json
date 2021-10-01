@@ -1,19 +1,14 @@
 {
-  "name": "slipstream-actions-lib",
+  "name": "slipstream-action-push-webapp",
   "version": "1.0.0",
   "scripts": {
+    "dev": "../node_modules/.bin/ncc build index.js -o dist -w",
     "test": "npm run lint && npm run unit",
     "unit": "../node_modules/.bin/jest",
     "lint": "../node_modules/.bin/eslint . --config ../.eslintrc.json --ignore-path ../.eslintignore"
   },
-  "main": "index.js",
   "dependencies": {
     "@actions/core": "^1.2.6",
-    "@actions/exec": "^1.0.4",
-    "@actions/tool-cache": "^1.6.1",
-    "aws-sdk": "^2.996.0",
-    "file-system": "^2.2.2",
-    "short-unique-id": "^3.0.3",
-    "simple-git": "^2.6.0"
+    "walk": "^2.3.14"
   }
 }

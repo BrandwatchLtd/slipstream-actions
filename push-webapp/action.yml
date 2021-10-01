@@ -1,0 +1,34 @@
+name: Slipstream Push Webapp
+description: Build and push a singlepage webapp artifact and metadata to Slipstream
+inputs:
+  service:
+    description: Service name for the artifact.
+    required: true
+  indexFile:
+    description: The index file that will be served for all requests
+    required: true
+  templated:
+    description: Weather or not the index file is a template
+    required: false
+    default: 'false'
+  labels:
+    description: Comma separated key=value labels.
+    required: false
+  staticRoot:
+    description: The directory containing your static files to push
+    required: true
+  cdnBucket:
+    description: The Bucket to store and serve artifact code from
+    required: false
+    default: s3://com.brandwatch.apps-cdn
+  metadataBucket:
+    description: The bucket to store artifact metadata to be picked up by Slipstream.
+    required: false
+    default: gs://bw-prod-artifacts-metadata
+
+outputs:
+  artifactID:
+    description: The ID (sha256 hash) of the uploaded files. This can be used to request a deployment.
+runs:
+  using: node12
+  main: dist/index.js

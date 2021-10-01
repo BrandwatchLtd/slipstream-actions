@@ -6,15 +6,22 @@ const {
   pushFilesToBucket,
   getHashOfFiles,
 } = require('../lib');
-const push = require('./push');
+const {
+  writeMetadataFile,
+  buildSlipstreamMetadata,
+} = require('./push');
 
 async function run() {
   try {
     const service = core.getInput('service');
-    const filesDir = core.getInput('filesDir');
-    const bucket = core.getInput('artifactBucket');
+    const indexFile = core.getInput('indexFile');
+    const templated = core.getInput('templated') === 'true';
+    const labels = core.getInput('labels');
+    const webappDir = core.getInput('staticRoot');
+    const bucket = core.getInput('cdnBucket');
     const metadataBucket = core.getInput('metadataBucket');
-    const hash = await getHashOfFiles(filesDir);
+
+    const hash = await getHashOfFiles(webappDir);
     const bucketAddress = `${bucket}/${service}/${hash}/`;
 
     const existsAlready = await directoryExists(bucketAddress);
@@ -26,20 +33,17 @@ async function run() {
       return;
     }
 
-    core.startGroup(`Pushing files to GCR: ${bucketAddress}`);
-    await push.writeSlipstreamCheckFile(hash, filesDir);
-    await pushFilesToBucket(filesDir, bucketAddress);
+    core.startGroup(`Pushing files to AWS: ${bucketAddress}`);
+    await writeMetadataFile(hash, indexFile, templated);
+    await pushFilesToBucket(webappDir, bucketAddress);
     core.endGroup();
 
     core.startGroup('Pushing Slipstream metadata');
-    const data = await push.buildMetadata({
+    const data = await buildSlipstreamMetadata({
       event: githubEvent,
-      service: core.getInput('service'),
-      labels: core.getInput('labels'),
+      service,
+      labels,
       hash,
-      filesDir: core.getInput('filesDir'),
-      filesStageUrl: core.getInput('stageVersionCheckURL'),
-      filesProdUrl: core.getInput('productionVersionCheckURL'),
     });
     await pushMetadata(metadataBucket, data);
     core.endGroup();
@@ -47,7 +51,7 @@ async function run() {
     core.setOutput('artifactID', hash);
     core.setOutput('skipped', 'false');
     core.info('success');
-    core.info(`Run 'slipstream list files -s ${service}' to view service images`);
+    core.info(`Run 'slipstream list webapps -s ${service}' to view webapp versions`);
   } catch (err) {
     core.setFailed(err.message);
   }

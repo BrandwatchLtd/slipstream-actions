@@ -44,6 +44,33 @@ To push images to ECR you need to provide an ECR `dockerRegistry` and setup a fe
 
 See [Action definition](push-image/action.yml) for additional details.
 
+
+### Push Webapp
+
+![](https://github.com/BrandwatchLtd/slipstream-actions/workflows/Push%Webapp/badge.svg)
+
+The `push-webapp` action pushes a folder of static files to a CDN to be served by Webapp Service in Kubernetes. Additionally it generates and pushes artifact metadata to Slipstream.
+
+```yaml
+- name: Push Webapp
+  uses: BrandwatchLtd/slipstream-actions/push-webapp@main
+  id: push-webapp
+  with:
+    service: myservice
+    labels: project=myproject
+    staticRoot: ./public
+    indexFile: index.html
+  env:
+    #The AWS secrets are already set as organisation level secrets, you don't need
+    #to set them on a repository level, unless you want to use a different account
+    AWS_ACCESS_KEY_ID: ${{ secrets.CDN_PROD_AWS_ACCESS_KEY }}
+    AWS_SECRET_ACCESS_KEY: ${{ secrets.CDN_PROD_AWS_SECRET_KEY }}
+```
+
+by default you will need to pass the above aws access credential environment variables as the default CDN bucket is stored in s3
+
+See [Action definition](push-webapp/action.yml) for additional details.
+
 ### Push Files
 
 ![](https://github.com/BrandwatchLtd/slipstream-actions/workflows/Push%20Files/badge.svg)

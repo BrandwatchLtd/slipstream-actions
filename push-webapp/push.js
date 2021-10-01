@@ -7,14 +7,12 @@ const {
   getLabels,
 } = require('../lib');
 
-async function buildMetadata(input) {
+async function buildSlipstreamMetadata(input) {
   const data = {
-    type: 'files',
+    type: 'webapp',
     service: input.service,
-    files: {
+    webapp: {
       sha: input.hash,
-      stageUrl: input.filesStageUrl,
-      prodUrl: input.filesProdUrl,
     },
   };
 
@@ -25,20 +23,22 @@ async function buildMetadata(input) {
   return data;
 }
 
-async function writeSlipstreamCheckFile(id, filesDir) {
-  const file = path.resolve(filesDir, 'slipstreamz');
+async function writeMetadataFile(id, dir, index, templated) {
+  const file = path.resolve(dir, 'metadata.json');
   const data = {
-    id,
+    version: id,
+    index,
+    templated,
   };
 
   try {
     await fs.writeFile(file, JSON.stringify(data));
   } catch (err) {
-    throw Error(`failed to write slipstreamz file: ${err.message}`);
+    throw Error(`failed to write metdata file: ${err.message}`);
   }
 }
 
 module.exports = {
-  buildMetadata,
-  writeSlipstreamCheckFile,
+  buildSlipstreamMetadata,
+  writeMetadataFile,
 };

@@ -1,0 +1,47 @@
+name: Push Webapp
+on:
+  push:
+    branches:
+      main
+    paths:
+    - 'push-webapp/**'
+    - '.github/workflows/push-webapp-*'
+    - 'lib'
+  pull_request:
+    paths:
+    - 'push-webapp/**'
+    - '.github/workflows/push-webapp-*'
+    - 'lib'
+
+jobs:
+  unit:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@master
+      with:
+        node-version: 12.x
+    - run: npm install # In the root for shared dev deps
+    - run: npm install
+      working-directory: ./lib
+    - run: npm install
+      working-directory: ./push-webapp
+    - run: npm test
+      working-directory: ./push-webapp
+  integration:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: google-github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.BW_EE_LABS_REGISTRY_KEY }}
+          export_default_credentials: true
+      - uses: ./push-webapp
+        with:
+          service: action-integration-test
+          staticRoot: ./.github/.fixtures
+          indexFile: index.html
+          cdnBucket: gs://slipstream-github-action-test
+          metadataBucket: gs://slipstream-github-action-test
