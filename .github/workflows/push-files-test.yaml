@@ -44,5 +44,5 @@ jobs:
           filesDir: ./.github/.fixtures
           stageVersionCheckURL: https://whatever.com
           productionVersionCheckURL: https://whatever.com
-          artifactBucket: gs://slipstream-github-action-test
-          metadataBucket: gs://slipstream-github-action-test
+          artifactBucket: gs://bw-ee-labs-slipstream-github-action-test
+          metadataBucket: gs://bw-ee-labs-slipstream-github-action-test

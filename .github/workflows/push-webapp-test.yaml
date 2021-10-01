@@ -43,5 +43,5 @@ jobs:
           service: webapp-action-integration-test
           staticRoot: ./.github/.fixtures
           indexFile: index.html
-          artifactBucket: gs://slipstream-github-action-test
-          metadataBucket: gs://slipstream-github-action-test
+          artifactBucket: gs://bw-ee-labs-slipstream-github-action-test
+          metadataBucket: gs://bw-ee-labs-slipstream-github-action-test
