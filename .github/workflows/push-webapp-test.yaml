@@ -43,5 +43,5 @@ jobs:
           service: action-integration-test
           staticRoot: ./.github/.fixtures
           indexFile: index.html
-          cdnBucket: gs://slipstream-github-action-test
+          artifactBucket: gs://slipstream-github-action-test
           metadataBucket: gs://slipstream-github-action-test

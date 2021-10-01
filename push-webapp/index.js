@@ -18,7 +18,7 @@ async function run() {
     const templated = core.getInput('templated') === 'true';
     const labels = core.getInput('labels');
     const webappDir = core.getInput('staticRoot');
-    const bucket = core.getInput('cdnBucket');
+    const bucket = core.getInput('artifactBucket');
     const metadataBucket = core.getInput('metadataBucket');
 
     const hash = await getHashOfFiles(webappDir);

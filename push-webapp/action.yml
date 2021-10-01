@@ -17,7 +17,7 @@ inputs:
   staticRoot:
     description: The directory containing your static files to push
     required: true
-  cdnBucket:
+  artifactBucket:
     description: The Bucket to store and serve artifact code from
     required: false
     default: s3://com.brandwatch.apps-cdn
