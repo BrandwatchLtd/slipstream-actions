@@ -31,6 +31,8 @@ async function writeMetadataFile(id, dir, index, templated) {
     templated,
   };
 
+  await fs.access(path.resolve(dir, index), fs.F_OK);
+
   try {
     await fs.writeFile(file, JSON.stringify(data));
   } catch (err) {
