@@ -40,7 +40,7 @@ jobs:
           export_default_credentials: true
       - uses: ./push-webapp
         with:
-          service: action-integration-test
+          service: webapp-action-integration-test
           staticRoot: ./.github/.fixtures
           indexFile: index.html
           artifactBucket: gs://slipstream-github-action-test

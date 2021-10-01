@@ -40,8 +40,8 @@ jobs:
           export_default_credentials: true
       - uses: ./push-files
         with:
-          service: action-integration-test
-          filesDir: ./.github
+          service: files-action-integration-test
+          filesDir: ./.github/.fixtures
           stageVersionCheckURL: https://whatever.com
           productionVersionCheckURL: https://whatever.com
           artifactBucket: gs://slipstream-github-action-test
