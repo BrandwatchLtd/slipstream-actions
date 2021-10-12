@@ -35,7 +35,7 @@ async function getHashOfFiles(filesDir) {
     let output = '';
 
     walker.on('file', async (root, fileStats, next) => {
-      const filename = path.join(filesDir, fileStats.name);
+      const filename = path.join(root, fileStats.name);
       core.debug(`Read content of ${filename}`);
 
       const fileContent = await fs.readFile(filename);

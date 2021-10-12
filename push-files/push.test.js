@@ -35,7 +35,7 @@ test('builds correct metadata', async () => {
 
 test('generates a content hash', async () => {
   const hash = await getHashOfFiles('./fixtures');
-  expect(hash).toBe('775de5a308edde41f9ad');
+  expect(hash).toBe('b5c5f8dc2fefaf577fb9');
 });
 
 test('throws an error if content hash genertion fails', async () => {
