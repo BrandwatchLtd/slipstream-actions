@@ -52,8 +52,8 @@ The `push-files` action packages up a directory of files and pushes it to an app
 
 ```yaml
 - name: Push static files
-  uses: BrandwatchLtd/slipstream-actions/push-image@main
-  id: push-image
+  uses: BrandwatchLtd/slipstream-actions/push-files@main
+  id: push-files
   with:
     service: myservice
     filesDir: ./myfiles
