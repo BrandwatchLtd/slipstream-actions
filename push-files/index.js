@@ -26,7 +26,7 @@ async function run() {
       return;
     }
 
-    core.startGroup(`Pushing files to GCR: ${bucketAddress}`);
+    core.startGroup(`Pushing files to Bucket: ${bucketAddress}`);
     await push.writeSlipstreamCheckFile(hash, filesDir);
     await pushFilesToBucket(filesDir, bucketAddress);
     core.endGroup();

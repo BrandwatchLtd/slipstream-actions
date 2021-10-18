@@ -33,7 +33,7 @@ async function run() {
       return;
     }
 
-    core.startGroup(`Pushing files to AWS: ${bucketAddress}`);
+    core.startGroup(`Pushing files to Bucket: ${bucketAddress}`);
     await writeMetadataFile(hash, indexFile, templated);
     await pushFilesToBucket(webappDir, bucketAddress);
     core.endGroup();
