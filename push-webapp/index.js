@@ -34,7 +34,7 @@ async function run() {
     }
 
     core.startGroup(`Pushing files to Bucket: ${bucketAddress}`);
-    await writeMetadataFile(hash, indexFile, templated);
+    await writeMetadataFile(hash, webappDir, indexFile, templated);
     await pushFilesToBucket(webappDir, bucketAddress);
     core.endGroup();
 
