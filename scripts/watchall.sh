@@ -11,4 +11,5 @@ ROOT="${DIR}/../"
 cd $ROOT/deploy && npm run dev &
 cd $ROOT/install-cli && npm run dev &
 cd $ROOT/push-files && npm run dev &
+cd $ROOT/push-webapp && npm run dev &
 cd $ROOT/push-image && npm run dev
