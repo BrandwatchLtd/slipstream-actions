@@ -20,7 +20,7 @@ inputs:
   artifactBucket:
     description: The Bucket to store and serve artifact code from
     required: false
-    default: s3://com.brandwatch.apps-cdn
+    default: s3://com.brandwatch.appscdn
   metadataBucket:
     description: The bucket to store artifact metadata to be picked up by Slipstream.
     required: false
