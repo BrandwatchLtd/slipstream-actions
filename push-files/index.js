@@ -4,6 +4,7 @@ const {
   pushMetadata,
   directoryExists,
   pushFilesToBucket,
+  getHashOfFiles,
 } = require('../lib');
 const push = require('./push');
 
@@ -13,7 +14,7 @@ async function run() {
     const filesDir = core.getInput('filesDir');
     const bucket = core.getInput('artifactBucket');
     const metadataBucket = core.getInput('metadataBucket');
-    const hash = await push.getHashOfFiles(filesDir);
+    const hash = await getHashOfFiles(filesDir);
     const bucketAddress = `${bucket}/${service}/${hash}/`;
 
     const existsAlready = await directoryExists(bucketAddress);
@@ -25,7 +26,7 @@ async function run() {
       return;
     }
 
-    core.startGroup(`Pushing files to GCR: ${bucketAddress}`);
+    core.startGroup(`Pushing files to Bucket: ${bucketAddress}`);
     await push.writeSlipstreamCheckFile(hash, filesDir);
     await pushFilesToBucket(filesDir, bucketAddress);
     core.endGroup();

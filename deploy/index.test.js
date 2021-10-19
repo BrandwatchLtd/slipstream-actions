@@ -17,5 +17,7 @@ test('calls slipstream command with correct arguments', async () => {
       '--quiet',
       '--wait',
     ],
-    {});
+    {
+      silent: false,
+    });
 });

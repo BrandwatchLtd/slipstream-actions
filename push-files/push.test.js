@@ -1,7 +1,6 @@
 process.env.GITHUB_RUN_NUMBER = '2345';
 
-const core = require('@actions/core');
-const { buildMetadata, getHashOfFiles } = require('./push');
+const { buildMetadata } = require('./push');
 
 test('builds correct metadata', async () => {
   const data = await buildMetadata({
@@ -31,20 +30,4 @@ test('builds correct metadata', async () => {
   expect(data.commit.url).not.toBeUndefined();
   expect(data.build.id).toBe('2345');
   expect(data.build.url).not.toBeUndefined();
-});
-
-test('generates a content hash', async () => {
-  const hash = await getHashOfFiles('./fixtures');
-  expect(hash).toBe('775de5a308edde41f9ad');
-});
-
-test('throws an error if content hash genertion fails', async () => {
-  const setFailedSpy = jest.spyOn(core, 'setFailed');
-
-  return getHashOfFiles('./fixtures/does-not-exist').catch((error) => {
-    expect(error[0].error.code).toBe('ENOENT');
-    expect(error[0].error.path).toBe('./fixtures/does-not-exist');
-    expect(setFailedSpy).toHaveBeenCalled();
-    expect(setFailedSpy).toHaveBeenCalledWith('Hash generation failed');
-  });
 });
