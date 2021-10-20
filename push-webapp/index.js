@@ -20,6 +20,7 @@ async function run() {
     const webappDir = core.getInput('staticRoot');
     const bucket = core.getInput('artifactBucket');
     const metadataBucket = core.getInput('metadataBucket');
+    const release = core.getInput('release') === 'true';
 
     const hash = await getHashOfFiles(webappDir);
     const bucketAddress = `${bucket}/${service}/${hash}/`;
@@ -44,6 +45,7 @@ async function run() {
       service,
       labels,
       hash,
+      release
     });
     await pushMetadata(metadataBucket, data);
     core.endGroup();
