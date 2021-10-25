@@ -19,6 +19,10 @@ async function buildImage(input) {
     }
   }
 
+  if (input.additionalOptions) {
+    args.push(input.additionalOptions);
+  }
+
   args.push(input.path);
 
   await dockerCommand(args.join(' '));

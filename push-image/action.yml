@@ -33,6 +33,9 @@ inputs:
   release:
     description: Set your image as release image so it can be used for deployment
     required: true
+  additionalOptions:
+    description: String of any additional [docker build](https://docs.docker.com/engine/reference/commandline/build/) options (e.g. '--ssh foo=bar --secret baz=quux')
+    required: false
 outputs:
   imageDigest:
     description: The image digest of the Docker image. Can be used to request a deployment.
