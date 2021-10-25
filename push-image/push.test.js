@@ -46,6 +46,17 @@ describe('passes corrects args to docker build', () => {
     expect(docker.dockerCommand)
       .toHaveBeenCalledWith('build --tag thing1 --file dockf1 --build-arg k1=v1 --build-arg k2=v2 path1');
   });
+  test('with additional options', async () => {
+    await buildImage({
+      repo: 'thing1',
+      dockerfile: 'dockf1',
+      path: 'path1',
+      buildArgs: 'k1=v1,k2=v2',
+      additionalOptions: '--secret id=npmrc,src=.npmrc --ssh default=foo',
+    });
+    expect(docker.dockerCommand)
+      .toHaveBeenCalledWith('build --tag thing1 --file dockf1 --build-arg k1=v1 --build-arg k2=v2 --secret id=npmrc,src=.npmrc --ssh default=foo path1');
+  });
 });
 
 test('calls tagImage correctly', async () => {

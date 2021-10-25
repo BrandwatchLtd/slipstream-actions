@@ -31,6 +31,7 @@ async function run() {
       path: core.getInput('path'),
       push: core.getInput('push'),
       buildArgs: core.getInput('buildArgs'),
+      additionalOptions: core.getInput('additionalOptions'),
       repo,
     });
 
