@@ -10,6 +10,6 @@
   "dependencies": {
     "@actions/core": "^1.2.6",
     "@actions/exec": "^1.0.4",
-    "docker-cli-js": "^2.7.1"
+    "docker-cli-js": "^2.8.0"
   }
 }
