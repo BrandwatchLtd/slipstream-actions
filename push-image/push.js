@@ -25,7 +25,7 @@ async function buildImage(input) {
 
   args.push(input.path);
 
-  await dockerCommand(args.join(' '));
+  await dockerCommand(args.join(' '), { env: process.env });
 }
 
 async function tagImage(repo, tag) {
