@@ -14,7 +14,7 @@ async function buildSlipstreamMetadata(input) {
     webapp: {
       sha: input.hash,
     },
-    release: input.release
+    release: input.release,
   };
 
   data.commit = await getCommitData();
