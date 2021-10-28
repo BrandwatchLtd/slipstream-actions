@@ -45,7 +45,7 @@ async function run() {
       service,
       labels,
       hash,
-      release
+      release,
     });
     await pushMetadata(metadataBucket, data);
     core.endGroup();
