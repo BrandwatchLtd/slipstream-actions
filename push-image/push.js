@@ -4,6 +4,7 @@ const core = require("@actions/core");
 
 async function buildImage(input) {
   const args = [
+    'buildx',
     'build',
     '--tag', input.repo,
     '--file', input.dockerfile,
