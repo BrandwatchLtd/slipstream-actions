@@ -1,5 +1,6 @@
 const { dockerCommand } = require('docker-cli-js');
 const metadata = require('../lib');
+const core = require("@actions/core");
 
 async function buildImage(input) {
   const args = [
@@ -24,6 +25,8 @@ async function buildImage(input) {
   }
 
   args.push(input.path);
+
+  core.info(`env: \n${JSON.stringify(process.env)}`);
 
   await dockerCommand(args.join(' '), { env: process.env });
 }
