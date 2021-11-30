@@ -1,10 +1,19 @@
 {
   "name": "slipstream-actions",
   "version": "1.0.0",
+  "workspaces": [
+    "deploy",
+    "install-cli",
+    "lib",
+    "push-files",
+    "push-inage",
+    "push-webapp"
+  ],
   "scripts": {
     "test": "npm run lint && jest",
     "lint": "eslint .",
-    "dev": "./scripts/watchall.sh"
+    "dev": "./scripts/watchall.sh",
+    "build": "npm run build --workspaces --if-present"
   },
   "devDependencies": {
     "@zeit/ncc": "^0.22.3",
