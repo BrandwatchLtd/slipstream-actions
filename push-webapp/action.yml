@@ -28,6 +28,12 @@ inputs:
   release:
     description: Set your image as release image so it can be used for deployment
     required: true
+  prBuild:
+    description: Pushes a non release PR build to be used with webapp services pr deployments system
+    required: false
+  prNumber:
+    description: PR Number for build (when prBuild set to true)
+    default: ${{ github.event.number }}
 
 outputs:
   artifactID:

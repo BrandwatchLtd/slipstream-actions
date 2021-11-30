@@ -12,7 +12,7 @@ async function buildSlipstreamMetadata(input) {
     type: 'webapp',
     service: input.service,
     webapp: {
-      sha: input.hash,
+      sha: input.version,
     },
     release: input.release,
   };
