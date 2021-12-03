@@ -41,5 +41,5 @@ jobs:
           version: 123
 
       - name: Deletion not Skipped
-        run: "[[ \"steps.cleanup.outputs.skipped\" == \"false\" ]]"
+        run: "[[ \"${{steps.cleanup.outputs.skipped}}\" == \"false\" ]]"
 
