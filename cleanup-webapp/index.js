@@ -22,7 +22,7 @@ async function run() {
     }
 
     core.startGroup(`Removing files from Bucket: ${bucketAddress}`);
-    removeFilesFromBucket(bucketAddress);
+    await removeFilesFromBucket(bucketAddress);
     core.endGroup();
 
     //TODO: we should probably remove the artifact from slipstream?
