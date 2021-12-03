@@ -1,0 +1,28 @@
+name: Slipstream Push Webapp
+description: Build and push a singlepage webapp artifact and metadata to Slipstream
+inputs:
+  service:
+    description: Service name for the artifact.
+    required: true
+  versionPrefix:
+    description: prefix for version string (you canprobably leave this as default)
+    required: false
+    default: prs/
+  version:
+    description: build version to remove (usually the PR number)
+    required: false
+    default: ${{ github.event.number }}
+  artifactBucket:
+    description: The Bucket to store and serve artifact code from
+    required: false
+    default: s3://com.brandwatch.static
+
+outputs:
+  artifactID:
+    description: The ID (sha256 hash) of the removed files
+  skipped:
+    description: boolean, only true if no deletion happend becuase it was not required, a failed deletion would not be considered a skip
+
+runs:
+  using: node12
+  main: dist/index.js

@@ -31,13 +31,22 @@ inputs:
   prBuild:
     description: Pushes a non release PR build to be used with webapp services pr deployments system
     required: false
+    default: 'false'
+  prPrefix:
+    description: version prefix for uploading PR builds (you probably dont need to change this)
+    required: false
+    default: prs/
   prNumber:
     description: PR Number for build (when prBuild set to true)
+    required: false
     default: ${{ github.event.number }}
 
 outputs:
   artifactID:
-    description: The ID (sha256 hash) of the uploaded files. This can be used to request a deployment.
+    description: The ID (sha256 hash) of the uploaded files. This can be used to request a deployment
+  skipped:
+    description: boolean, only true if no push happend becuase it was not required, a failed push would not be considered a skip
+
 runs:
   using: node12
   main: dist/index.js

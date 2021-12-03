@@ -23,18 +23,19 @@ async function run() {
     const release = core.getInput('release') === 'true';
     const prBuild = core.getInput('prBuild') === 'true';
 
-    if(prBuild && release) {
+    if (prBuild && release) {
       core.setFailed('You must set only one of release and prBuild to true');
     }
 
     let version;
-    if(prBuild) {
+    if (prBuild) {
       const prNumber = core.getInput('prNumber');
       if (!prNumber) {
         throw new Error('prBuild true, but prNumber not set...');
       }
+      const prPrefix = core.getInput('prPrefix');
 
-      version = `prs/${prNumber}`;
+      version = `${prPrefix}${prNumber}`;
       core.setOutput('pr', prNumber);
       core.info(`PR Build: ${prNumber}`);
     } else {
@@ -43,7 +44,7 @@ async function run() {
 
     const bucketAddress = `${bucket}/${service}/${version}/`;
 
-    if(!prBuild) {
+    if (!prBuild) {
       const existsAlready = await directoryExists(bucketAddress);
 
       if (existsAlready) {
@@ -74,8 +75,8 @@ async function run() {
     core.setOutput('skipped', 'false');
     core.info('success');
 
-    let cmd = `slipstream list webapps -s ${service}`
-    if(!release) {
+    let cmd = `slipstream list webapps -s ${service}`;
+    if (!release) {
       cmd = `${cmd} --dev`;
     }
 

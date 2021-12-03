@@ -1,0 +1,17 @@
+{
+  "name": "slipstream-action-cleanup-webapp",
+  "version": "1.0.0",
+  "description": "cleanup assets from old webapp deployments",
+  "main": "index.js",
+  "scripts": {
+    "dev": "ncc build index.js -o dist -w",
+    "build": "ncc build index.js -o dist",
+    "unit": "../node_modules/.bin/jest",
+    "lint": "../node_modules/.bin/eslint . --config ../.eslintrc.json --ignore-path ../.eslintignore"
+  },
+  "author": "Eliot Stocker <estocker@brandwatch.com>",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@actions/core": "^1.2.6"
+  }
+}
