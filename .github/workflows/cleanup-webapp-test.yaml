@@ -14,21 +14,6 @@ on:
     - 'lib'
 
 jobs:
-  unit:
-    name: Unit Test
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@master
-      with:
-        node-version: 12.x
-    - run: npm install # In the root for shared dev deps
-    - run: npm install
-      working-directory: ./lib
-    - run: npm install
-      working-directory: ./push-webapp
-    - run: npm test
-      working-directory: ./push-webapp
   integration:
     name: Integration Test
     runs-on: ubuntu-latest

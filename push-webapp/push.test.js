@@ -9,7 +9,7 @@ test('builds correct metadata', async () => {
         number: 1,
       },
     },
-    hash: 'a1b2',
+    version: 'a1b2',
     service: 'test-service',
     labels: 'k1=v1,k2=v2',
   });

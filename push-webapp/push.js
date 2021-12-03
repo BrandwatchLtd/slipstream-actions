@@ -37,7 +37,7 @@ async function writeMetadataFile(id, dir, index, templated) {
   try {
     await fs.writeFile(file, JSON.stringify(data));
   } catch (err) {
-    throw Error(`failed to write metdata file: ${err.message}`);
+    throw Error(`failed to write metadata file: ${err.message}`);
   }
 }
 
