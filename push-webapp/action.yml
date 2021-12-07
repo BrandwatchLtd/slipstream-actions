@@ -45,7 +45,7 @@ outputs:
   artifactID:
     description: The ID (sha256 hash) of the uploaded files. This can be used to request a deployment
   skipped:
-    description: boolean, only true if no push happend becuase it was not required, a failed push would not be considered a skip
+    description: boolean, only true if no push happened because it was not required, a failed push would not be considered a skip
 
 runs:
   using: node12

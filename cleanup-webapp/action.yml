@@ -5,7 +5,7 @@ inputs:
     description: Service name for the artifact.
     required: true
   versionPrefix:
-    description: prefix for version string (you canprobably leave this as default)
+    description: prefix for version string (you can probably leave this as default)
     required: false
     default: prs/
   version:
@@ -21,7 +21,7 @@ outputs:
   artifactID:
     description: The ID (sha256 hash) of the removed files
   skipped:
-    description: boolean, only true if no deletion happend becuase it was not required, a failed deletion would not be considered a skip
+    description: boolean, only true if no deletion happened because it was not required, a failed deletion would not be considered a skip
 
 runs:
   using: node12
