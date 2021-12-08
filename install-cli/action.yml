@@ -4,7 +4,8 @@ inputs:
   url:
     description: URL of the slipstream binary to download
     required: false
-    default: https://raw.githubusercontent.com/BrandwatchLtd/slipstream-cli-release/master/install.sh
+    default: https://github.com/BrandwatchLtd/slipstream-cli-release/releases/download/v0.7.0%2Bslipstream/slipstream-cli-release_0.7.0+slipstream_linux_amd64.tar.gz
+
 runs:
   using: node12
   main: dist/index.js
