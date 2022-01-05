@@ -1,5 +1,5 @@
-const fs = require('fs').promises;
-const path = require('path');
+const util = require('util');
+const exec = util.promisify(require('child_process').exec);
 
 const {
   getCommitData,
@@ -7,15 +7,9 @@ const {
 } = require('../lib');
 
 async function buildMetadata(input) {
-  const data = {
-    type: 'module',
-    service: input.service,
-    module: {
-      sha: input.hash,
-      artifactID: input.id,
-      version: input.version,
-    },
-  };
+
+  const { stdout, stderr } = await exec(`npm v "${input.id}@${input.version}" --json`);
+  const data = JSON.parse(stdout);
 
   data.commit = await getCommitData();
   data.build = getBuildData(input.event);

@@ -7,13 +7,6 @@ inputs:
   version:
     description: Version of the bundle.
     required: true
-  hash:
-    description: Hash of the bundle.
-    required: true
-  artifactBucket:
-    description: The Bucket to store and serve artifact code from
-    required: false
-    default: s3://com.brandwatch.static
   metadataBucket:
     description: The bucket to store artifact metadata to be picked up by Slipstream.
     required: false
