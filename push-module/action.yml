@@ -1,0 +1,30 @@
+name: Slipstream Push Module
+description: Build and push bundle to Slipstream
+inputs:
+  bundleId:
+    description: Name of the bundle.
+    required: true
+  version:
+    description: Version of the bundle.
+    required: true
+  hash:
+    description: Hash of the bundle.
+    required: true
+  artifactBucket:
+    description: The Bucket to store and serve artifact code from
+    required: false
+    default: s3://com.brandwatch.static
+  metadataBucket:
+    description: The bucket to store artifact metadata to be picked up by Slipstream.
+    required: false
+    default: gs://bw-prod-artifacts-metadata
+  service:
+    description: Service name for the artifact.
+    required: true
+
+outputs:
+  artifactID:
+    description: The ID (sha256 hash) of the published bundle.
+runs:
+  using: node12
+  main: dist/index.js
