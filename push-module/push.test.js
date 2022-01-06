@@ -10,7 +10,7 @@ test('builds correct metadata', async () => {
       },
     },
     id: 'test-app1',
-    version: '1.5.1',
+    version: '0.1.1-SNAPSHOT',
   });
 
   expect(data.type).toBe('module');

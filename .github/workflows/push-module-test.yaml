@@ -41,5 +41,5 @@ jobs:
       - uses: ./push-module
         with:
           bundleId: test-app1
-          version: 1.5.1
+          version: 0.1.1-SNAPSHOT
           metadataBucket: gs://bw-ee-labs-slipstream-github-action-test
