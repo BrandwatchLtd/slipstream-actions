@@ -11,9 +11,6 @@ inputs:
     description: The bucket to store artifact metadata to be picked up by Slipstream.
     required: false
     default: gs://bw-prod-artifacts-metadata
-  service:
-    description: Service name for the artifact.
-    required: true
 
 outputs:
   artifactID:

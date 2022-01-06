@@ -9,13 +9,11 @@ async function run() {
   try {
     const bundleId = core.getInput('bundleId');
     const version = core.getInput('version');
-    const service = core.getInput('service');
     const metadataBucket = core.getInput('metadataBucket');
 
     core.startGroup('Pushing Slipstream metadata');
     const data = await push.buildMetadata({
       event: githubEvent,
-      service: service,
       id: bundleId,
       version: version
     });
@@ -24,7 +22,6 @@ async function run() {
 
     core.setOutput('artifactID', hash);
     core.info('success');
-    core.info(`Run 'slipstream list files -s ${service}' to view service images`);
   } catch (err) {
     core.setFailed(err.message);
   }

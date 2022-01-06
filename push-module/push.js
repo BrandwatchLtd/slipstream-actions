@@ -9,7 +9,12 @@ const {
 async function buildMetadata(input) {
 
   const { stdout, stderr } = await exec(`npm v "${input.id}@${input.version}" --json`);
-  const data = JSON.parse(stdout);
+
+  const data = {
+    type: 'module',
+    service: input.id,
+    module: JSON.parse(stdout)
+  };
 
   data.commit = await getCommitData();
   data.build = getBuildData(input.event);
