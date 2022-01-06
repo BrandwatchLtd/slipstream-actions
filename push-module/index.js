@@ -1,7 +1,7 @@
 const core = require('@actions/core');
 const githubEvent = require(process.env.GITHUB_EVENT_PATH);
 const {
-  pushMetadata
+  pushMetadata,
 } = require('../lib');
 const push = require('./push');
 
@@ -15,12 +15,12 @@ async function run() {
     const data = await push.buildMetadata({
       event: githubEvent,
       id: bundleId,
-      version: version
+      version,
     });
     await pushMetadata(metadataBucket, data);
     core.endGroup();
 
-    core.setOutput('artifactID', hash);
+    core.setOutput('artifactID', bundleId);
     core.info('success');
   } catch (err) {
     core.setFailed(err.message);
