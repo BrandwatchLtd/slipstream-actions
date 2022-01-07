@@ -10,6 +10,10 @@ inputs:
   id:
     description: ID of artifact to deploy, e.g. image digest, files sha, module digest.
     required: true
+  version:
+    description: Version of the module to be deployed
+    required: false
+    default: none
   slipstream-cli-url:
     description: URL of the slipstream binary to download
     required: false
