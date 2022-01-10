@@ -11,6 +11,8 @@ async function deploy(environment, service, id, idKey) {
     '--wait',
   ];
 
+  console.log(idKey);
+
   core.warning(JSON.stringify(args, null, 2));
 
   await exec.exec('slipstream', args, { silent: false });
