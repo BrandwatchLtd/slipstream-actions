@@ -1,4 +1,5 @@
 const exec = require('@actions/exec');
+const crypto = require('crypto');
 
 async function deploy(environment, service, id, idKey) {
   const args = [
@@ -10,7 +11,14 @@ async function deploy(environment, service, id, idKey) {
     '--wait',
   ];
 
-  console.log(`::warning file=deploy.js,line=13,endLine=13,title=isthiscached::${JSON.stringify(args)}`);
+  const resumeToken = crypto.randomBytes(30).toString('base64');
+  console.log('::group::Event JSON');
+  console.log(`::stop-commands::${resumeToken}`);
+
+  console.log(JSON.stringify(args, null, 2));
+
+  console.log(`::${resumeToken}::`);
+  console.log('::endgroup::');
 
   await exec.exec('slipstream', args, { silent: false });
 }
