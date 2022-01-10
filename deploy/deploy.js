@@ -15,8 +15,8 @@ async function deploy(environment, service, id, idKey) {
     args = [
       'deploy',
       environment,
-      id,
-      '--version', `${idKey}`,
+      service,
+      '--version', `${id}`,
       '--quiet',
       '--wait',
     ];

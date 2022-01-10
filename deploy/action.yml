@@ -11,7 +11,7 @@ inputs:
     description: ID of artifact to deploy, e.g. image digest, files sha, module digest.
     required: true
   idKey:
-    description: ID of the module to be deployed
+    description: Shows whether the the ID field contains an id, or a version in case of a module
     required: false
     default: ID
   slipstream-cli-url:
