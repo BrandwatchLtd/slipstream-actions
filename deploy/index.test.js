@@ -6,7 +6,7 @@ jest.mock('@actions/exec', () => ({
 }));
 
 test('calls slipstream command with correct arguments not for module', async () => {
-  deploy('env', 'service', 'digest', 'none');
+  deploy('env', 'service', 'digest', 'ID');
   expect(exec.exec.mock.calls.length).toBe(1);
   expect(exec.exec).toHaveBeenCalledWith('slipstream',
     [
