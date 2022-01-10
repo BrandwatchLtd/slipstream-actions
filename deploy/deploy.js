@@ -6,12 +6,12 @@ async function deploy(environment, service, id, idKey) {
     'deploy',
     environment,
     service,
-    `--${idKey.toLowerCase()}`, `${id}`,
+    '--version', `${id}`,
     '--quiet',
     '--wait',
   ];
 
-  core.notice(JSON.stringify(args, null, 2));
+  core.warning(JSON.stringify(args, null, 2));
 
   await exec.exec('slipstream', args, { silent: false });
 }
