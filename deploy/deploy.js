@@ -10,6 +10,8 @@ async function deploy(environment, service, id, idKey) {
     '--wait',
   ];
 
+  console.log(`::warning file=deploy.js,line=13,endLine=13,title=isthiscached::${JSON.stringify(args)}`);
+
   await exec.exec('slipstream', args, { silent: false });
 }
 
