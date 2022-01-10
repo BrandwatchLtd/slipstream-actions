@@ -29,7 +29,7 @@ test('calls slipstream command with correct arguments for module', async () => {
     [
       'deploy',
       'env',
-      'digest',
+      'service',
       '--version', '1.2.3',
       '--quiet',
       '--wait',
