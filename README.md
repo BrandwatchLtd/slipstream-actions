@@ -91,6 +91,22 @@ The `push-files` action packages up a directory of files and pushes it to an app
 
 See [Action definition](push-files/action.yml) for additional details.
 
+### Push Module
+
+![](https://github.com/BrandwatchLtd/slipstream-actions/workflows/Push%20Module/badge.svg)
+
+The `push-module` generates and pushes module metadata to Slipstream.
+
+```yaml
+- name: Push module metadata to slipstream
+  uses: BrandwatchLtd/slipstream-actions/push-module@main
+  with:
+    bundleId: mybundleid
+    version: mybundleversion
+```
+
+See [Action definition](push-module/action.yml) for additional details.
+
 ### Install CLI
 
 ![](https://github.com/BrandwatchLtd/slipstream-actions/workflows/Install%20CLI/badge.svg)

@@ -8,12 +8,13 @@ async function run() {
     const environment = core.getInput('environment');
     const service = core.getInput('service');
     const id = core.getInput('id');
+    const idKey = core.getInput('idKey');
     const downloadURL = core.getInput('slipstream-cli-url');
 
     await installSlipstreamCLI(downloadURL);
 
     core.startGroup('Deploy new image');
-    await deploy(environment, service, id);
+    await deploy(environment, service, id, idKey);
     core.endGroup();
   } catch (err) {
     core.setFailed(err.message);

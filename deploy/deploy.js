@@ -1,11 +1,11 @@
 const exec = require('@actions/exec');
 
-async function deploy(environment, service, id) {
+async function deploy(environment, service, id, idKey) {
   const args = [
     'deploy',
     environment,
     service,
-    '--id', `${id}`,
+    `--${idKey.toLowerCase()}`, `${id}`,
     '--quiet',
     '--wait',
   ];

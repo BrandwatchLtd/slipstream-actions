@@ -1,0 +1,20 @@
+name: Slipstream Push Module
+description: Build and push bundle to Slipstream
+inputs:
+  bundleId:
+    description: Name of the bundle.
+    required: true
+  version:
+    description: Version of the bundle.
+    required: true
+  metadataBucket:
+    description: The bucket to store artifact metadata to be picked up by Slipstream.
+    required: false
+    default: gs://bw-prod-artifacts-metadata
+
+outputs:
+  artifactID:
+    description: The ID (sha256 hash) of the published bundle.
+runs:
+  using: node12
+  main: dist/index.js

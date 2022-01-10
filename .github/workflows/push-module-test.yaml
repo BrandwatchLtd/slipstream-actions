@@ -1,0 +1,45 @@
+name: Push Module
+on:
+  push:
+    branches:
+      [main]
+    paths:
+    - 'push-module/**'
+    - '.github/workflows/push-module-*'
+    - 'lib'
+  pull_request:
+    paths:
+    - 'push-module/**'
+    - '.github/workflows/push-module-*'
+    - 'lib'
+
+jobs:
+  unit:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@master
+      with:
+        node-version: 12.x
+    - run: npm install
+    - run: npm install
+      working-directory: ./lib
+    - run: npm install
+      working-directory: ./push-module
+    - run: npm test
+      working-directory: ./push-module
+  integration:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: google-github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.BW_EE_LABS_REGISTRY_KEY }}
+          export_default_credentials: true
+      - uses: ./push-module
+        with:
+          bundleId: test-app1
+          version: 0.1.1-SNAPSHOT
+          metadataBucket: gs://bw-ee-labs-slipstream-github-action-test
