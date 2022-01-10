@@ -11,6 +11,10 @@ async function run() {
     const idKey = core.getInput('idKey');
     const downloadURL = core.getInput('slipstream-cli-url');
 
+    core.warning(`service is ${service}`);
+    core.warning(`id is ${id}`);
+    core.warning(`idKey is ${idKey}`);
+
     await installSlipstreamCLI(downloadURL);
 
     core.startGroup('Deploy new image');
