@@ -1,8 +1,8 @@
 const exec = require('@actions/exec');
 
-async function deploy(environment, service, id, version) {
+async function deploy(environment, service, id, idKey) {
   let args;
-  if (version === 'none') {
+  if (idKey === 'ID') {
     args = [
       'deploy',
       environment,
@@ -16,7 +16,7 @@ async function deploy(environment, service, id, version) {
       'deploy',
       environment,
       id,
-      '--version', `${version}`,
+      '--version', `${idKey}`,
       '--quiet',
       '--wait',
     ];
