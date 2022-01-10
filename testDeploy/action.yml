@@ -1,0 +1,24 @@
+name: TEST DEPLOY TEST
+description: TEST DEPLOY TEST
+inputs:
+  environment:
+    description: Environment to deploy to
+    required: true
+  service:
+    description: Service to deploy
+    required: true
+  id:
+    description: ID of artifact to deploy, e.g. image digest, files sha, module digest.
+    required: true
+  idKey:
+    description: Shows whether the the ID field contains an id, or a version in case of a module
+    required: false
+    default: ID
+  slipstream-cli-url:
+    description: URL of the slipstream binary to download
+    required: false
+    default: https://raw.githubusercontent.com/BrandwatchLtd/slipstream-cli-release/master/install.sh
+
+runs:
+  using: node12
+  main: dist/index.js
