@@ -33,7 +33,7 @@ async function tagImage(repo, tag) {
 }
 
 async function pushImage(input) {
-  await dockerCommand(`push -a ${input.repo}`);
+  await dockerCommand(`push ${input.repo}`);
 }
 
 async function buildMetadata(input) {
