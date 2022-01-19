@@ -1,14 +1,14 @@
 const core = require('@actions/core');
 const {
   directoryExists,
-  removeFilesFromBucket
+  removeFilesFromBucket,
 } = require('../lib');
 
 async function run() {
   try {
     const service = core.getInput('service');
     const bucket = core.getInput('artifactBucket');
-    const versionPrefix = core.getInput('versionPrefix')
+    const versionPrefix = core.getInput('versionPrefix');
     const version = core.getInput('version');
 
     const bucketAddress = `${bucket}/${service}/${versionPrefix}${version}/`;
@@ -25,7 +25,7 @@ async function run() {
     await removeFilesFromBucket(bucketAddress);
     core.endGroup();
 
-    //TODO: we should probably remove the artifact from slipstream?
+    // TODO: we should probably remove the artifact from slipstream?
 
     core.setOutput('artifactID', `${versionPrefix}${version}`);
     core.setOutput('skipped', 'false');
