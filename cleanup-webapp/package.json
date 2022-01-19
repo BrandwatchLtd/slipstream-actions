@@ -4,8 +4,8 @@
   "description": "cleanup assets from old webapp deployments",
   "main": "index.js",
   "scripts": {
-    "dev": "ncc build index.js -o dist -w",
-    "build": "ncc build index.js -o dist",
+    "dev": "../node_modules/.bin/ncc build index.js -o dist -w",
+    "build": "../node_modules/.bin/ncc build index.js -o dist",
     "unit": "../node_modules/.bin/jest",
     "lint": "../node_modules/.bin/eslint . --config ../.eslintrc.json --ignore-path ../.eslintignore"
   },
