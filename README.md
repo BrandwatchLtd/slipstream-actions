@@ -115,7 +115,7 @@ The `install-cli` action downloads and installs the Slipstream CLI. Useful for d
 
 ```yaml
 - uses: BrandwatchLtd/slipstream-actions/install-cli@main
-- uses: google-github-actions/setup-gcloud@master
+- uses: google-github-actions/setup-gcloud@v0
   with:
     service_account_key: ${{ secrets.BW_PROD_ARTIFACTS_KEY }}
     export_default_credentials: true

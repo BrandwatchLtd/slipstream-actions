@@ -38,7 +38,7 @@ jobs:
     - uses: actions/setup-node@master
       with:
         node-version: 12.x
-    - uses: google-github-actions/setup-gcloud@master
+    - uses: google-github-actions/setup-gcloud@v0
       with:
         service_account_key: ${{ secrets.BW_EE_LABS_REGISTRY_KEY }}
         export_default_credentials: true
