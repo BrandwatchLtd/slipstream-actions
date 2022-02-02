@@ -4,7 +4,7 @@ inputs:
   url:
     description: URL of the slipstream binary to download
     required: false
-    default: https://github.com/BrandwatchLtd/slipstream-cli-release/releases/download/v0.7.0%2Bslipstream/slipstream-cli-release_0.7.0+slipstream_linux_amd64.tar.gz
+    default: https://github.com/BrandwatchLtd/slipstream-cli-release/releases/download/v0.12.0%2Bslipstream/slipstream-cli-release_0.12.0+slipstream_linux_amd64.tar.gz
 
 runs:
   using: node12
