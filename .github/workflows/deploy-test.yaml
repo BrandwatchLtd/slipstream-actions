@@ -35,13 +35,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud'
+      uses: google-github-actions/auth@v0
+      with:
+        credentials_json: ${{ secrets.BW_EE_LABS_REGISTRY_KEY }}
+        create_credentials_file: true
+
     - uses: actions/setup-node@master
       with:
         node-version: 12.x
     - uses: google-github-actions/setup-gcloud@v0
-      with:
-        service_account_key: ${{ secrets.BW_EE_LABS_REGISTRY_KEY }}
-        export_default_credentials: true
     - uses: ./install-cli
 
     - name: Start fake slipstream API

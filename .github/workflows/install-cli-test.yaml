@@ -19,10 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v0'
+      with:
+        credentials_json: ${{ secrets.BW_EE_LABS_REGISTRY_KEY }}
+        create_credentials_file: true
     - uses: ./install-cli
     # Needs this because the version command can't run without. We should fix that.
     - uses: google-github-actions/setup-gcloud@v0
-      with:
-        service_account_key: ${{ secrets.BW_EE_LABS_REGISTRY_KEY }}
-        export_default_credentials: true
     - run: slipstream version
