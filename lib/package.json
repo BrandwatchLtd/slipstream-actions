@@ -16,6 +16,6 @@
     "file-system": "^1.2.2",
     "mime-types": "^2.1.33",
     "short-unique-id": "^3.0.3",
-    "simple-git": "^2.6.0"
+    "simple-git": "^3.5.0"
   }
 }
