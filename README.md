@@ -6,6 +6,60 @@ A collection of GitHub Actions for working with Slipstream. A full end-to-end ex
 
 See [Action definition](install-cli/action.yml) for additional details.
 
+## Example
+
+```yaml
+name: Build
+on:
+  push:
+    branches:
+      main
+
+jobs:
+  build:
+    name: Build docker image
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Slipstream Auth
+      uses: 'google-github-actions/auth@v0'
+      with:
+        credentials_json: ${{ secrets.SERVICE_ACCOUNT }}
+
+    - name: Slipstream setup Google Credentials
+      uses: google-github-actions/setup-gcloud@v0
+
+    - name: Build and push Docker image
+      uses: BrandwatchLtd/slipstream-actions/push-image@main
+      id: push-image
+      with:
+        service: <service_name>
+        labels: project=<project_name>
+
+    - name: Deploy new image to stage
+      uses: BrandwatchLtd/slipstream-actions/deploy@main
+      with:
+        environment: stage
+        service: <service_name>
+        id: ${{ steps.push-image.outputs.imageDigest }}
+```
+
+## Slipstream Actions
+
+### Prepare setup
+
+Before you can use any of the actions you need to run the following setup steps.
+
+```yaml
+- name: Slipstream Auth
+  uses: 'google-github-actions/auth@v0'
+  with:
+    credentials_json: ${{ secrets.SERVICE_ACCOUNT }}
+
+- name: Slipstream setup Google Credentials
+  uses: google-github-actions/setup-gcloud@v0
+```
 ### Push Image
 
 ![](https://github.com/BrandwatchLtd/slipstream-actions/workflows/Push%20Image/badge.svg)
@@ -13,6 +67,7 @@ See [Action definition](install-cli/action.yml) for additional details.
 The `push-image` action builds a Docker image and pushes it to an appropriate Google Cloud Registry for use by Kubernetes. Additionally it generates and pushes artifact metadata to Slipstream.
 
 ```yaml
+# Attention: This Action needs a google auth context. Please see "Prepare setup" section above.
 - name: Build and push Docker image
   uses: BrandwatchLtd/slipstream-actions/push-image@main
   id: push-image
@@ -26,6 +81,7 @@ The `push-image` action builds a Docker image and pushes it to an appropriate Go
 To push images to ECR you need to provide an ECR `dockerRegistry` and setup a few environment variables. For your image to be deployable via slipstream it is mandatory to set the `release` field to `true` otherwise your image will be considered as a development image.
 
 ```yaml
+# Attention: This Action needs a google auth context. Please see "Prepare setup" section above.
 - name: Build and push Docker image
   uses: BrandwatchLtd/slipstream-actions/push-image@main
   id: push-to-slipstream
@@ -52,6 +108,7 @@ See [Action definition](push-image/action.yml) for additional details.
 The `push-webapp` action pushes a folder of static files to a CDN to be served by Webapp Service in Kubernetes. Additionally it generates and pushes artifact metadata to Slipstream.
 
 ```yaml
+# Attention: This Action needs a google auth context. Please see "Prepare setup" section above.
 - name: Push Webapp
   uses: BrandwatchLtd/slipstream-actions/push-webapp@main
   id: push-webapp
@@ -78,6 +135,7 @@ See [Action definition](push-webapp/action.yml) for additional details.
 The `push-files` action packages up a directory of files and pushes it to an appropriate Google Cloud Storage bucket for use in static website hosting. Additionally it generates and pushes artifact metadata to Slipstream.
 
 ```yaml
+# Attention: This Action needs a google auth context. Please see "Prepare setup" section above.
 - name: Push static files
   uses: BrandwatchLtd/slipstream-actions/push-files@main
   id: push-files
@@ -98,6 +156,7 @@ See [Action definition](push-files/action.yml) for additional details.
 The `push-module` generates and pushes module metadata to Slipstream.
 
 ```yaml
+# Attention: This Action needs a google auth context. Please see "Prepare setup" section above.
 - name: Push module metadata to slipstream
   uses: BrandwatchLtd/slipstream-actions/push-module@main
   with:
@@ -114,11 +173,8 @@ See [Action definition](push-module/action.yml) for additional details.
 The `install-cli` action downloads and installs the Slipstream CLI. Useful for deployment requests, or querying for information about services and artifacts. NB: Requires the gcloud CLI to be installed and configured for authentication.
 
 ```yaml
+# Attention: This Action needs a google auth context. Please see "Prepare setup" section above.
 - uses: BrandwatchLtd/slipstream-actions/install-cli@main
-- uses: 'google-github-actions/auth@v0'
-  with:
-    credentials_json: ${{ secrets.SERVICE_ACCOUNT }}
-- uses: google-github-actions/setup-gcloud@v0
 ```
 
 ### Deploy
@@ -128,6 +184,7 @@ The `install-cli` action downloads and installs the Slipstream CLI. Useful for d
 The `deploy` action can be used to create a deployment request for a given artifact. This is typically used immediately after building an image to request a deployment to stage.
 
 ```yaml
+# Attention: This Action needs a google auth context. Please see "Prepare setup" section above.
 - name: Deploy new image to stage
   uses: BrandwatchLtd/slipstream-actions/deploy@main
   with:
@@ -145,6 +202,7 @@ See [Action definition](deploy/action.yml) for additional details.
 The `maven-build` action build and tag your maven package that will be picked up by your docker build in the `target` folder.
 
 ```yaml
+# Attention: This Action needs a google auth context. Please see "Prepare setup" section above.
 - name: Maven build package
   uses: BrandwatchLtd/slipstream-actions/maven-build@main
 ```
@@ -158,6 +216,7 @@ See [Action definition](maven-build/action.yml) for additional details.
 The `maven-verify` action will verify your maven package and run additional your tests on it.
 
 ```yaml
+
 - name: Maven verify package
   uses: BrandwatchLtd/slipstream-actions/maven-verify@main
 ```
