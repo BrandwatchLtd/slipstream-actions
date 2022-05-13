@@ -25,7 +25,7 @@ jobs:
     - name: Slipstream Auth
       uses: 'google-github-actions/auth@v0'
       with:
-        credentials_json: ${{ secrets.SERVICE_ACCOUNT }}
+        credentials_json: ${{ secrets.BW_PROD_ARTIFACTS_KEY }}
 
     - name: Slipstream setup Google Credentials
       uses: google-github-actions/setup-gcloud@v0
@@ -55,7 +55,7 @@ Before you can use any of the actions you need to run the following setup steps.
 - name: Slipstream Auth
   uses: 'google-github-actions/auth@v0'
   with:
-    credentials_json: ${{ secrets.SERVICE_ACCOUNT }}
+    credentials_json: ${{ secrets.BW_PROD_ARTIFACTS_KEY }}
 
 - name: Slipstream setup Google Credentials
   uses: google-github-actions/setup-gcloud@v0
