@@ -9,7 +9,7 @@
     "lint": "../node_modules/.bin/eslint . --config ../.eslintrc.json --ignore-path ../.eslintignore"
   },
   "dependencies": {
-    "@actions/core": "^1.2.6",
+    "@actions/core": "^1.9.1",
     "walk": "^2.3.14"
   }
 }
