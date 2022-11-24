@@ -21,14 +21,8 @@ jobs:
     - uses: actions/checkout@v2
     - uses: actions/setup-node@master
       with:
-        node-version: 12.x
-    - run: npm install # In the root for shared dev deps
+        node-version-file: .nvmrc
     - run: npm install
-      working-directory: ./lib
-    - run: npm install
-      working-directory: ./deploy
-    - run: npm test
-      working-directory: ./deploy
   integration:
     name: Integration Test
     #needs: unit

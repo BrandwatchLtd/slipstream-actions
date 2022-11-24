@@ -20,5 +20,5 @@ inputs:
     default: https://raw.githubusercontent.com/BrandwatchLtd/slipstream-cli-release/master/install.sh
 
 runs:
-  using: node12
+  using: node16
   main: dist/index.js
