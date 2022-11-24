@@ -23,12 +23,6 @@ jobs:
       with:
         node-version-file: .nvmrc
     - run: npm install
-    - run: npm install
-      working-directory: ./lib
-    - run: npm install
-      working-directory: ./push-module
-    - run: npm test
-      working-directory: ./push-module
   integration:
     name: Integration Test
     runs-on: ubuntu-latest
