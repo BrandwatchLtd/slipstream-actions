@@ -5,7 +5,7 @@
     "dev": "ncc build index.js -o dist -w",
     "build": "ncc build index.js -o dist",
     "test": "npm run lint && npm run unit",
-    "unit": "jest",
+    "unit": "jest --passWithNoTests",
     "lint": "eslint . --config ../.eslintrc.json --ignore-path ../.eslintignore"
   },
   "dependencies": {
