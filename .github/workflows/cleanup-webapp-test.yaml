@@ -57,3 +57,15 @@ jobs:
       - name: Deletion not Skipped
         run: "[[ \"${{steps.cleanup.outputs.skipped}}\" == \"false\" ]]"
 
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@main
+      with:
+        node-version-file: .nvmrc
+    - run: npm ci
+    - run: npm run build --workspace cleanup-webapp
+    - run: ./scripts/assert-git-clean.sh
+
