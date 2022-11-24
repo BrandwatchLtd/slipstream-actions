@@ -20,7 +20,7 @@ jobs:
     name: Build docker image
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Slipstream Auth
       uses: 'google-github-actions/auth@v0'
