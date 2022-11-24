@@ -22,13 +22,7 @@ jobs:
     - uses: actions/setup-node@master
       with:
         node-version-file: .nvmrc
-    - run: npm install # In the root for shared dev deps
     - run: npm install
-      working-directory: ./lib
-    - run: npm install
-      working-directory: ./push-webapp
-    - run: npm test
-      working-directory: ./push-webapp
   integration:
     name: Integration Test
     runs-on: ubuntu-latest
