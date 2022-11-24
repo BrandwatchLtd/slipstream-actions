@@ -75,3 +75,14 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.ARTIFACTS_PROD_AWS_SECRET_KEY }}
           AWS_DEFAULT_REGION: eu-west-1
 
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@main
+      with:
+        node-version-file: .nvmrc
+    - run: npm ci
+    - run: npm run build --workspace push-image
+    - run: ./scripts/assert-git-clean.sh

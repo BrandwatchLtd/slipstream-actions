@@ -46,3 +46,16 @@ jobs:
           productionVersionCheckURL: https://whatever.com
           artifactBucket: gs://bw-ee-labs-slipstream-github-action-test
           metadataBucket: gs://bw-ee-labs-slipstream-github-action-test
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@main
+      with:
+        node-version-file: .nvmrc
+    - run: npm ci
+    - run: npm run build --workspace push-files
+    - run: ./scripts/assert-git-clean.sh
+
