@@ -2,15 +2,15 @@
   "name": "slipstream-action-deploy",
   "version": "1.0.0",
   "scripts": {
-    "dev": "../node_modules/.bin/ncc build index.js -o dist -w",
-    "build": "../node_modules/.bin/ncc build index.js -o dist",
+    "dev": "ncc build index.js -o dist -w",
+    "build": "ncc build index.js -o dist",
     "test": "npm run lint && npm run unit",
-    "unit": "../node_modules/.bin/jest",
-    "lint": "../node_modules/.bin/eslint . --config ../.eslintrc.json --ignore-path ../.eslintignore"
+    "unit": "jest",
+    "lint": "eslint . --config ../.eslintrc.json --ignore-path ../.eslintignore"
   },
   "dependencies": {
-    "@actions/core": "^1.2.6",
-    "@actions/exec": "^1.0.4",
-    "@actions/tool-cache": "^1.6.1"
+    "@actions/core": "^1.10.0",
+    "@actions/exec": "^1.1.1",
+    "@actions/tool-cache": "^2.0.1"
   }
 }
