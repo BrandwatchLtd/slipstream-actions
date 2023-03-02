@@ -24,12 +24,13 @@ async function buildSlipstreamMetadata(input) {
   return data;
 }
 
-async function writeMetadataFile(id, dir, index, templated) {
+async function writeMetadataFile(id, dir, index, templated, compressed) {
   const file = path.resolve(dir, 'metadata.json');
   const data = {
     version: id,
     index,
     templated,
+    compressed,
   };
 
   await fs.access(path.resolve(dir, index), fs.F_OK);

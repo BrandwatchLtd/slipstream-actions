@@ -11,6 +11,10 @@ inputs:
     description: Weather or not the index file is a template
     required: false
     default: 'false'
+  compressed:
+    description: The index file is compressed by default
+    required: false
+    default: 'false'
   labels:
     description: Comma separated key=value labels.
     required: false
