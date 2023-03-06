@@ -16,6 +16,7 @@ async function run() {
     const service = core.getInput('service');
     const indexFile = core.getInput('indexFile');
     const templated = core.getInput('templated') === 'true';
+    const compressed = core.getInput('compressed') === 'true';
     const labels = core.getInput('labels');
     const webappDir = core.getInput('staticRoot');
     const bucket = core.getInput('artifactBucket');
@@ -56,7 +57,7 @@ async function run() {
     }
 
     core.startGroup(`Pushing files to Bucket: ${bucketAddress}`);
-    await writeMetadataFile(version, webappDir, indexFile, templated);
+    await writeMetadataFile(version, webappDir, indexFile, templated, compressed);
     await pushFilesToBucket(webappDir, bucketAddress);
     core.endGroup();
 
