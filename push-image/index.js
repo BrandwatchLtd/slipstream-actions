@@ -60,6 +60,7 @@ async function run() {
       // when https://github.com/actions/toolkit/pull/725 is released
       release: (core.getInput('release') === 'true'),
     });
+
     await pushMetadata(metadataBucket, data);
     core.endGroup();
 

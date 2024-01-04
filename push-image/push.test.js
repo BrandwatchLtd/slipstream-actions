@@ -110,9 +110,7 @@ describe('getTags', () => {
 });
 
 test('builds correct metadata', async () => {
-  docker.dockerJSON.mockReturnValue({
-    object: [{ dummy: 'inspect' }],
-  });
+  docker.dockerJSON.mockReturnValue([{ dummy: 'inspect' }]);
   const data = await buildMetadata({
     event: {
       pull_request: {
