@@ -40,5 +40,5 @@ outputs:
   imageDigest:
     description: The image digest of the Docker image. Can be used to request a deployment.
 runs:
-  using: node16
+  using: node20
   main: dist/index.js
