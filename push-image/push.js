@@ -1,4 +1,4 @@
-const { dockerCommand } = require('docker-cli-js');
+const { docker, dockerJSON } = require('./docker');
 const metadata = require('../lib');
 
 async function buildImage(input) {
@@ -20,20 +20,21 @@ async function buildImage(input) {
   }
 
   if (input.additionalOptions) {
-    args.push(input.additionalOptions);
+    args.push(...input.additionalOptions.split(' '));
   }
 
   args.push(input.path);
 
-  await dockerCommand(args.join(' '), { env: process.env });
+  docker('context', 'inspect');
+  docker(...args);
 }
 
 async function tagImage(repo, tag) {
-  await dockerCommand(`tag ${repo} ${repo}:${tag}`);
+  docker('tag', repo, `${repo}:${tag}`);
 }
 
 async function pushImage(input) {
-  await dockerCommand(`push -a ${input.repo}`);
+  docker('push', '-a', input.repo);
 }
 
 async function buildMetadata(input) {
@@ -46,9 +47,7 @@ async function buildMetadata(input) {
   data.build = metadata.getBuildData(input.event);
   data.labels = metadata.getLabels(input.labels);
   data.release = input.release;
-
-  const dockerInspect = await dockerCommand(`inspect ${input.repo}`, { echo: false });
-  data.dockerInspect = dockerInspect.object;
+  data.dockerInspect = dockerJSON('inspect', input.repo).object;
 
   return data;
 }
