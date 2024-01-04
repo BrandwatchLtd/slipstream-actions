@@ -1,6 +1,7 @@
 process.env.GITHUB_RUN_NUMBER = '2345';
 
 const { execFileSync } = require('child_process');
+const { EOL } = require('os');
 const { docker, dockerJSON } = require('./docker');
 
 jest.mock('child_process', () => ({
@@ -13,8 +14,7 @@ beforeEach(() => {
   execFileSync.mockReset();
   execFileSync.mockReturnValue(Buffer.alloc(0));
 
-  jest.spyOn(global.console, 'error').mockImplementation(() => {});
-  jest.spyOn(global.console, 'log').mockImplementation(() => {});
+  jest.spyOn(process.stdout, 'write').mockImplementation(() => {});
 
   process.env = { FOO: 'bar' };
 });
@@ -42,8 +42,8 @@ describe('dockerJSON())', () => {
     execFileSync.mockReturnValue(Buffer.from('{'));
 
     expect(() => dockerJSON('docker', 'context', 'inspect')).toThrow();
-    expect(global.console.error).toBeCalledWith(
-      ':error::Failed to parse json output for "docker docker context inspect"',
+    expect(process.stdout.write).toBeCalledWith(
+      `::error::Failed to parse json output for "docker docker context inspect"${EOL}`,
     );
   });
 });
