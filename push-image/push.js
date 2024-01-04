@@ -47,7 +47,7 @@ async function buildMetadata(input) {
   data.build = metadata.getBuildData(input.event);
   data.labels = metadata.getLabels(input.labels);
   data.release = input.release;
-  data.dockerInspect = dockerJSON('inspect', input.repo).object;
+  data.dockerInspect = dockerJSON('inspect', input.repo);
 
   return data;
 }

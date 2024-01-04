@@ -65,15 +65,6 @@ describe('passes corrects args to docker build', () => {
     expect(docker.docker.mock.calls[1])
       .toEqual(['build', '--tag', 'thing1', '--file', 'dockf1', '--build-arg', 'k1=v1', '--build-arg', 'k2=v2', '--secret', 'id=npmrc,src=.npmrc', '--ssh', 'default=foo', 'path1']);
   });
-  // test('passes process.env', async () => {
-  //   await buildImage({
-  //     repo: 'thing1',
-  //     dockerfile: 'dockf1',
-  //     path: 'path1',
-  //   });
-  //   expect(docker.docker.mock.calls[0][1])
-  //     .toStrictEqual({ env: { FOO: 'bar' } });
-  // });
 });
 
 test('calls tagImage correctly', async () => {
@@ -110,9 +101,7 @@ describe('getTags', () => {
 });
 
 test('builds correct metadata', async () => {
-  docker.dockerJSON.mockReturnValue({
-    object: [{ dummy: 'inspect' }],
-  });
+  docker.dockerJSON.mockReturnValue([{ dummy: 'inspect' }]);
   const data = await buildMetadata({
     event: {
       pull_request: {
