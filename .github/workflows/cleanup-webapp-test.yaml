@@ -2,7 +2,7 @@ name: Cleanup Webapp
 on:
   push:
     branches:
-      main
+    - main
     paths:
     - 'cleanup-webapp/**'
     - '.github/workflows/cleanup-webapp-*'

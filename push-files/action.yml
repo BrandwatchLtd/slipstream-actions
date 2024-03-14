@@ -29,5 +29,5 @@ outputs:
   artifactID:
     description: The ID (sha256 hash) of the uploaded files. This can be used to request a deployment.
 runs:
-  using: node16
+  using: node20
   main: dist/index.js

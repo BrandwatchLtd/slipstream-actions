@@ -2,7 +2,7 @@ name: Lib
 on:
   push:
     branches:
-      main
+    - main
     paths:
     - 'lib/**'
     - '.github/workflows/lib-*'
