@@ -2,7 +2,7 @@ name: Push Image
 on:
   push:
     branches:
-      main
+    - main
     paths:
     - 'push-image/**'
     - '.github/workflows/push-image-*'

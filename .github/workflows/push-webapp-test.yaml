@@ -2,7 +2,7 @@ name: Push Webapp
 on:
   push:
     branches:
-      main
+    - main
     paths:
     - 'push-webapp/**'
     - '.github/workflows/push-webapp-*'

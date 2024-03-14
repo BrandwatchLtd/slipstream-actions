@@ -2,7 +2,7 @@ name: Install CLI
 on:
   push:
     branches:
-      main
+    - main
     paths:
     - 'install-cli/**'
     - '.github/workflows/install-cli-*'

@@ -7,5 +7,5 @@ inputs:
     default: https://github.com/BrandwatchLtd/slipstream-cli-release/releases/download/v0.7.0%2Bslipstream/slipstream-cli-release_0.7.0+slipstream_linux_amd64.tar.gz
 
 runs:
-  using: node16
+  using: node20
   main: dist/index.js

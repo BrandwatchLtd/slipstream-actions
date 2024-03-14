@@ -52,5 +52,5 @@ outputs:
     description: boolean, only true if no push happened because it was not required, a failed push would not be considered a skip
 
 runs:
-  using: node16
+  using: node20
   main: dist/index.js

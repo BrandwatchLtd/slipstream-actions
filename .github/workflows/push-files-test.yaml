@@ -2,7 +2,7 @@ name: Push Files
 on:
   push:
     branches:
-      main
+    - main
     paths:
     - 'push-files/**'
     - '.github/workflows/push-files-*'
