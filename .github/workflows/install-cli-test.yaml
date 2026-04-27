@@ -38,7 +38,7 @@ jobs:
         create_credentials_file: true
     - uses: ./install-cli
     # Needs this because the version command can't run without. We should fix that.
-    - uses: google-github-actions/setup-gcloud@v0
+    - uses: google-github-actions/setup-gcloud@v3
     - run: slipstream version
 
   build:
