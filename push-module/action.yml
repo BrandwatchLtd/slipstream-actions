@@ -16,5 +16,5 @@ outputs:
   artifactID:
     description: The ID (sha256 hash) of the published bundle.
 runs:
-  using: node20
+  using: node24
   main: dist/index.js
