@@ -23,7 +23,7 @@ jobs:
     - uses: actions/checkout@v6
 
     - name: Slipstream Auth
-      uses: 'google-github-actions/auth@v0'
+      uses: 'google-github-actions/auth@v3'
       with:
         credentials_json: ${{ secrets.BW_PROD_ARTIFACTS_KEY }}
 
@@ -53,7 +53,7 @@ Before you can use any of the actions you need to run the following setup steps.
 
 ```yaml
 - name: Slipstream Auth
-  uses: 'google-github-actions/auth@v0'
+  uses: 'google-github-actions/auth@v3'
   with:
     credentials_json: ${{ secrets.BW_PROD_ARTIFACTS_KEY }}
 
