@@ -23,12 +23,12 @@ jobs:
     - uses: actions/checkout@v6
 
     - name: Slipstream Auth
-      uses: 'google-github-actions/auth@v3'
+      uses: google-github-actions/auth@v3
       with:
         credentials_json: ${{ secrets.BW_PROD_ARTIFACTS_KEY }}
 
     - name: Slipstream setup Google Credentials
-      uses: google-github-actions/setup-gcloud@v0
+      uses: google-github-actions/setup-gcloud@v3
 
     - name: Build and push Docker image
       uses: BrandwatchLtd/slipstream-actions/push-image@main
@@ -53,12 +53,12 @@ Before you can use any of the actions you need to run the following setup steps.
 
 ```yaml
 - name: Slipstream Auth
-  uses: 'google-github-actions/auth@v3'
+  uses: google-github-actions/auth@v3
   with:
     credentials_json: ${{ secrets.BW_PROD_ARTIFACTS_KEY }}
 
 - name: Slipstream setup Google Credentials
-  uses: google-github-actions/setup-gcloud@v0
+  uses: google-github-actions/setup-gcloud@v3
 ```
 ### Push Image
 

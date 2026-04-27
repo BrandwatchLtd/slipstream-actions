@@ -37,7 +37,7 @@ jobs:
           credentials_json: ${{ secrets.BW_EE_LABS_REGISTRY_KEY }}
           create_credentials_file: true
 
-      - uses: google-github-actions/setup-gcloud@v0
+      - uses: google-github-actions/setup-gcloud@v3
       - uses: ./push-files
         with:
           service: files-action-integration-test
